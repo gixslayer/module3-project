@@ -70,12 +70,12 @@ public class Application implements MulticastCallbacks, CacheCallbacks {
 		
 		clientCache.update(packet.getSourceClient());
 		
-		System.out.println("[Announcement packet]");
-		System.out.printf("Source: %s%n", packet.getSourceClient());
-		System.out.println("Knows about clients:");
+		//System.out.println("[Announcement packet]");
+		//System.out.printf("Source: %s%n", packet.getSourceClient());
+		//System.out.println("Knows about clients:");
 		
 		for(Client client : packet.getKnownClients()) {
-			System.out.println(client);
+			//System.out.println(client);
 			clientCache.update(client);
 		}
 	}
