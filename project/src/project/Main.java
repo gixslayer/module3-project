@@ -51,6 +51,11 @@ public class Main {
 		String data = "Test";
 		byte[] buf = new byte[1024];
 		
+		Packet p1 = new Packet(3,2,4,33024,3900,true,true,false,100, new byte[4000]);
+		p1.printData();
+		Packet p2 = new Packet(p1.getBytes());
+		p2.printData();
+		
 		socket.joinGroup(group);		
 		
 		DatagramPacket send = new DatagramPacket(data.getBytes(), data.length(), group, PORT);

@@ -1,10 +1,6 @@
 package project;
 
-import java.io.IOException;
-import java.lang.reflect.Array;
-import java.net.InetAddress;
 import java.util.Arrays;
-import java.util.BitSet;
 
 public class Packet {
 	private int source, destination, type, length, seq, ack, windowSize, checksum;
@@ -29,7 +25,7 @@ public class Packet {
 	
 	public Packet(byte[] packet) {
 		this.packet = packet;
-		this.data = Arrays.copyOfRange(packet, 11, packet.length);
+		this.data = Arrays.copyOfRange(packet, 10, packet.length);
 		fillVariables();
 	}
 	
@@ -37,18 +33,18 @@ public class Packet {
 		this.length = data.length;
 		int sourceDest = (source<<4)+destination;
 		int temp = data.length;
-		int typeLength = (type<<4)+(temp>>8);
-		int length2 = temp - ((temp>>8)<<8);
-		int seq1 = seq>>8;
-		int seq2 = seq-((seq>>8)<<8);
-		int ack1 = ack>>8;
-		int ack2 = ack-((ack>>8)<<8);
+		int typeLength = (type<<4)+(temp>>>8);
+		int length2 = temp - ((temp>>>8)<<8);
+		int seq1 = seq>>>8;
+		int seq2 = seq-((seq>>>8)<<8);
+		int ack1 = ack>>>8;
+		int ack2 = ack-((ack>>>8)<<8);
 		int flags = (synFlag? 1:0)*4 +(ackFlag? 1:0)*2+(finFlag? 1:0);
-		int windowSize1 = windowSize>>8;
-		int windowSize2 = windowSize-((windowSize>>8)<<8);
+		int windowSize1 = windowSize>>>8;
+		int windowSize2 = windowSize-((windowSize>>>8)<<8);
 		temp = calculateChecksum();
-		int checkSum1 = temp>>8;
-		int checkSum2 = temp-((temp>>8)<<8);
+		int checkSum1 = temp>>>8;
+		int checkSum2 = temp-((temp>>>8)<<8);
 		
 		byte[] header = new byte[]{(byte)sourceDest, (byte)typeLength, (byte)length2, (byte)seq1, (byte)seq2, (byte)ack1, (byte)ack2, (byte)flags, (byte)windowSize1, (byte)windowSize2, (byte)checkSum1, (byte)checkSum2};
 		packet = new byte[header.length+data.length];
@@ -82,20 +78,30 @@ public class Packet {
 		p.fillPacket();
 	}
 	
+	private long getUnsignedInt(int x) {
+	    return x & 0xFFFFFFFFL;
+	}
+	
 	private void fillVariables() {
-		source = packet[0]>>4;
-		destination = packet[0] - ((packet[0]>>4)<<4);
-		System.out.println("DESTINATION: " + destination);
-		type = packet[1]>>4;
-		length = ((int)(packet[1] - ((packet[1]>>4)<<4))<<8) + packet[2];
-		seq = (((int)packet[3])<<8) + packet[4]; 
-		ack = (((int)packet[5])<<8) + packet[6]; 
-		synFlag = packet[7]>>2 == 1;
-		ackFlag = (packet[7]-(packet[7]>>2<<2)>>1) == 1;
-		finFlag = (packet[7]-packet[7]>>1<<1) == 1;
-		windowSize = (((int)packet[8])<<8) + packet[9];
-		checksum = (((int)packet[10])<<8) + packet[11];
+		source = packet[0]>>>4;
+		destination = packet[0] - ((packet[0]>>>4)<<4);
+		type = packet[1]>>>4;
+		int part1 = (packet[1] - ((packet[1]>>>4)<<4));
+		part1 = part1<<8;
+		part1 += packet[2]>>>7 == -1? 128: 0;
+		packet[2] = (byte)(packet[2]>>>7 == -1? ((packet[2]-128)): packet[2]);
+		length = (part1) + packet[2];
+		System.out.println((byte)129);
 		
-		data = Arrays.copyOfRange(packet, 11, packet.length);
+		long aseq = ((getUnsignedInt(packet[3]))<<8) + getUnsignedInt(packet[4]); 
+		System.out.println((getUnsignedInt((int)packet[3])));
+		ack = (((int)packet[5])<<8) + packet[6]; 
+		synFlag = packet[7]>>>2 == 1;
+		ackFlag = (packet[7]-(packet[7]>>>2<<2)>>>1) == 1;
+		finFlag = (packet[7]-packet[7]>>>1<<1) == 1;
+		windowSize = (((int)packet[8])<<8) + packet[9];
+		checksum = (((int)packet[10])<<8) + packet[10];
+		
+		data = Arrays.copyOfRange(packet, 10, packet.length);
 	}
 }
