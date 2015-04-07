@@ -18,9 +18,19 @@ public class MainGUI extends JFrame implements ActionListener, KeyListener, Mous
 	private static final Color JOIN_COLOR = Color.BLUE;
 	private static final Color LEAVE_COLOR = Color.RED;
 	
-	private static final String[] colors = {"Red", "Blue", "Green", "Yellow", "Purple", "Black", "Orange", "Pink", "Seagreen", "Chocolate"};
+	private static final String[] colors = {"Red", "Blue", "Green", "Yellow", "Purple", "Orange", "Black"};
+	public static final String[] fiftyShades = {"E0E0E0", "DEDEDE", "DBDBDB", "D9D9D9", "D6D6D6", "D4D4D4", "D1D1D1", "CFCFCF",
+		"CCCCCC", "C9C9C9", "C7C7C7", "C4C4C4", "C2C2C2", "BFBFBF", "BDBDBD", "BABABA", "B8B8B8", "B5B5B5", "B3B3B3", "B0B0B0",
+		"ADADAD", "ABABAB", "A9A9A9", "A8A8A8", "A6A6A6", "A3A3A3", "A1A1A1", "9E9E9E", "9C9C9C", "969696", "949494", "919191",
+		"8F8F8F", "8C8C8C", "8A8A8A", "878787", "858585", "828282", "7F7F7F", "7D7D7D", "7A7A7A", "787878", "757575", "737373",
+		"707070", "6E6E6E", "6B6B6B", "696969", "666666", "636363", "616161"};
 	
 	private HashMap<String, String> colorMap;
+	public boolean fiftyEnabled = false;
+	
+	private JMenuBar menu;
+	private JMenu optionMenu;
+	private JMenuItem preferencesItem;
 	
 	private JTabbedPane tabPane;
 	
@@ -118,8 +128,24 @@ public class MainGUI extends JFrame implements ActionListener, KeyListener, Mous
 		addUser("Alice");
 		addUser("Bob");
 		
+		menu = new JMenuBar();
+		
+		optionMenu = new JMenu("Options");
+		
+		preferencesItem = new JMenuItem("Preferences");
+		preferencesItem.addActionListener(this);
+		
+		optionMenu.add(preferencesItem);
+		menu.add(optionMenu);
+		
+		setJMenuBar(menu);
+		
 		setSize(800,800);
 		setVisible(true);
+	}
+	
+	public boolean getFiftyEnabled() {
+		return fiftyEnabled;
 	}
 	
 	public void removeUser(String name) {
@@ -131,7 +157,7 @@ public class MainGUI extends JFrame implements ActionListener, KeyListener, Mous
 		peopleList.addElement(name);
 		peopleArea.addMouseListener(this);
 		peopleArea.ensureIndexIsVisible(peopleList.getSize()-1);
-		setUserColor(name, colors[(int)(Math.random()*10)]);
+		setUserColor(name, colors[(int)(Math.random()*7)]);
 		addToScreen("[JOIN]: User <font color=" + getUserColor(name) + ">" + name + "</font> entered the chat room.");
 	}
 	
@@ -144,6 +170,7 @@ public class MainGUI extends JFrame implements ActionListener, KeyListener, Mous
 	
 	public void setUserColor(String name, String color) {
 		colorMap.put(name, color);
+		receiveArea.repaint();
 	}
 	
 	public void loadIcons() {
@@ -158,7 +185,7 @@ public class MainGUI extends JFrame implements ActionListener, KeyListener, Mous
 		if(name.equals(clientName)) return;
 		JPanel privChat = new JPanel();
 		privChat.setLayout(new BorderLayout());
-		privChat.add(new PrivateChat(clientName), BorderLayout.CENTER);
+		privChat.add(new PrivateChat(clientName, this), BorderLayout.CENTER);
 		tabPane.addTab(name, privChat);
 		int i = tabPane.indexOfTab(name);
 		
@@ -206,6 +233,12 @@ public class MainGUI extends JFrame implements ActionListener, KeyListener, Mous
 	public void actionPerformed(ActionEvent e) {
 		if(e.getSource().equals(sendButton)) {
 			sendText();
+		}
+		
+		if(e.getSource().equals(preferencesItem)) {
+			PreferencesMenu menu = new PreferencesMenu(clientName);
+			menu.pack();
+			menu.setVisible(true);
 		}
 	}
 
@@ -268,12 +301,15 @@ public class MainGUI extends JFrame implements ActionListener, KeyListener, Mous
 	         setText(value.toString());
 	         Color background = Color.WHITE;
 	         Color foreground = Color.BLACK;
-	         
-	         /*if(index % 2 == 0) {
-	        	 background = Color.LIGHT_GRAY;
+	         if(fiftyEnabled) {
+	        	background = Color.decode("0x" + fiftyShades[index % 50]);
 	         }
-	         else background = Color.WHITE;
-	         */
+	         else {
+	        	 if(index % 2 == 0)
+	        		 background = Color.decode("0x" + fiftyShades[10]);
+	        	 else
+	        		 background = Color.decode("0x" + fiftyShades[20]);
+	         }
 	         
 	         if(value.toString().startsWith("[JOIN]:")) 
 	        	 setText("<html><font color=blue>[JOIN]:</font>" + value.toString().split(":")[1] + "</html>");
@@ -295,7 +331,7 @@ public class MainGUI extends JFrame implements ActionListener, KeyListener, Mous
 	    JMenuItem privChatItem;
 	    JMenuItem pokeItem;
 	    JMenu chooseColor;
-	    JMenuItem[] color = new JMenuItem[10];
+	    JMenuItem[] color = new JMenuItem[7];
 	    String name;
 	    
 	    public UserMenu(String name){
@@ -305,6 +341,7 @@ public class MainGUI extends JFrame implements ActionListener, KeyListener, Mous
 	        	for(int i=0; i<color.length; i++) {
 	        		color[i] = new JMenuItem(colors[i]);
 	        		color[i].addActionListener(this);
+	        		chooseColor.add(color[i]);
 	        	}
 	        	add(chooseColor);
 	        }
@@ -331,6 +368,26 @@ public class MainGUI extends JFrame implements ActionListener, KeyListener, Mous
 				if(arg0.getSource().equals(color[i])) {
 					setUserColor(name, colors[i]);
 				}
+			}
+		}
+	}
+	
+	public class PreferencesMenu extends JFrame implements ActionListener {
+	    private JButton areaColor;
+	    private String name;
+	    
+	    public PreferencesMenu(String name){
+	        this.name = name;
+	        areaColor = new JButton("Change Area Color");
+	        areaColor.addActionListener(this);
+	        add(areaColor);
+	    }
+	    
+		@Override
+		public void actionPerformed(ActionEvent arg0) {
+			if(arg0.getSource().equals(areaColor)) {
+				fiftyEnabled = !fiftyEnabled;
+				receiveArea.repaint();
 			}
 		}
 	}

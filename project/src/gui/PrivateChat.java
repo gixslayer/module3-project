@@ -20,9 +20,11 @@ public class PrivateChat extends JPanel implements ActionListener, KeyListener {
 	private JButton sendButton;
 	
 	private String clientName;
+	private MainGUI main;
 	
-	public PrivateChat(String name) {
+	public PrivateChat(String name, MainGUI main) {
 		clientName = name;
+		this.main = main;
 		init();
 	}
 	
@@ -102,13 +104,27 @@ public class PrivateChat extends JPanel implements ActionListener, KeyListener {
 
 	     public Component getListCellRendererComponent(JList<?> list, Object value, int index, boolean isSelected, boolean cellHasFocus) {
 	         setText(value.toString());
-	         Color background;
+	         Color background = Color.WHITE;
 	         Color foreground = Color.BLACK;
-	         
-	         if(index % 2 == 0) {
-	        	 background = Color.LIGHT_GRAY;
+	         if(main.getFiftyEnabled()) {
+	        	background = Color.decode("0x" + main.fiftyShades[index % 50]);
 	         }
-	         else background = Color.WHITE;
+	         else {
+	        	 if(index % 2 == 0)
+	        		 background = Color.decode("0x" + main.fiftyShades[10]);
+	        	 else
+	        		 background = Color.decode("0x" + main.fiftyShades[20]);
+	         }
+	         
+	         if(value.toString().startsWith("[JOIN]:")) 
+	        	 setText("<html><font color=blue>[JOIN]:</font>" + value.toString().split(":")[1] + "</html>");
+	         
+	         else if(value.toString().startsWith("[LEAVE]:")) 
+	        	 setText("<html><font color=red>" + value.toString().split(":")[0] + "</font>:" + value.toString().split(":")[1] + "</html>");
+	         else {
+	        	 setText("<html><font color="+ main.getUserColor(value.toString().split(":")[0]) +">" + value.toString().split(":")[0] + "</font>:" + value.toString().split(":")[1] + "</html>");
+	         }
+	        	 
 	         setBackground(background);
 	         setForeground(foreground);
 
