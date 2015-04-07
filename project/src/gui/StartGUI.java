@@ -7,9 +7,11 @@ import project.Main;
 import java.awt.*;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
+import java.awt.event.KeyEvent;
+import java.awt.event.KeyListener;
 import java.io.IOException;
 
-public class StartGUI extends JFrame {
+public class StartGUI extends JFrame implements ActionListener, KeyListener {
 	private Container c;
 	public JTextField name;
 	private JButton start;
@@ -26,23 +28,15 @@ public class StartGUI extends JFrame {
 		setDefaultCloseOperation(DISPOSE_ON_CLOSE);
 		
 		text = new JLabel("Please enter your username.");
-		c.add(text, BorderLayout.NORTH);
 		
 		name = new JTextField();
-		c.add(name, BorderLayout.CENTER);
+		name.addKeyListener(this);
 		
 		start = new JButton("START");
-		start.addActionListener(new ActionListener() {
-			@Override
-			public void actionPerformed(ActionEvent arg0) {
-				try {
-					new Main(name.getText());
-				} catch (IOException e) {
-					// TODO Auto-generated catch block
-					e.printStackTrace();
-				}
-			}
-		});
+		start.addActionListener(this);
+
+		c.add(text, BorderLayout.NORTH);
+		c.add(name, BorderLayout.CENTER);
 		c.add(start, BorderLayout.EAST);
 		
 		pack();
@@ -51,5 +45,31 @@ public class StartGUI extends JFrame {
 	
 	public static void main(String[] args) {
 		new StartGUI();
+	}
+
+	@Override
+	public void keyPressed(KeyEvent arg0) {
+		if(arg0.getSource().equals(name)) {
+			if(arg0.getKeyCode() == KeyEvent.VK_ENTER) {
+				new MainGUI(name.getText());
+				this.dispose();
+			}
+		}	
+	}
+
+	@Override
+	public void keyReleased(KeyEvent arg0) {
+	}
+
+	@Override
+	public void keyTyped(KeyEvent arg0) {
+	}
+
+	@Override
+	public void actionPerformed(ActionEvent arg0) {
+		if(arg0.getSource().equals(start)) {
+			new MainGUI(name.getText());
+			this.dispose();
+		}
 	}
 }
