@@ -1,6 +1,9 @@
 package application;
 
 import java.io.IOException;
+import java.net.InetAddress;
+import java.text.SimpleDateFormat;
+import java.util.Date;
 
 import client.CacheCallbacks;
 import client.Client;
@@ -23,15 +26,15 @@ public class Application implements MulticastCallbacks, CacheCallbacks {
 	private final AnnounceThread announceThread;
 	
 	public static void main(String[] args) throws IOException {
-		args = new String[] { "Henk", "1" };
+		args = new String[] { "Henk" };
 		
 		String username = args[0];
-		int address = Integer.parseInt(args[1]);
+		InetAddress address = InetAddress.getLocalHost();
 		
 		new Application(username, address).start();
 	}
 	
-	public Application(String username, int address) {
+	public Application(String username, InetAddress address) {
 		this.mci = new MulticastInterface(GROUP, PORT, this);
 		this.localClient = new Client(username, address, 0);
 		this.clientCache = new ClientCache(localClient, this);
@@ -40,9 +43,10 @@ public class Application implements MulticastCallbacks, CacheCallbacks {
 	
 	public void start() {
 		long now = System.currentTimeMillis();
-		clientCache.update(new Client("Jantje", 2, now));
-		clientCache.update(new Client("Paashaas", 3, now));
-		clientCache.update(new Client("Kabouter", 4, now));
+		InetAddress address = localClient.getAddress();
+		clientCache.updateDirect(new Client("Jantje69", address, now));
+		clientCache.updateDirect(new Client("Paashaas", address, now));
+		clientCache.updateDirect(new Client("Kabouter", address, now));
 		
 		mci.start();
 		announceThread.start();
@@ -59,7 +63,7 @@ public class Application implements MulticastCallbacks, CacheCallbacks {
 	}
 
 	@Override
-	public void onMulticastPacketReceived(Packet packet) {
+	public void onMulticastPacketReceived(Packet packet, InetAddress address) {
 		if(packet.getType() == Packet.TYPE_ANNOUNCE) {
 			handleAnnouncePacket((AnnouncePacket)packet);
 		} else if(packet.getType() == Packet.TYPE_MULTICAST_CHAT) {
@@ -72,7 +76,8 @@ public class Application implements MulticastCallbacks, CacheCallbacks {
 			return;
 		}
 		
-		clientCache.update(packet.getSourceClient());
+		Client source = packet.getSourceClient();
+		clientCache.updateDirect(source);
 		
 		//System.out.println("[Announcement packet]");
 		//System.out.printf("Source: %s%n", packet.getSourceClient());
@@ -80,7 +85,7 @@ public class Application implements MulticastCallbacks, CacheCallbacks {
 		
 		for(Client client : packet.getKnownClients()) {
 			//System.out.println(client);
-			clientCache.update(client);
+			clientCache.updateIndirect(source, client);
 		}
 	}
 	
@@ -90,16 +95,19 @@ public class Application implements MulticastCallbacks, CacheCallbacks {
 
 	@Override
 	public void onClientTimedOut(Client client) {
-		System.out.printf("Client %s has timed out (last seen: %d)%n", client, client.getLastSeen());
+		String lastSeen = DateUtils.timestampToDateString(client.getLastSeen(), "HH:mm:ss");
+		System.out.printf("Client %s has timed out (last seen: %s)%n", client, lastSeen);
 	}
 
 	@Override
 	public void onClientConnected(Client client) {
-		System.out.printf("Client %s has connected (last seen: %d)%n", client, client.getLastSeen());	
+		String lastSeen = DateUtils.timestampToDateString(client.getLastSeen(), "HH:mm:ss");
+		System.out.printf("Client %s has connected (last seen: %s)%n", client, lastSeen);	
 	}
 
 	@Override
 	public void onClientDisconnected(Client client) {
-		System.out.printf("Client %s has disconnected (last seen: %d)%n", client, client.getLastSeen());	
+		String lastSeen = DateUtils.timestampToDateString(client.getLastSeen(), "HH:mm:ss");
+		System.out.printf("Client %s has disconnected (last seen: %s)%n", client, lastSeen);	
 	}
 }

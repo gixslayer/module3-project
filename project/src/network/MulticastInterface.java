@@ -60,15 +60,16 @@ public class MulticastInterface {
 		}
 	}
 	
-	public Packet recv() {
+	public ReceivedPacket recv() {
 		try {
 			DatagramPacket datagram = new DatagramPacket(recvBuffer, RECV_BUFFER_SIZE);
 			socket.receive(datagram);
 			byte[] receivedData = new byte[datagram.getLength()];
 			System.arraycopy(datagram.getData(), datagram.getOffset(), receivedData, 0, receivedData.length);
 			Packet packet = Packet.deserialize(receivedData);
-		
-			return packet;
+			InetAddress address = datagram.getAddress();
+			
+			return new ReceivedPacket(packet, address);
 		} catch(IOException e) {
 			return null;
 		}
@@ -78,13 +79,16 @@ public class MulticastInterface {
 		@Override
 		public void run() {
 			while(true) {
-				Packet packet = recv();
+				ReceivedPacket receivedPacket = recv();
 				
-				if(packet == null) {
+				if(receivedPacket == null) {
 					break;
 				}
 				
-				callbacks.onMulticastPacketReceived(packet);
+				Packet packet = receivedPacket.getPacket();
+				InetAddress address = receivedPacket.getAddress();
+				
+				callbacks.onMulticastPacketReceived(packet, address);
 			}
 		}
 	}

@@ -16,10 +16,10 @@ public class AnnouncePacket extends Packet {
 		this.knownClients = new ArrayList<Client>();
 	}
 	
-	public AnnouncePacket(String name, int address, List<Client> knownClients) {
+	public AnnouncePacket(Client sourceClient, List<Client> knownClients) {
 		super(Packet.TYPE_ANNOUNCE);
 		
-		this.sourceClient = new Client(name, address, 0);
+		this.sourceClient = sourceClient;
 		this.knownClients = knownClients;
 	}
 	

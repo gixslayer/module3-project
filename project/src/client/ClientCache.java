@@ -22,11 +22,7 @@ public final class ClientCache {
 		this.callbacks = callbacks;
 	}
 	
-	public void update(Client client) {
-		if(client == localClient) {
-			return;
-		}
-		
+	public void updateDirect(Client client) {
 		boolean clientDisconnected = false;
 		boolean clientConnected = false;
 		
@@ -37,6 +33,7 @@ public final class ClientCache {
 					clientDisconnected = true;
 				}
 			} else if(!cache.containsKey(client.getName())) {
+				client.setDirect();
 				cache.put(client.getName(), client);
 				clientConnected = true;
 			} else {
@@ -44,6 +41,9 @@ public final class ClientCache {
 			
 				if(client.getLastSeen() > cachedClient.getLastSeen()) {
 					cachedClient.setLastSeen(client.getLastSeen());
+				}
+				if(client.isIndirect()) {
+					client.setDirect();
 				}
 			}
 		}
@@ -53,6 +53,36 @@ public final class ClientCache {
 			callbacks.onClientConnected(client);
 		} else if(clientDisconnected) {
 			callbacks.onClientDisconnected(client);
+		}
+	}
+	
+	public void updateIndirect(Client source, Client client) {
+		if(client == localClient) {
+			return;
+		}
+		
+		boolean clientConnected = false;
+		
+		synchronized(syncRoot) {
+			if(!cache.containsKey(client.getName())) {
+				client.setIndirect(source.getName());
+				cache.put(client.getName(), client);
+				clientConnected = true;
+			} else {
+				Client cachedClient = cache.get(client.getName());
+			
+				if(cachedClient.isIndirect()) {
+					if(client.getLastSeen() > cachedClient.getLastSeen()) {
+						cachedClient.setRoute(source.getName());
+						cachedClient.setLastSeen(client.getLastSeen());
+					}
+				}
+			}
+		}
+		
+		// Process callback outside critical section to avoid holding the lock longer than needed.
+		if(clientConnected) {
+			callbacks.onClientConnected(client);
 		}
 	}
 	
