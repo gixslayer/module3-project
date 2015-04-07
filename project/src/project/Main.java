@@ -7,10 +7,10 @@ import java.net.MulticastSocket;
 
 public class Main {
 	static final int PORT = 6969;
-	static final int DEVICE = 1;
+	static final String GROUP = "228.9.10.11";
 	
 	public static void main(String[] args) throws IOException {
-		InetAddress group = InetAddress.getByName(String.format("192.168.5.%d", DEVICE));
+		InetAddress group = InetAddress.getByName(GROUP);
 		MulticastSocket socket = new MulticastSocket(PORT);
 		String data = "Test";
 		byte[] buf = new byte[1024];
