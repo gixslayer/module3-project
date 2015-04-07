@@ -27,13 +27,17 @@ public final class ByteUtils {
 	}
 	
 	public static long getLongFromBytes(byte[] src, int offset) {
-		return (src[offset++] & 0xff) | 
-				(src[offset++] & 0xff) << 8 | 
-				(src[offset++] & 0xff) << 16 | 
-				(src[offset++] & 0xff) << 24 |
-				(src[offset++] & 0xff) << 32 |
-				(src[offset++] & 0xff) << 40 |
-				(src[offset++] & 0xff) << 48 |
-				(src[offset++] & 0xff) << 56;
+		long result = 0;
+		
+		result |= ((long)src[offset++] & 0xff) << 0;
+		result |= ((long)src[offset++] & 0xff) << 8;
+		result |= ((long)src[offset++] & 0xff) << 16;
+		result |= ((long)src[offset++] & 0xff) << 24;
+		result |= ((long)src[offset++] & 0xff) << 32;
+		result |= ((long)src[offset++] & 0xff) << 40;
+		result |= ((long)src[offset++] & 0xff) << 48;
+		result |= ((long)src[offset++] & 0xff) << 56;
+		
+		return result;
 	}
 }

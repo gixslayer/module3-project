@@ -82,16 +82,16 @@ public class Application implements MulticastCallbacks, CacheCallbacks {
 
 	@Override
 	public void onClientTimedOut(Client client) {
-		System.out.printf("Client %s has timed out%n", client);
+		System.out.printf("Client %s has timed out (last seen: %d)%n", client, client.getLastSeen());
 	}
 
 	@Override
 	public void onClientConnected(Client client) {
-		System.out.printf("Client %s has connected%n", client);	
+		System.out.printf("Client %s has connected (last seen: %d)%n", client, client.getLastSeen());	
 	}
 
 	@Override
 	public void onClientDisconnected(Client client) {
-		System.out.printf("Client %s has disconnected%n", client);	
+		System.out.printf("Client %s has disconnected (last seen: %d)%n", client, client.getLastSeen());	
 	}
 }
