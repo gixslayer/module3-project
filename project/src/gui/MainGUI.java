@@ -76,10 +76,23 @@ public class MainGUI extends JFrame implements ActionListener, KeyListener, Mous
 		sendBar.add(typeField, gbc);
 		sendBar.add(sendButton);
 		
+		JLabel userLabel = new JLabel("Users");
+		
 		JPanel sideBar = new JPanel();
-		sideBar.setLayout(new BorderLayout());
-		sideBar.add(peopleScrollPane, BorderLayout.CENTER);
+		sideBar.setLayout(new GridBagLayout());
+		gbc = new GridBagConstraints();
+		gbc.gridx = 0;
+		gbc.gridy = 1;
+		gbc.anchor = GridBagConstraints.NORTH;
+		gbc.weighty = 1;
+		gbc.fill = GridBagConstraints.BOTH;
+		gbc.ipadx = 30;
+		
+		sideBar.add(peopleScrollPane, gbc);
 		peopleArea.setBackground(BGCOLOR);
+		
+		gbc = new GridBagConstraints();
+		sideBar.add(userLabel);
 		
 		JPanel mainChat = new JPanel();
 		mainChat.setLayout(new BorderLayout());
@@ -118,6 +131,7 @@ public class MainGUI extends JFrame implements ActionListener, KeyListener, Mous
 			tabPane.setSelectedIndex(tabPane.indexOfTab(name));
 			return;
 		}
+		if(name.equals(clientName)) return;
 		JPanel privChat = new JPanel();
 		privChat.setLayout(new BorderLayout());
 		privChat.add(new PrivateChat(clientName), BorderLayout.CENTER);
