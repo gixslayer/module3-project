@@ -1,6 +1,7 @@
 package gui;
 
 import javax.swing.*;
+
 import java.awt.*;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
@@ -8,11 +9,18 @@ import java.awt.event.KeyEvent;
 import java.awt.event.KeyListener;
 import java.awt.event.MouseEvent;
 import java.awt.event.MouseListener;
+import java.util.HashMap;
 
 public class MainGUI extends JFrame implements ActionListener, KeyListener, MouseListener {
 	private Container c;
 	
 	private static final Color BGCOLOR = Color.GRAY;
+	private static final Color JOIN_COLOR = Color.BLUE;
+	private static final Color LEAVE_COLOR = Color.RED;
+	
+	private static final String[] colors = {"Red", "Blue", "Green", "Yellow", "Purple", "Black", "Orange", "Pink", "Seagreen", "Chocolate"};
+	
+	private HashMap<String, String> colorMap;
 	
 	private JTabbedPane tabPane;
 	
@@ -39,6 +47,8 @@ public class MainGUI extends JFrame implements ActionListener, KeyListener, Mous
 	}
 	
 	public void init() {
+		colorMap = new HashMap<String, String>();
+		
 		loadIcons();
 		
 		c = getContentPane();
@@ -114,12 +124,26 @@ public class MainGUI extends JFrame implements ActionListener, KeyListener, Mous
 	
 	public void removeUser(String name) {
 		peopleList.removeElement(name);
+		addToScreen("[LEAVE]: User " + name + " has left the chat room.");
 	}
 	
 	public void addUser(String name) {
 		peopleList.addElement(name);
 		peopleArea.addMouseListener(this);
 		peopleArea.ensureIndexIsVisible(peopleList.getSize()-1);
+		setUserColor(name, colors[(int)(Math.random()*10)]);
+		addToScreen("[JOIN]: User <font color=" + getUserColor(name) + ">" + name + "</font> entered the chat room.");
+	}
+	
+	public String getUserColor(String name) {
+		if(colorMap.containsKey(name)) {
+			return colorMap.get(name);
+		}
+		return "Black";
+	}
+	
+	public void setUserColor(String name, String color) {
+		colorMap.put(name, color);
 	}
 	
 	public void loadIcons() {
@@ -242,13 +266,24 @@ public class MainGUI extends JFrame implements ActionListener, KeyListener, Mous
 
 	     public Component getListCellRendererComponent(JList<?> list, Object value, int index, boolean isSelected, boolean cellHasFocus) {
 	         setText(value.toString());
-	         Color background;
+	         Color background = Color.WHITE;
 	         Color foreground = Color.BLACK;
 	         
-	         if(index % 2 == 0) {
+	         /*if(index % 2 == 0) {
 	        	 background = Color.LIGHT_GRAY;
 	         }
 	         else background = Color.WHITE;
+	         */
+	         
+	         if(value.toString().startsWith("[JOIN]:")) 
+	        	 setText("<html><font color=blue>[JOIN]:</font>" + value.toString().split(":")[1] + "</html>");
+	         
+	         else if(value.toString().startsWith("[LEAVE]:")) 
+	        	 setText("<html><font color=red>" + value.toString().split(":")[0] + "</font>:" + value.toString().split(":")[1] + "</html>");
+	         else {
+	        	 setText("<html><font color="+ getUserColor(value.toString().split(":")[0]) +">" + value.toString().split(":")[0] + "</font>:" + value.toString().split(":")[1] + "</html>");
+	         }
+	        	 
 	         setBackground(background);
 	         setForeground(foreground);
 
@@ -259,17 +294,29 @@ public class MainGUI extends JFrame implements ActionListener, KeyListener, Mous
 	public class UserMenu extends JPopupMenu implements ActionListener {
 	    JMenuItem privChatItem;
 	    JMenuItem pokeItem;
+	    JMenu chooseColor;
+	    JMenuItem[] color = new JMenuItem[10];
 	    String name;
 	    
 	    public UserMenu(String name){
 	        this.name = name;
-	    	privChatItem = new JMenuItem("Private Chat");
-	        privChatItem.addActionListener(this);
-	        add(privChatItem);
-	        
-	        pokeItem = new JMenuItem("Poke");
-	        pokeItem.addActionListener(this);
-	        add(pokeItem);
+	        if(name.equals(clientName)) {
+	        	chooseColor = new JMenu("Choose Color");
+	        	for(int i=0; i<color.length; i++) {
+	        		color[i] = new JMenuItem(colors[i]);
+	        		color[i].addActionListener(this);
+	        	}
+	        	add(chooseColor);
+	        }
+	        else {
+	        	privChatItem = new JMenuItem("Private Chat");
+		        privChatItem.addActionListener(this);
+		        add(privChatItem);
+		        
+		        pokeItem = new JMenuItem("Poke");
+		        pokeItem.addActionListener(this);
+		        add(pokeItem);
+	        }
 	    }
 	    
 		@Override
@@ -279,6 +326,11 @@ public class MainGUI extends JFrame implements ActionListener, KeyListener, Mous
 			}
 			if(arg0.getSource().equals(pokeItem)) {
 				removeUser(name);
+			}
+			for(int i=0; i<color.length; i++) {
+				if(arg0.getSource().equals(color[i])) {
+					setUserColor(name, colors[i]);
+				}
 			}
 		}
 	}
