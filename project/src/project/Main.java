@@ -6,6 +6,7 @@ import java.net.InetAddress;
 import java.net.MulticastSocket;
 
 public class Main {
+	static final int DEVICE = 4;
 	static final int PORT = 6969;
 	static final String GROUP = "228.9.10.11";
 	
