@@ -2,6 +2,7 @@ package application;
 
 import java.io.IOException;
 
+import client.CacheCallbacks;
 import client.Client;
 import client.ClientCache;
 import protocol.AnnouncePacket;
@@ -10,7 +11,7 @@ import network.AnnounceThread;
 import network.MulticastCallbacks;
 import network.MulticastInterface;
 
-public class Application implements MulticastCallbacks {
+public class Application implements MulticastCallbacks, CacheCallbacks {
 	public static final String GROUP = "228.0.0.0";
 	public static final int PORT = 6969;
 	public static final int ANNOUNCE_INTERVAL = 1000;
@@ -32,7 +33,7 @@ public class Application implements MulticastCallbacks {
 	public Application(String username, int address) {
 		this.mci = new MulticastInterface(GROUP, PORT, this);
 		this.localClient = new Client(username, address, 0);
-		this.clientCache = new ClientCache(localClient);
+		this.clientCache = new ClientCache(localClient, this);
 		this.announceThread = new AnnounceThread(mci, clientCache, ANNOUNCE_INTERVAL);
 	}
 	
@@ -62,9 +63,11 @@ public class Application implements MulticastCallbacks {
 	}
 	
 	private void handleAnnouncePacket(AnnouncePacket packet) {
-		/*if(packet.getSourceClient().equals(localClient)) {
+		if(packet.getSourceClient().equals(localClient)) {
 			return;
-		}*/
+		}
+		
+		clientCache.update(packet.getSourceClient());
 		
 		System.out.println("[Announcement packet]");
 		System.out.printf("Source: %s%n", packet.getSourceClient());
@@ -72,7 +75,22 @@ public class Application implements MulticastCallbacks {
 		
 		for(Client client : packet.getKnownClients()) {
 			System.out.println(client);
+			clientCache.update(client);
 		}
 	}
 
+	@Override
+	public void onClientTimedOut(Client client) {
+		System.out.printf("Client %s has timed out%n", client);
+	}
+
+	@Override
+	public void onClientConnected(Client client) {
+		System.out.printf("Client %s has connected%n", client);	
+	}
+
+	@Override
+	public void onClientDisconnected(Client client) {
+		System.out.printf("Client %s has disconnected%n", client);	
+	}
 }

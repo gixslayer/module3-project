@@ -26,6 +26,7 @@ public final class AnnounceThread extends Thread {
 			// Construct the announcement packet.
 			AnnouncePacket packet = new AnnouncePacket();
 			
+			localClient.setLastSeen(System.currentTimeMillis());
 			packet.setSourceClient(localClient);
 			
 			for(Client client : clientCache.getClients()) {
