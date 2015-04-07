@@ -36,7 +36,10 @@ public final class AnnounceThread extends Thread {
 			// Broadcast the announcement to all clients within range.
 			mci.send(packet);
 			
-			// Sleep the thread for the interval duration before exiting 
+			// Check if any clients timed out.
+			clientCache.checkForTimeouts();
+			
+			// Sleep the thread for the interval duration before exiting the loop iteration.
 			sleep(interval);
 		}
 	}

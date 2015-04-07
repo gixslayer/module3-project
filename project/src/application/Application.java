@@ -38,9 +38,10 @@ public class Application implements MulticastCallbacks, CacheCallbacks {
 	}
 	
 	public void start() {
-		clientCache.update(new Client("Jantje", 2, 0));
-		clientCache.update(new Client("Paashaas", 3, 0));
-		clientCache.update(new Client("Kabouter", 4, 0));
+		long now = System.currentTimeMillis();
+		clientCache.update(new Client("Jantje", 2, now));
+		clientCache.update(new Client("Paashaas", 3, now));
+		clientCache.update(new Client("Kabouter", 4, now));
 		
 		mci.start();
 		announceThread.start();
