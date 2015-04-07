@@ -1,6 +1,7 @@
 package gui;
 
 import javax.swing.*;
+
 import java.awt.*;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
@@ -34,6 +35,7 @@ public class PrivateChat extends JPanel implements ActionListener, KeyListener {
 		typeField.addKeyListener(this);
 		
 		receiveArea = new JList<String>(list);
+		receiveArea.setCellRenderer(new MyCellRenderer());
 		scrollPane = new JScrollPane(receiveArea);
 	
 		sendButton = new JButton("Send");
@@ -92,4 +94,25 @@ public class PrivateChat extends JPanel implements ActionListener, KeyListener {
 	@Override
 	public void keyTyped(KeyEvent arg0) {
 	}
+	
+	public class MyCellRenderer extends JLabel implements ListCellRenderer<Object> {
+	     public MyCellRenderer() {
+	         setOpaque(true);
+	     }
+
+	     public Component getListCellRendererComponent(JList<?> list, Object value, int index, boolean isSelected, boolean cellHasFocus) {
+	         setText(value.toString());
+	         Color background;
+	         Color foreground = Color.BLACK;
+	         
+	         if(index % 2 == 0) {
+	        	 background = Color.LIGHT_GRAY;
+	         }
+	         else background = Color.WHITE;
+	         setBackground(background);
+	         setForeground(foreground);
+
+	         return this;
+	     }
+	 }
 }
