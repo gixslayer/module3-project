@@ -1,0 +1,101 @@
+package project;
+
+import java.io.IOException;
+import java.lang.reflect.Array;
+import java.net.InetAddress;
+import java.util.Arrays;
+import java.util.BitSet;
+
+public class Packet {
+	private int source, destination, type, length, seq, ack, windowSize, checksum;
+	private boolean synFlag, ackFlag, finFlag;
+	private byte[] packet, data;
+	
+	public Packet(int source, int destination, int type, int seq, int ack, boolean synFlag, boolean ackFlag, boolean finFlag, int windowSize, byte[] data) {
+		this.source = source;
+		this.destination = destination;
+		this.type = type;
+		this.seq = seq;
+		this.ack = ack;
+		this.synFlag = synFlag;
+		this.ackFlag = ackFlag;
+		this.finFlag = finFlag;
+		this.windowSize = windowSize;
+		this.checksum = 0;
+		this.packet = new byte[0];
+		this.data = data;
+		fillPacket();
+	}
+	
+	public Packet(byte[] packet) {
+		this.packet = packet;
+		this.data = Arrays.copyOfRange(packet, 11, packet.length);
+		fillVariables();
+	}
+	
+	private void fillPacket() {
+		this.length = data.length;
+		int sourceDest = (source<<4)+destination;
+		int temp = data.length;
+		int typeLength = (type<<4)+(temp>>8);
+		int length2 = temp - ((temp>>8)<<8);
+		int seq1 = seq>>8;
+		int seq2 = seq-((seq>>8)<<8);
+		int ack1 = ack>>8;
+		int ack2 = ack-((ack>>8)<<8);
+		int flags = (synFlag? 1:0)*4 +(ackFlag? 1:0)*2+(finFlag? 1:0);
+		int windowSize1 = windowSize>>8;
+		int windowSize2 = windowSize-((windowSize>>8)<<8);
+		temp = calculateChecksum();
+		int checkSum1 = temp>>8;
+		int checkSum2 = temp-((temp>>8)<<8);
+		
+		byte[] header = new byte[]{(byte)sourceDest, (byte)typeLength, (byte)length2, (byte)seq1, (byte)seq2, (byte)ack1, (byte)ack2, (byte)flags, (byte)windowSize1, (byte)windowSize2, (byte)checkSum1, (byte)checkSum2};
+		packet = new byte[header.length+data.length];
+		System.arraycopy(header, 0, packet, 0, header.length);
+		System.arraycopy(data, 0, packet, header.length, data.length);
+	}
+	
+	public void printData() {
+		System.out.println("Source: " + source);
+		System.out.println("Destination: " + destination);
+		System.out.println("Type: " + type);
+		System.out.println("Length: " + length);
+		System.out.println("Seq: " + seq);
+		System.out.println("Ack: " + ack);
+		System.out.println("Flags: " + synFlag + ackFlag + finFlag);
+		System.out.println("WindowSize: " + windowSize);
+		System.out.println("Checksum: " + checksum);
+		System.out.println("pakketlengte: " + packet.length);
+	}
+	
+	public byte[] getBytes() {
+		return packet;
+	}
+	
+	private int calculateChecksum() {
+		return 0;
+	}
+	
+	public static void main(String[] args){
+		Packet p = new Packet(new byte[11]);
+		p.fillPacket();
+	}
+	
+	private void fillVariables() {
+		source = packet[0]>>4;
+		destination = packet[0] - ((packet[0]>>4)<<4);
+		System.out.println("DESTINATION: " + destination);
+		type = packet[1]>>4;
+		length = ((int)(packet[1] - ((packet[1]>>4)<<4))<<8) + packet[2];
+		seq = (((int)packet[3])<<8) + packet[4]; 
+		ack = (((int)packet[5])<<8) + packet[6]; 
+		synFlag = packet[7]>>2 == 1;
+		ackFlag = (packet[7]-(packet[7]>>2<<2)>>1) == 1;
+		finFlag = (packet[7]-packet[7]>>1<<1) == 1;
+		windowSize = (((int)packet[8])<<8) + packet[9];
+		checksum = (((int)packet[10])<<8) + packet[11];
+		
+		data = Arrays.copyOfRange(packet, 11, packet.length);
+	}
+}
