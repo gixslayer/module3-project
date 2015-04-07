@@ -5,6 +5,8 @@ public final class PacketFactory {
 		switch(type) {
 		case Packet.TYPE_ANNOUNCE:
 			return new AnnouncePacket();
+		case Packet.TYPE_MULTICAST_CHAT:
+			return new MulticastChatPacket();
 		}
 		
 		throw new IllegalArgumentException("Invalid type");

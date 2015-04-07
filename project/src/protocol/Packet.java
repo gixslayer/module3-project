@@ -2,6 +2,7 @@ package protocol;
 
 public abstract class Packet {
 	public static final int TYPE_ANNOUNCE = 0;
+	public static final int TYPE_MULTICAST_CHAT = 1;
 	
 	private final int type;
 	

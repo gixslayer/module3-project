@@ -84,7 +84,7 @@ public class MulticastInterface {
 					break;
 				}
 				
-				callbacks.onPacketReceived(packet);
+				callbacks.onMulticastPacketReceived(packet);
 			}
 		}
 	}

@@ -6,6 +6,7 @@ import client.CacheCallbacks;
 import client.Client;
 import client.ClientCache;
 import protocol.AnnouncePacket;
+import protocol.MulticastChatPacket;
 import protocol.Packet;
 import network.AnnounceThread;
 import network.MulticastCallbacks;
@@ -46,6 +47,7 @@ public class Application implements MulticastCallbacks, CacheCallbacks {
 		mci.start();
 		announceThread.start();
 		
+		// TODO: Start gui here on this thread.
 		System.out.println("Press any key to exit");
 		try {
 			System.in.read();
@@ -57,9 +59,11 @@ public class Application implements MulticastCallbacks, CacheCallbacks {
 	}
 
 	@Override
-	public void onPacketReceived(Packet packet) {
+	public void onMulticastPacketReceived(Packet packet) {
 		if(packet.getType() == Packet.TYPE_ANNOUNCE) {
 			handleAnnouncePacket((AnnouncePacket)packet);
+		} else if(packet.getType() == Packet.TYPE_MULTICAST_CHAT) {
+			handleMulticastChatPacket((MulticastChatPacket)packet);
 		}
 	}
 	
@@ -78,6 +82,10 @@ public class Application implements MulticastCallbacks, CacheCallbacks {
 			//System.out.println(client);
 			clientCache.update(client);
 		}
+	}
+	
+	private void handleMulticastChatPacket(MulticastChatPacket packet) {
+		System.out.printf("Received a multicast chat message from %s: %s%n", packet.getName(), packet.getMessage());
 	}
 
 	@Override
