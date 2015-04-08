@@ -115,9 +115,9 @@ public class Application implements MulticastCallbacks, CacheCallbacks, GUICallb
 	}
 	
 	private void handlePrivateChatPacket(PrivateChatPacket packet) {
-		if(!packet.getName().equals(localClient.getName())) {
+		/*if(!packet.getName().equals(localClient.getName())) {
 			return;
-		}
+		}*/
 		
 		callbacks.onPrivateChatMessageReceived(packet.getName(), packet.getMessage());
 	}
@@ -150,6 +150,7 @@ public class Application implements MulticastCallbacks, CacheCallbacks, GUICallb
 	//-------------------------------------------
 	@Override
 	public void onSendPrivateMessage(String user, String message) {
+		// TODO: Don't multicast this!
 		PrivateChatPacket packet = new PrivateChatPacket(user, message);
 		sendToAll(packet);
 	}

@@ -1,7 +1,6 @@
 package client;
 
 import java.util.ArrayList;
-import java.util.Collection;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -25,23 +24,10 @@ public final class ClientCache {
 	}
 	
 	public void updateDirect(Client client) {
-		boolean clientDisconnected = false;
 		boolean clientConnected = false;
-		Map<Client, Client> routeLostClients = new HashMap<Client, Client>();
 		
 		synchronized(syncRoot) {
-			/*if(client.getLastSeen() == LAST_SEEN_DISCONNECTED) {
-				if(cache.containsKey(client.getName())) {
-					cache.remove(client.getName());
-					clientDisconnected = true;
-					
-					for(Client c : cache.values()) {
-						if(c.isIndirect() && c.getRoute().equals(client.getName())) {
-							routeLostClients.put(c, client);
-						}
-					}
-				}
-			} else*/ if(!cache.containsKey(client.getName())) {
+			if(!cache.containsKey(client.getName())) {
 				client.setDirect();
 				cache.put(client.getName(), client);
 				clientConnected = true;
@@ -57,16 +43,10 @@ public final class ClientCache {
 			}
 		}
 		
-		// Process callbacks outside critical section to avoid holding the lock longer than needed.
+		// Process callback outside critical section to avoid holding the lock longer than needed.
 		if(clientConnected) {
 			callbacks.onClientConnected(client);
-		} /*else if(clientDisconnected) {
-			callbacks.onClientDisconnected(client);
-			
-			for(Client c : routeLostClients.keySet()) {
-				callbacks.onClientLostRoute(c, routeLostClients.get(c));
-			}
-		}*/
+		}
 	}
 	
 	public void updateIndirect(Client source, Client client) {
@@ -100,6 +80,7 @@ public final class ClientCache {
 	}
 	
 	public void checkForTimeouts() {
+		// TODO: Route lost is a recursive problem!
 		List<Client> timedOutClients = new ArrayList<Client>();
 		Map<Client, Client> lostRouteClients = new HashMap<Client, Client>();
 		
@@ -139,6 +120,7 @@ public final class ClientCache {
 	
 	public void clientDisconnected(String name) {
 		// TODO: Route lost is a recursive problem!
+		// TODO: Disconnect clients might get added as indirect through case, prevent this!
 		Client disconnectedClient;
 		Map<Client, Client> lostRouteClients;
 		
