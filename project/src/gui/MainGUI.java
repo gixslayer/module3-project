@@ -304,7 +304,8 @@ public class MainGUI extends JFrame implements ActionListener, KeyListener, Mous
 		// I fixed the editor issue by forcing Java source files to use UTF-8 on Windows (Preferences -> General -> Content Types
 		// -> expand Text -> Select Java source file -> Set Default encoding to UTF-8).
 		// Doing this also seems to run the program with UTF-8 encoding (for whatever reason), but if it doesn't Windows clients
-		// will have to run the program with the '-Dfile.encoding=UTF-8' Java VM argument to force the correct encoding.
+		// will have to run the program with the '-Dfile.encoding=UTF-8' Java VM argument to possibly set the correct encoding.
+		// This is a giant hack though as the Java VM doesn't have to use the specified encoding. Windows clients might just be SOL.
 		str = str.replace(":)", "☺");
 		str = str.replace(":(", "☹");
 		str = str.replace("*check*", "✔");
