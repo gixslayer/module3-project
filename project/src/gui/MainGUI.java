@@ -61,6 +61,7 @@ public class MainGUI extends JFrame implements ActionListener, KeyListener, Mous
 	private Icon closeIcon;
 	
 	private Application app;
+	private Alice alice;
 	
 	/**
 	 * Constuctor of the <code>class</code>.
@@ -145,7 +146,7 @@ public class MainGUI extends JFrame implements ActionListener, KeyListener, Mous
 		
 		addUser(clientName);
 		addUser("Alice");
-		addUser("Bob");
+		alice = new Alice(this, "Alice");
 		
 		menu = new JMenuBar();
 		
@@ -216,7 +217,7 @@ public class MainGUI extends JFrame implements ActionListener, KeyListener, Mous
 		if(name.equals(clientName)) return;
 		JPanel privChat = new JPanel();
 		privChat.setLayout(new BorderLayout());
-		PrivateChat pChat = new PrivateChat(clientName, name, this, app);
+		PrivateChat pChat = new PrivateChat(clientName, name, this, app, alice);
 		privChat.add(pChat, BorderLayout.CENTER);
 		
 		tabPane.addTab(name, privChat);
@@ -265,10 +266,14 @@ public class MainGUI extends JFrame implements ActionListener, KeyListener, Mous
 	 */
 	public void sendText() {
 		String txt = typeField.getText();
-		if(txt.length() == 0 || txt.matches("\\s*") || txt.matches(".*(<script).*")) return;
-		app.onSendMessage(txt);
-		receiveText(txt, clientName, false);
+		if(txt.toLowerCase().length() == 0 || txt.toLowerCase().matches("\\s*") || txt.toLowerCase().matches(".*(<script).*")) return;
 		typeField.setText("");
+		receiveText(txt, clientName, false);
+		if(txt.contains("Alice") || txt.contains("alice")) {
+			receiveText(alice.getResponse(txt), "Alice", false);
+			return;
+		}
+		app.onSendMessage(txt);
 	}
 	
 	/**
@@ -569,7 +574,7 @@ public class MainGUI extends JFrame implements ActionListener, KeyListener, Mous
 
 	@Override
 	public void onChatMessageReceived(String user, String message) {
-		if(!user.equals(clientName)) receiveText(message, user, false);
+		receiveText(message, user, false);
 	}
 
 	@Override

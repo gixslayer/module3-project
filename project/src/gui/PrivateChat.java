@@ -25,12 +25,14 @@ public class PrivateChat extends JPanel implements ActionListener, KeyListener {
 	private String otherName;
 	private MainGUI main;
 	private Application app;
+	private Alice alice;
 	
-	public PrivateChat(String name, String otherName, MainGUI main, Application app) {
+	public PrivateChat(String name, String otherName, MainGUI main, Application app, Alice alice) {
 		clientName = name;
 		this.otherName = otherName;
 		this.main = main;
 		this.app = app;
+		this.alice = alice;
 		init();
 	}
 	
@@ -76,9 +78,13 @@ public class PrivateChat extends JPanel implements ActionListener, KeyListener {
 	public void sendText() {
 		String txt = typeField.getText();
 		if(txt.length() == 0 || txt.matches("\\s*")) return;
-		app.onSendPrivateMessage(otherName, txt);
 		addToScreen(clientName + ": " + txt);
 		typeField.setText("");
+		if(otherName.equals("Alice")) {
+			receiveText(alice.getResponse(txt), "Alice");
+			return;
+		}
+		app.onSendPrivateMessage(otherName, txt);
 	}
 	
 	public void receiveText(String str, String name) {
