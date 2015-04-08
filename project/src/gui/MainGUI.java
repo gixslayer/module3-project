@@ -182,7 +182,7 @@ public class MainGUI extends JFrame implements ActionListener, KeyListener, Mous
 	 * Opens a new Private Chat to the specified User.
 	 * @param name the name of the User to chat with.
 	 */
-	public void addPrivateChat(String name) {
+	public void addPrivateChat(String name, boolean self) {
 		if(tabPane.indexOfTab(name) != -1) {
 			tabPane.setSelectedIndex(tabPane.indexOfTab(name));
 			return;
@@ -219,7 +219,7 @@ public class MainGUI extends JFrame implements ActionListener, KeyListener, Mous
 		tabPane.setTabComponentAt(i, tabPanel);
 		tabClose.addActionListener(new TabActionListener(name, this));
 		
-		tabPane.setSelectedIndex(i);
+		if(self) tabPane.setSelectedIndex(i);
 	}
 	
 	/**
@@ -254,6 +254,10 @@ public class MainGUI extends JFrame implements ActionListener, KeyListener, Mous
 	public void receiveText(String str, String name, boolean priv) {
 		if(priv) {
 			int index = tabPane.indexOfTab(name);
+			if(index == -1) {
+				addPrivateChat(name, false);
+				index = tabPane.indexOfTab(name);
+			}
 			PrivateChat pChat = chatMap.get(index);
 			pChat.receiveText(str, name);
 		}

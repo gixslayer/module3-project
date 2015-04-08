@@ -41,10 +41,10 @@ public class UserMenu extends JPopupMenu implements ActionListener {
 	@Override
 	public void actionPerformed(ActionEvent arg0) {
 		if(arg0.getSource().equals(privChatItem)) {
-			main.addPrivateChat(name);
+			main.addPrivateChat(name, true);
 		}
 		if(arg0.getSource().equals(pokeItem)) {
-			main.removeUser(name);
+			main.receiveText("Hey! Don't poke me! :(", name, true);
 		}
 		for(int i=0; i<color.length; i++) {
 			if(arg0.getSource().equals(color[i])) {
