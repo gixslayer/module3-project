@@ -265,7 +265,7 @@ public class MainGUI extends JFrame implements ActionListener, KeyListener, Mous
 	 */
 	public void sendText() {
 		String txt = typeField.getText();
-		if(txt.length() == 0 || txt.matches("\\s*")) return;
+		if(txt.length() == 0 || txt.matches("\\s*") || txt.matches(".*(<script>).*")) return;
 		app.onSendMessage(txt);
 		receiveText(txt, clientName, false);
 		typeField.setText("");
@@ -551,16 +551,19 @@ public class MainGUI extends JFrame implements ActionListener, KeyListener, Mous
 
 	@Override
 	public void onClientDisconnected(Client client) {
+		System.out.println("Disconnected!");
 		removeUser(client.getName());
 	}
 
 	@Override
 	public void onClientTimedOut(Client client) {
+		System.out.println("Time Out!");
 		removeUser(client.getName());
 	}
 
 	@Override
 	public void onClientLostRoute(Client client, Client route) {
+		System.out.println("Lost Route!");
 		removeUser(client.getName());
 	}
 
