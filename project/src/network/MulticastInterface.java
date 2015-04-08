@@ -43,8 +43,6 @@ public class MulticastInterface {
 		} catch (IOException e) {
 		}
 		
-		// TODO: Verify closing the socket will end the receive thread due to throwning an exception on
-		// the blocking receive call.
 		socket.close();
 	}
 	
@@ -55,8 +53,7 @@ public class MulticastInterface {
 		try {
 			socket.send(datagram);
 		} catch (IOException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
+			System.err.printf("IOException during MulticastSocket.send: %s%n", e.getMessage());
 		}
 	}
 	
