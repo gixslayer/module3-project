@@ -36,8 +36,8 @@ public class MainGUI extends JFrame implements ActionListener, KeyListener, Mous
 	private HashMap<String, String> colorMap = new HashMap<String, String>();
 	private ColoringColors coloring = ColoringColors.NORMAL;
 	
-	public volatile boolean rainbowMode = false;
-	public volatile float hue = 0;
+	private volatile boolean rainbowMode = false;
+	private boolean altRBMode = false;
 	
 	private HashMap<Integer, PrivateChat> chatMap = new HashMap<Integer, PrivateChat>();
 	
@@ -68,6 +68,7 @@ public class MainGUI extends JFrame implements ActionListener, KeyListener, Mous
 	private Alice alice;
 	
 	private Thread rbThread;
+	private AnimationThread animation;
 	
 	/**
 	 * Constuctor of the <code>class</code>.
@@ -86,6 +87,10 @@ public class MainGUI extends JFrame implements ActionListener, KeyListener, Mous
 	 */
 	public void init() {
 		loadResources();
+		
+		animation = new AnimationThread();
+		animation.setCont(true);
+		animation.start();
 		
 		addWindowListener(this);
 		setDefaultCloseOperation(WindowConstants.DO_NOTHING_ON_CLOSE);
@@ -106,7 +111,7 @@ public class MainGUI extends JFrame implements ActionListener, KeyListener, Mous
 		peopleScrollPane = new JScrollPane(peopleArea);
 		
 		receiveArea = new JList<String>(list);
-		receiveArea.setCellRenderer(new CustomCellRenderer(this));
+		receiveArea.setCellRenderer(new CustomCellRenderer(this, animation));
 		scrollPane = new JScrollPane(receiveArea);
 	
 		sendButton = new JButton("Send");
@@ -357,6 +362,22 @@ public class MainGUI extends JFrame implements ActionListener, KeyListener, Mous
 //========================== GETTERS AND SETTERS ==============================
 //=============================================================================
 	
+	public void setAltRainBowMode(boolean enabled) {
+		altRBMode = enabled;
+	}
+	
+	public boolean getAltRBMode() {
+		return altRBMode;
+	}
+	
+	public void setRainBowMode(boolean enabled) {
+		rainbowMode = enabled;
+	}
+	
+	public boolean getRainBowMode() {
+		return rainbowMode;
+	}
+	
 	/**
 	 * Gets the specified User's color.
 	 * @param name the name of the User.
@@ -569,6 +590,7 @@ public class MainGUI extends JFrame implements ActionListener, KeyListener, Mous
 		if (JOptionPane.showConfirmDialog(this, "Are you sure to close this window?", "Really Closing?", 
 				JOptionPane.YES_NO_OPTION, JOptionPane.QUESTION_MESSAGE) == JOptionPane.YES_OPTION){
 			app.stop();
+			animation.setCont(false);
 			rainbowMode = false;
 	        this.dispose();
 	    }
@@ -632,13 +654,10 @@ public class MainGUI extends JFrame implements ActionListener, KeyListener, Mous
 	}
 	
 	public class RainBowMode extends Thread {
-		
 		@Override
 		public void run() {
 			while(rainbowMode) {
-				setBGColor(Color.getHSBColor(hue, 1, 1));
-				hue+=0.001;
-				if(hue == 1) hue = 0;
+				setBGColor(Color.getHSBColor(animation.getHue(), 1, 1));
 				repaintAll();
 				try {
 					Thread.sleep(10);
