@@ -48,7 +48,7 @@ public class StartGUI extends JFrame implements ActionListener, KeyListener {
 	public void keyPressed(KeyEvent arg0) {
 		if(arg0.getSource().equals(name)) {
 			if(arg0.getKeyCode() == KeyEvent.VK_ENTER) {
-				if(name.getText().matches(".*<.*>.*") || name.getText().toLowerCase().matches(".*<script.*") || name.getText().toLowerCase().matches(".*:.*")) {
+				if(name.getText().matches(".*<.*") || name.getText().toLowerCase().matches(".*<script.*") || name.getText().toLowerCase().matches(".*:.*")) {
 					text.setText("Illegal character(s)! | Please enter your username.");
 					pack();
 					return;

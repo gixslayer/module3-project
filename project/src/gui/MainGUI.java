@@ -650,6 +650,7 @@ public class MainGUI extends JFrame implements ActionListener, KeyListener, Mous
 
 	@Override
 	public void onPrivateChatMessageReceived(String user, String message) {
+		System.out.println("RECV: " + user + " " + message);
 		receiveText(message, user, true);
 	}
 	
