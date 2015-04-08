@@ -2,8 +2,6 @@ package application;
 
 import java.io.IOException;
 import java.net.InetAddress;
-import java.text.SimpleDateFormat;
-import java.util.Date;
 
 import client.CacheCallbacks;
 import client.Client;
@@ -44,9 +42,11 @@ public class Application implements MulticastCallbacks, CacheCallbacks {
 	public void start() {
 		long now = System.currentTimeMillis();
 		InetAddress address = localClient.getAddress();
-		clientCache.updateDirect(new Client("Jantje69", address, now));
-		clientCache.updateDirect(new Client("Paashaas", address, now));
-		clientCache.updateDirect(new Client("Kabouter", address, now));
+		Client testClient = new Client("Kabouter", address, now);
+		clientCache.updateDirect(new Client("Jantje69", address, now + 1000));
+		clientCache.updateDirect(new Client("Paashaas", address, now + 2500));
+		clientCache.updateDirect(testClient);
+		clientCache.updateIndirect(testClient, new Client("indirect", address, now + 5000));
 		
 		mci.start();
 		announceThread.start();
@@ -63,7 +63,7 @@ public class Application implements MulticastCallbacks, CacheCallbacks {
 	}
 
 	@Override
-	public void onMulticastPacketReceived(Packet packet, InetAddress address) {
+	public void onMulticastPacketReceived(Packet packet) {
 		if(packet.getType() == Packet.TYPE_ANNOUNCE) {
 			handleAnnouncePacket((AnnouncePacket)packet);
 		} else if(packet.getType() == Packet.TYPE_MULTICAST_CHAT) {
@@ -77,6 +77,7 @@ public class Application implements MulticastCallbacks, CacheCallbacks {
 		}
 		
 		Client source = packet.getSourceClient();
+		source.setAddress(packet.getAddress());
 		clientCache.updateDirect(source);
 		
 		//System.out.println("[Announcement packet]");
@@ -109,5 +110,10 @@ public class Application implements MulticastCallbacks, CacheCallbacks {
 	public void onClientDisconnected(Client client) {
 		String lastSeen = DateUtils.timestampToDateString(client.getLastSeen(), "HH:mm:ss");
 		System.out.printf("Client %s has disconnected (last seen: %s)%n", client, lastSeen);	
+	}
+	
+	@Override
+	public void onClientLostRoute(Client client, Client route) {
+		System.out.printf("Client %s has disconnected as its route %s has disconnected%n", client, route);
 	}
 }

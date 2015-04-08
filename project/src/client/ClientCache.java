@@ -25,12 +25,19 @@ public final class ClientCache {
 	public void updateDirect(Client client) {
 		boolean clientDisconnected = false;
 		boolean clientConnected = false;
+		Map<Client, Client> routeLostClients = new HashMap<Client, Client>();
 		
 		synchronized(syncRoot) {
 			if(client.getLastSeen() == LAST_SEEN_DISCONNECTED) {
 				if(cache.containsKey(client.getName())) {
 					cache.remove(client.getName());
 					clientDisconnected = true;
+					
+					for(Client c : cache.values()) {
+						if(c.isIndirect() && c.getRoute().equals(client.getName())) {
+							routeLostClients.put(c, client);
+						}
+					}
 				}
 			} else if(!cache.containsKey(client.getName())) {
 				client.setDirect();
@@ -53,6 +60,10 @@ public final class ClientCache {
 			callbacks.onClientConnected(client);
 		} else if(clientDisconnected) {
 			callbacks.onClientDisconnected(client);
+			
+			for(Client c : routeLostClients.keySet()) {
+				callbacks.onClientLostRoute(c, routeLostClients.get(c));
+			}
 		}
 	}
 	
@@ -88,6 +99,7 @@ public final class ClientCache {
 	
 	public void checkForTimeouts() {
 		List<Client> timedOutClients = new ArrayList<Client>();
+		Map<Client, Client> lostRouteClients = new HashMap<Client, Client>();
 		long now = System.currentTimeMillis();
 		
 		synchronized(syncRoot) {
@@ -99,12 +111,26 @@ public final class ClientCache {
 		
 			for(Client client : timedOutClients) {
 				cache.remove(client.getName());
+				
+				for(Client c : cache.values()) {
+					if(c.isIndirect() && c.getRoute().equals(client.getName())) {
+						lostRouteClients.put(c, client);
+					}
+				}
+			}
+			
+			for(Client client : lostRouteClients.keySet()) {
+				cache.remove(client.getName());
 			}
 		}
 		
 		// Process callbacks outside critical section to avoid holding the lock longer than needed.
 		for(Client client : timedOutClients) {
 			callbacks.onClientTimedOut(client);
+		}
+		
+		for(Client client : lostRouteClients.keySet()) {
+			callbacks.onClientLostRoute(client, lostRouteClients.get(client));
 		}
 	}
 	
@@ -113,6 +139,7 @@ public final class ClientCache {
 	}
 	
 	public Collection<Client> getClients() {
+		// TODO: This is problematic with multi-threading, return a copy?
 		return cache.values();
 	}
 }

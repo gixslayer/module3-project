@@ -1,10 +1,13 @@
 package protocol;
 
+import java.net.InetAddress;
+
 public abstract class Packet {
 	public static final int TYPE_ANNOUNCE = 0;
 	public static final int TYPE_MULTICAST_CHAT = 1;
 	
 	private final int type;
+	private InetAddress address;
 	
 	public Packet(int type) {
 		this.type = type;
@@ -21,13 +24,14 @@ public abstract class Packet {
 		return buffer;
 	}
 	
-	public static Packet deserialize(byte[] buffer) {
+	public static Packet deserialize(InetAddress address, byte[] buffer) {
 		int type = ByteUtils.getIntFromBytes(buffer, 0);
 		int contentLength = ByteUtils.getIntFromBytes(buffer, 4);
 		
 		Packet packet = PacketFactory.fromType(type);
 		
 		packet.deserializeContent(buffer, 8, contentLength);
+		packet.address = address;
 		
 		return packet;
 	}
@@ -37,5 +41,9 @@ public abstract class Packet {
 	
 	public int getType() {
 		return type;
+	}
+	
+	public InetAddress getAddress() {
+		return address;
 	}
 }

@@ -6,6 +6,7 @@ import java.net.UnknownHostException;
 import protocol.ByteUtils;
 
 public class Client {
+	
 	private String name;
 	private InetAddress address;
 	private long lastSeen;
