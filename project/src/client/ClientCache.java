@@ -103,8 +103,7 @@ public final class ClientCache {
 		}
 		
 		for(Client client : lostRouteClients) {
-			// TODO: Remove route parameter from callback as the client object now has access to it directly.
-			callbacks.onClientLostRoute(client, client.getRoute());
+			callbacks.onClientLostRoute(client);
 		}
 	}
 	
@@ -123,8 +122,7 @@ public final class ClientCache {
 		callbacks.onClientDisconnected(client);
 		
 		for(Client c : lostRouteClients) {
-			// TODO: Remove route parameter from callback as the client object now has access to it directly.
-			callbacks.onClientLostRoute(c, c.getRoute());
+			callbacks.onClientLostRoute(c);
 		}
 	}
 	

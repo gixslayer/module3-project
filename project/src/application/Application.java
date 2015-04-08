@@ -140,8 +140,8 @@ public class Application implements MulticastCallbacks, CacheCallbacks, GUICallb
 	}
 	
 	@Override
-	public void onClientLostRoute(Client client, Client route) {
-		callbacks.onClientLostRoute(client, route);
+	public void onClientLostRoute(Client client) {
+		callbacks.onClientLostRoute(client);
 	}
 	
 	//-------------------------------------------

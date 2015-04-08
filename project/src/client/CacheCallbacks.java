@@ -4,5 +4,5 @@ public interface CacheCallbacks {
 	void onClientTimedOut(Client client);
 	void onClientConnected(Client client);
 	void onClientDisconnected(Client client);
-	void onClientLostRoute(Client client, Client route);
+	void onClientLostRoute(Client client);
 }

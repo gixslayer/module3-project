@@ -298,6 +298,13 @@ public class MainGUI extends JFrame implements ActionListener, KeyListener, Mous
 	 * @param priv true if it is part of the private chat between the two Users | false if it is part of the global chat.
 	 */
 	public void receiveText(String str, String name, boolean priv) {
+		// Note: The Windows Eclipse client seems to struggle saving/displaying the file under the default settings.
+		// This is due to the encoding used (Cp1252 on Windows, UTF-8 on Linux).
+		// The GUI itself also doesn't display the characters correctly and they end up as garbage.
+		// I fixed the editor issue by forcing Java source files to use UTF-8 on Windows (Preferences -> General -> Content Types
+		// -> expand Text -> Select Java source file -> Set Default encoding to UTF-8).
+		// Doing this also seems to run the program with UTF-8 encoding (for whatever reason), but if it doesn't Windows clients
+		// will have to run the program with the '-Dfile.encoding=UTF-8' Java VM argument to force the correct encoding.
 		str = str.replace(":)", "☺");
 		str = str.replace(":(", "☹");
 		str = str.replace("*check*", "✔");
@@ -638,7 +645,7 @@ public class MainGUI extends JFrame implements ActionListener, KeyListener, Mous
 	}
 
 	@Override
-	public void onClientLostRoute(Client client, Client route) {
+	public void onClientLostRoute(Client client) {
 		System.out.println("Lost Route!");
 		removeUser(client.getName());
 	}
