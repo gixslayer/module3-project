@@ -239,10 +239,6 @@ public class MainGUI extends JFrame implements ActionListener, KeyListener, Mous
 	 * @param str the line of text to add.
 	 */
 	public void addToScreen(String str) {
-		str = str.replace(":)", "☺");
-		str = str.replace(":(", "☹");
-		str = str.replace("*check*", "✔");
-		str = str.replace("*yinyang*", "☯");
 		list.addElement(str);
 		receiveArea.ensureIndexIsVisible(list.getSize() -1);
 	}
@@ -253,7 +249,7 @@ public class MainGUI extends JFrame implements ActionListener, KeyListener, Mous
 	public void sendText() {
 		String txt = typeField.getText();
 		if(txt.length() == 0) return;
-		addToScreen(clientName + ": " + txt);
+		receiveText(txt, clientName, false);
 		typeField.setText("");
 	}
 	
@@ -264,6 +260,29 @@ public class MainGUI extends JFrame implements ActionListener, KeyListener, Mous
 	 * @param priv true if it is part of the private chat between the two Users | false if it is part of the global chat.
 	 */
 	public void receiveText(String str, String name, boolean priv) {
+		str = str.replace(":)", "☺");
+		str = str.replace(":(", "☹");
+		str = str.replace("*check*", "✔");
+		str = str.replace("*yinyang*", "☯");
+		str = str.replace("*down*", "↓");
+		str = str.replace("*left*", "←");
+		str = str.replace("*right*", "→");
+		str = str.replace("*up*", "↑");
+		str = str.replace("*phone*", "☎");
+		str = str.replace("*skull*", "☠");
+		str = str.replace("*radio*", "☢");
+		str = str.replace("*bio*", "☣");
+		str = str.replace("*peace*", "☮");
+		str = str.replace("*spade*", "♠");
+		str = str.replace("*heart*", "♥");
+		str = str.replace("*diamond*", "♦");
+		str = str.replace("*club*", "♣");
+		str = str.replace("*plane*", "✈");
+		str = str.replace("*x*", "✖");
+		str = str.replace("1/2", "½");
+		str = str.replace("1/4", "¼");
+		str = str.replace("*R*", "ℜ");
+		str = str.replace("*N*", "ℵ");
 		if(priv) {
 			int index = tabPane.indexOfTab(name);
 			if(index == -1) {

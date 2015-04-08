@@ -60,10 +60,6 @@ public class PrivateChat extends JPanel implements ActionListener, KeyListener {
 	}
 	
 	public void addToScreen(String str) {
-		str = str.replace(":)", "☺");
-		str = str.replace(":(", "☹");
-		str = str.replace("*check*", "✔");
-		str = str.replace("*yinyang*", "☯");
 		list.addElement(str);
 		receiveArea.ensureIndexIsVisible(list.getSize() -1);
 	}
