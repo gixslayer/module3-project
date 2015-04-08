@@ -185,6 +185,17 @@ public class Client {
 	// !!!TEMP HACK METHOD!!!
 	//-------------------------------------------
 	public static Client fromString(String str) {
-		return null;
+		try {
+			int splitIndex = str.lastIndexOf('@');
+			String name = str.substring(0, splitIndex);
+			String ipString = str.substring(splitIndex + 1);
+			InetAddress address = InetAddress.getByName(ipString);
+			Client client = new Client(name);
+			client.setAddress(address);
+			
+			return client;
+		} catch (UnknownHostException e) {
+			throw new RuntimeException(e);
+		}
 	}
 }
