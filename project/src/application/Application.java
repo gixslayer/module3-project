@@ -1,7 +1,5 @@
 package application;
 
-import java.io.IOException;
-
 import client.CacheCallbacks;
 import client.Client;
 import client.ClientCache;
@@ -22,16 +20,7 @@ public class Application implements MulticastCallbacks, CacheCallbacks, GUICallb
 	private final ClientCache clientCache;
 	private final AnnounceThread announceThread;
 	private final ApplicationCallbacks callbacks;
-	
-	public static void main(String[] args) throws IOException {
-		args = new String[] { "Henk" };
-		
-		String username = args[0];
-		ApplicationCallbacks callbacks = null;
-		
-		new Application(username, callbacks).start();
-	}
-	
+
 	public Application(String username, ApplicationCallbacks callbacks) {
 		this.mci = new MulticastInterface(GROUP, PORT, this);
 		this.localClient = new Client(username);
@@ -41,32 +30,17 @@ public class Application implements MulticastCallbacks, CacheCallbacks, GUICallb
 	}
 	
 	public void start() {
-		/*long now = System.currentTimeMillis();
-		InetAddress address = localClient.getAddress();
-		Client testClient = new Client("Kabouter", address, now);
-		clientCache.updateDirect(new Client("Jantje69", address, now + 1000));
-		clientCache.updateDirect(new Client("Paashaas", address, now + 2500));
-		clientCache.updateDirect(testClient);
-		clientCache.updateIndirect(testClient, new Client("indirect", address, now + 5000));*/
-		
 		mci.start();
 		announceThread.start();
-		
-		/*
-		// TODO: Start gui here on this thread.
-		System.out.println("Press any key to exit");
-		try {
-			System.in.read();
-		} catch (IOException e) { }
-		System.out.println("Closing");
-		
-		announceThread.close();
-		mci.close();*/
 	}
 
 	public void stop() {
 		announceThread.close();
 		mci.close();
+	}
+	
+	public void sendToAll(Packet packet) {
+		mci.send(packet);
 	}
 	
 	//-------------------------------------------
@@ -96,7 +70,7 @@ public class Application implements MulticastCallbacks, CacheCallbacks, GUICallb
 	}
 	
 	private void handleMulticastChatPacket(MulticastChatPacket packet) {
-		System.out.printf("Received a multicast chat message from %s: %s%n", packet.getName(), packet.getMessage());
+		callbacks.onChatMessageReceived(packet.getName(), packet.getMessage());
 	}
 
 	//-------------------------------------------
@@ -139,6 +113,7 @@ public class Application implements MulticastCallbacks, CacheCallbacks, GUICallb
 	
 	@Override
 	public void onSendMessage(String message) {
-		System.out.printf("Send message callback: %s%n", message);
+		MulticastChatPacket packet = new MulticastChatPacket(localClient.getName(), message);
+		sendToAll(packet);
 	}
 }
