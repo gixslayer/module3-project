@@ -27,10 +27,10 @@ public class AnnouncePacket extends Packet {
 		byte[][] serializedClients = new byte[knownClients.size() + 1][];
 		int totalLength = 0;
 		
-		serializedClients[0] = sourceClient.serialize();
+		serializedClients[0] = sourceClient.serialize(Client.SERIALIZE_DEFAULT);
 		totalLength += serializedClients[0].length;
 		for(int i = 0; i < serializedClients.length - 1; i++) {
-			serializedClients[i + 1] = knownClients.get(i).serialize();
+			serializedClients[i + 1] = knownClients.get(i).serialize(Client.SERIALIZE_ADDRESS);
 			totalLength += serializedClients[i + 1].length;
 		}
 		
