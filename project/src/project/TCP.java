@@ -26,16 +26,18 @@ public class TCP {
 	}
 	
 	public enum State {
-		CLOSED, SYNSENT, SYNRECEIVED, ESTABLISHED, FIN_WAIT, LAST_ACK, TIME_WAIT;
+		CLOSED, SYNSENT, SYN_RECEIVED, ESTABLISHED, FIN_WAIT, LAST_ACK, TIME_WAIT;
 	}
 	
 	public static void handlePacket(Packet packet) {
 		init();
 		if(packet.getDestination() == myAddress) {
+			int destination = packet.getSource();
 			if(packet.getSynFlag() && !packet.getAckFlag() && !packet.getFinFlag()) {
-				//stuur SynAck
-				
-				sendSynAck(packet);
+				if(!connections.containsKey(destination) || connections.get(destination).equals(State.CLOSED)) {
+					sendSynAck(packet);
+					connections.put(destination, State.SYN_RECEIVED);
+				}
 			} else if(packet.getSynFlag() && packet.getAckFlag() && !packet.getFinFlag()) {
 				sendAck(packet);
 			} else if(packet.getFinFlag() && !packet.getAckFlag()) {
@@ -75,7 +77,7 @@ public class TCP {
 	
 	public static boolean closeConnection(int destination) {
 		//TODO: change state
-		if(connections.containsKey(destination) && (connections.get(destination).equals(State.ESTABLISHED) || connections.get(destination).equals(State.SYNRECEIVED))) {
+		if(connections.containsKey(destination) && (connections.get(destination).equals(State.ESTABLISHED) || connections.get(destination).equals(State.SYN_RECEIVED))) {
 			sendFin(destination);
 			connections.put(destination, State.FIN_WAIT);
 			return true;
@@ -87,7 +89,7 @@ public class TCP {
 	public static boolean closeConnection(InetAddress destination) {
 		//TODO: change state
 		int dest = Integer.parseInt(""+destination.getHostAddress().charAt(10));
-		if(connections.containsKey(dest) && (connections.get(dest).equals(State.ESTABLISHED) || connections.get(dest).equals(State.SYNRECEIVED))) {
+		if(connections.containsKey(dest) && (connections.get(dest).equals(State.ESTABLISHED) || connections.get(dest).equals(State.SYN_RECEIVED))) {
 			sendFin(dest);
 			connections.put(dest, State.FIN_WAIT);
 			return true;
