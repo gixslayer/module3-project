@@ -95,4 +95,52 @@ public class Packet {
 		
 		data = Arrays.copyOfRange(packet, 11, packet.length);
 	}
+	
+	public int getSource() {
+		return source;
+	}
+	
+	public int getDestination() {
+		return destination;
+	}
+	
+	public int getType() {
+		return type;
+	}
+	
+	public int getLength() {
+		return length;
+	}
+	
+	public int getAck() {
+		return ack;
+	}
+	
+	public int getSeq() {
+		return seq;
+	}
+	
+	public boolean getSynFlag() {
+		return synFlag;
+	}
+	
+	public boolean getAckFlag() {
+		return ackFlag;
+	}
+	
+	public boolean getFinFlag() {
+		return finFlag;
+	}
+	
+	public int getCheckSum() {
+		return checksum;
+	}
+	
+	public int getWindowSize() {
+		return windowSize;
+	}
+	
+	public byte[] getData() {
+		return data;
+	}
 }
