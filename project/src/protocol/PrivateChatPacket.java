@@ -1,5 +1,7 @@
 package protocol;
 
+import utils.StringUtils;
+
 public final class PrivateChatPacket extends Packet {
 	private String name;
 	private String message;
@@ -17,8 +19,8 @@ public final class PrivateChatPacket extends Packet {
 
 	@Override
 	protected byte[] serializeContent() {
-		byte[] nameBytes = name.getBytes();
-		byte[] messageBytes = message.getBytes();
+		byte[] nameBytes = StringUtils.getBytes(name);
+		byte[] messageBytes = StringUtils.getBytes(message);
 		byte[] buffer = new byte[nameBytes.length + messageBytes.length + 8];
 		
 		ByteUtils.getIntBytes(nameBytes.length, buffer, 0);
@@ -34,8 +36,8 @@ public final class PrivateChatPacket extends Packet {
 		int nameLength = ByteUtils.getIntFromBytes(buffer, offset + 0);
 		int messageLength = ByteUtils.getIntFromBytes(buffer, offset + 4);
 		
-		name = new String(buffer, offset + 8, nameLength);
-		message = new String(buffer, offset + 8 + nameLength, messageLength);
+		name = StringUtils.getString(buffer, offset + 8, nameLength);
+		message = StringUtils.getString(buffer, offset + 8 + nameLength, messageLength);
 	}
 	
 	public void setName(String name) {

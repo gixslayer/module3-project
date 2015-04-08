@@ -4,6 +4,7 @@ import java.net.InetAddress;
 import java.net.UnknownHostException;
 
 import protocol.ByteUtils;
+import utils.StringUtils;
 
 public class Client {
 	public static final int SERIALIZE_NAME_ONLY = 0x0;
@@ -35,7 +36,7 @@ public class Client {
 		boolean serializeAddress = (flags & SERIALIZE_ADDRESS) == SERIALIZE_ADDRESS;
 		boolean serializeLastSeen = (flags & SERIALIZE_LASTSEEN) == SERIALIZE_LASTSEEN;
 
-		byte[] nameBytes = name.getBytes(); // TODO: Specify a charset
+		byte[] nameBytes = StringUtils.getBytes(name);
 		byte[] addressBytes = serializeAddress ? address.getAddress() : null;
 		int nameLength = nameBytes.length;
 		int addressLength = serializeAddress ? addressBytes.length : 0;
@@ -67,7 +68,7 @@ public class Client {
 	public int deserialize(byte[] buffer, int offset) {
 		int flags = ByteUtils.getIntFromBytes(buffer, offset);
 		int nameLength = ByteUtils.getIntFromBytes(buffer, offset + 4);
-		String name = new String(buffer, offset + 8, nameLength);
+		String name = StringUtils.getString(buffer, offset + 8, nameLength);
 		InetAddress address = null;
 		long lastSeen = 0;
 		int bytesRead = 8 + nameLength;
