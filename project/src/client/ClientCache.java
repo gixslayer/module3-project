@@ -72,7 +72,7 @@ public final class ClientCache {
 			return;
 		}
 		
-		boolean clientConnected = false;
+		/*boolean clientConnected = false;
 		
 		synchronized(syncRoot) {
 			if(!cache.containsKey(client.getName())) {
@@ -96,7 +96,7 @@ public final class ClientCache {
 		// Process callback outside critical section to avoid holding the lock longer than needed.
 		if(clientConnected) {
 			callbacks.onClientConnected(client);
-		}
+		}*/
 	}
 	
 	public void checkForTimeouts() {
