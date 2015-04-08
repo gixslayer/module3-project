@@ -65,6 +65,7 @@ public class Packet {
 		System.out.println("WindowSize: " + windowSize);
 		System.out.println("Checksum: " + checksum);
 		System.out.println("pakketlengte: " + packet.length);
+		System.out.println("");
 	}
 	
 	public byte[] getBytes() {
