@@ -37,7 +37,7 @@ public class PrivateChat extends JPanel implements ActionListener, KeyListener {
 		typeField.addKeyListener(this);
 		
 		receiveArea = new JList<String>(list);
-		receiveArea.setCellRenderer(new MyCellRenderer());
+		receiveArea.setCellRenderer(new CustomCellRenderer(main));
 		scrollPane = new JScrollPane(receiveArea);
 	
 		sendButton = new JButton("Send");
@@ -60,18 +60,23 @@ public class PrivateChat extends JPanel implements ActionListener, KeyListener {
 	}
 	
 	public void addToScreen(String str) {
+		str = str.replace(":)", "☺");
+		str = str.replace(":(", "☹");
+		str = str.replace("*check*", "✔");
+		str = str.replace("*yinyang*", "☯");
 		list.addElement(str);
 		receiveArea.ensureIndexIsVisible(list.getSize() -1);
 	}
 	
 	public void sendText() {
 		String txt = typeField.getText();
-		txt = txt.replace(":)", "☺");
-		txt = txt.replace(":(", "☹");
-		txt = txt.replace("*check*", "✔");
-		txt = txt.replace("*yinyang*", "☯");
+		if(txt.length() == 0) return;
 		addToScreen(clientName + ": " + txt);
 		typeField.setText("");
+	}
+	
+	public void receiveText(String str, String name) {
+		addToScreen(name + ": " + str);
 	}
 
 	@Override
@@ -96,39 +101,4 @@ public class PrivateChat extends JPanel implements ActionListener, KeyListener {
 	@Override
 	public void keyTyped(KeyEvent arg0) {
 	}
-	
-	public class MyCellRenderer extends JLabel implements ListCellRenderer<Object> {
-	     public MyCellRenderer() {
-	         setOpaque(true);
-	     }
-
-	     public Component getListCellRendererComponent(JList<?> list, Object value, int index, boolean isSelected, boolean cellHasFocus) {
-	         setText(value.toString());
-	         Color background = Color.WHITE;
-	         Color foreground = Color.BLACK;
-	         if(main.getFiftyEnabled()) {
-	        	background = Color.decode("0x" + main.fiftyShades[index % 50]);
-	         }
-	         else {
-	        	 if(index % 2 == 0)
-	        		 background = Color.decode("0x" + main.fiftyShades[10]);
-	        	 else
-	        		 background = Color.decode("0x" + main.fiftyShades[20]);
-	         }
-	         
-	         if(value.toString().startsWith("[JOIN]:")) 
-	        	 setText("<html><font color=blue>[JOIN]:</font>" + value.toString().split(":")[1] + "</html>");
-	         
-	         else if(value.toString().startsWith("[LEAVE]:")) 
-	        	 setText("<html><font color=red>" + value.toString().split(":")[0] + "</font>:" + value.toString().split(":")[1] + "</html>");
-	         else {
-	        	 setText("<html><font color="+ main.getUserColor(value.toString().split(":")[0]) +">" + value.toString().split(":")[0] + "</font>:" + value.toString().split(":")[1] + "</html>");
-	         }
-	        	 
-	         setBackground(background);
-	         setForeground(foreground);
-
-	         return this;
-	     }
-	 }
 }
