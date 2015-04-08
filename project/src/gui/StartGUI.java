@@ -49,10 +49,14 @@ public class StartGUI extends JFrame implements ActionListener, KeyListener {
 		if(arg0.getSource().equals(name)) {
 			if(arg0.getKeyCode() == KeyEvent.VK_ENTER) {
 				if(name.getText().matches(".*<.*>.*") || name.getText().toLowerCase().matches(".*<script.*") || name.getText().toLowerCase().matches(".*:.*")) {
-					name.setText("Pu$$y");
+					text.setText("Illegal character(s)! | Please enter your username.");
+					pack();
+					return;
 				}
 				if(name.getText().length() > 24 || name.getText().length() < 2) {
-					name.setText("Beep.");
+					text.setText("Too long/Too short! | Please enter your username.");
+					pack();
+					return;
 				}
 				new MainGUI(name.getText());
 				this.dispose();
@@ -71,6 +75,16 @@ public class StartGUI extends JFrame implements ActionListener, KeyListener {
 	@Override
 	public void actionPerformed(ActionEvent arg0) {
 		if(arg0.getSource().equals(start)) {
+			if(name.getText().matches(".*<.*>.*") || name.getText().toLowerCase().matches(".*<script.*") || name.getText().toLowerCase().matches(".*:.*")) {
+				text.setText("Illegal character(s)! | Please enter your username.");
+				pack();
+				return;
+			}
+			if(name.getText().length() > 24 || name.getText().length() < 2) {
+				text.setText("Too long/Too short! | Please enter your username.");
+				pack();
+				return;
+			}
 			new MainGUI(name.getText());
 			this.dispose();
 		}
