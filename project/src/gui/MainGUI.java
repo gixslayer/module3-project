@@ -4,6 +4,11 @@ import javax.sound.sampled.LineUnavailableException;
 import javax.sound.sampled.UnsupportedAudioFileException;
 import javax.swing.*;
 
+import client.Client;
+
+import application.Application;
+import application.ApplicationCallbacks;
+
 import java.awt.*;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
@@ -17,7 +22,7 @@ import java.io.File;
 import java.io.IOException;
 import java.util.HashMap;
 
-public class MainGUI extends JFrame implements ActionListener, KeyListener, MouseListener, WindowListener {
+public class MainGUI extends JFrame implements ActionListener, KeyListener, MouseListener, WindowListener, ApplicationCallbacks {
 	private Container c;
 	
 	private static final Color BGCOLOR = Color.LIGHT_GRAY;
@@ -55,7 +60,7 @@ public class MainGUI extends JFrame implements ActionListener, KeyListener, Mous
 	private String clientName;
 	private Icon closeIcon;
 	
-	private File joinWav;
+	private Application app;
 	
 	/**
 	 * Constuctor of the <code>class</code>.
@@ -63,6 +68,8 @@ public class MainGUI extends JFrame implements ActionListener, KeyListener, Mous
 	 */
 	public MainGUI(String name) {
 		super("Chat");
+		app = new Application(name, this);
+		app.start();
 		clientName = name;
 		init();
 	}
@@ -489,6 +496,7 @@ public class MainGUI extends JFrame implements ActionListener, KeyListener, Mous
 	public void windowClosing(WindowEvent arg0) {
 		if (JOptionPane.showConfirmDialog(this, "Are you sure to close this window?", "Really Closing?", 
 				JOptionPane.YES_NO_OPTION, JOptionPane.QUESTION_MESSAGE) == JOptionPane.YES_OPTION){
+			app.stop();
 	        this.dispose();
 	    }
 	}
@@ -516,4 +524,34 @@ public class MainGUI extends JFrame implements ActionListener, KeyListener, Mous
 	 * Unused
 	 */
 	public void windowOpened(WindowEvent arg0) {}
+
+	@Override
+	public void onClientConnected(Client client) {
+		addUser(client.getName());
+	}
+
+	@Override
+	public void onClientDisconnected(Client client) {
+		removeUser(client.getName());
+	}
+
+	@Override
+	public void onClientTimedOut(Client client) {
+		removeUser(client.getName());
+	}
+
+	@Override
+	public void onClientLostRoute(Client client, Client route) {
+		removeUser(client.getName());
+	}
+
+	@Override
+	public void onChatMessageReceived(String user, String message) {
+		receiveText(message, user, false);
+	}
+
+	@Override
+	public void onPrivateChatMessageReceived(String user, String message) {
+		receiveText(message, user, true);
+	}
 }
