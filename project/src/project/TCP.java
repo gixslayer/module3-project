@@ -5,6 +5,7 @@ import java.net.UnknownHostException;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.Map.Entry;
 import java.util.TimerTask;
 import java.util.Timer;
 
@@ -14,6 +15,7 @@ public class TCP {
 	private static Map<Integer, TCP.State> connections;
 	private static Map<Integer, Timer> timers;
 	private static Map<Integer, int[]> lastInfo;
+	private static Map<Integer, ArrayList<byte[]>> toSend;
 	private static boolean constructed = false;
 	
 	private static void init() {
@@ -23,6 +25,7 @@ public class TCP {
 				myAddress = Integer.parseInt(""+myInetAddress.getHostAddress().charAt(10));
 				constructed = true;
 				connections = new HashMap<>();
+				toSend = new HashMap<>();
 				timers = new HashMap<>();
 				lastInfo = new HashMap<>();
 			} catch (UnknownHostException e) {
@@ -53,6 +56,11 @@ public class TCP {
 				if(connections.containsKey(destination) && connections.get(destination).equals(State.SYNSENT)) {
 					sendAckForSynAck(packet);
 					connections.put(destination, State.ESTABLISHED);
+					ArrayList<byte[]> array = toSend.get(destination);
+					for(byte[] a: array){
+						sendData(destination, a);
+					}
+					toSend.remove(destination);
 				}
 			} else if(packet.getFinFlag() && !packet.getAckFlag()) {
 				if(connections.containsKey(destination) && connections.get(destination).equals(State.ESTABLISHED)) {
@@ -73,6 +81,11 @@ public class TCP {
 			} else if(!packet.getSynFlag() && packet.getAckFlag() && !packet.getFinFlag()) {
 				if(connections.containsKey(destination) && connections.get(destination).equals(State.SYN_RECEIVED)) {
 					connections.put(destination, State.ESTABLISHED);
+					ArrayList<byte[]> array = toSend.get(destination);
+					for(byte[] a: array){
+						sendData(destination, a);
+					}
+					toSend.remove(destination);
 				} else if(connections.containsKey(destination) && connections.get(destination).equals(State.LAST_ACK)) {
 					connections.put(destination, State.CLOSED);
 				} else if(connections.containsKey(destination) && connections.get(destination).equals(State.ESTABLISHED)) {
@@ -202,9 +215,19 @@ public class TCP {
 	}
 	
 	private static void sendData(int destination, byte[] data) {
-		if(connections.get(destination).equals(State.ESTABLISHED)) {
+		if(connections.containsKey(destination) && connections.get(destination).equals(State.ESTABLISHED)) {
 			Packet toSend = new Packet(myAddress, destination, 0, lastInfo.get(destination)[0], lastInfo.get(destination)[1], false, true, false, 5, data);
+			lastInfo.put(destination, new int[]{toSend.getSeq()+toSend.getLength(),toSend.getAck()});
 			//TODO send packet
+		} else if(!connections.containsKey(destination) || connections.get(destination).equals(State.CLOSED)){
+			openConnection(destination);
+			ArrayList<byte[]> array = toSend.get(destination);
+			array.add(data);
+			toSend.put(destination, array);
+		} else {
+			ArrayList<byte[]> array = toSend.get(destination);
+			array.add(data);
+			toSend.put(destination, array);
 		}
 	}
 	
