@@ -7,20 +7,22 @@ import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 
 import javax.swing.JButton;
+import javax.swing.JColorChooser;
 import javax.swing.JComboBox;
 import javax.swing.JFrame;
 import javax.swing.JLabel;
 import javax.swing.JPanel;
+import javax.swing.event.ChangeEvent;
+import javax.swing.event.ChangeListener;
 
-public class PreferencesMenu extends JFrame implements ActionListener {
+public class PreferencesMenu extends JFrame implements ActionListener, ChangeListener {
 	private JLabel[] labels = new JLabel[2];
 	private JButton doneButton;
 	
     private JComboBox<String> areaColor;
     private String[] areaStrings = {"Normal", "Fifty Shades of Gray", "Rainbow"};
     
-    private JComboBox<String> bgColor;
-    private String[] bgStrings = {"Gray", "Red", "White", "Blue"};
+    private JColorChooser bgColor;
     
     private String name;
     private MainGUI main;
@@ -44,8 +46,8 @@ public class PreferencesMenu extends JFrame implements ActionListener {
         labels[1] = new JLabel("Background Color: ");
         panel.add(labels[1]);
         
-        bgColor = new JComboBox<String>(bgStrings);
-        bgColor.addActionListener(this);
+        bgColor = new JColorChooser(Color.GRAY);
+        bgColor.getSelectionModel().addChangeListener(this);
         panel.add(bgColor, BorderLayout.CENTER);
         
         add(panel, BorderLayout.CENTER);
@@ -65,17 +67,13 @@ public class PreferencesMenu extends JFrame implements ActionListener {
 			main.repaintAll();
 		}
 		
-		if(arg0.getSource().equals(bgColor)) {
-			JComboBox<String> jb = (JComboBox<String>)arg0.getSource();
-			if(jb.getSelectedItem().equals("Gray")) main.setBGColor(Color.GRAY);
-			else if(jb.getSelectedItem().equals("Red")) main.setBGColor(Color.RED);
-			else if(jb.getSelectedItem().equals("White")) main.setBGColor(Color.WHITE);
-			else if(jb.getSelectedItem().equals("Blue")) main.setBGColor(Color.BLUE);
-			main.repaintAll();
-		}
-		
 		if(arg0.getSource().equals(doneButton)) {
 			this.dispose();
 		}
+	}
+
+	@Override
+	public void stateChanged(ChangeEvent arg0) {
+		main.setBGColor(bgColor.getColor());
 	}
 }

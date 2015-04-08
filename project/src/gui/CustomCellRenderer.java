@@ -9,6 +9,7 @@ import javax.swing.ListCellRenderer;
 
 public class CustomCellRenderer extends JLabel implements ListCellRenderer<Object> {
 	private MainGUI main;
+	private int rb = 0;
 	
     public CustomCellRenderer(MainGUI main) {
     	this.main = main;
@@ -22,8 +23,11 @@ public class CustomCellRenderer extends JLabel implements ListCellRenderer<Objec
         if(main.getColoring() == ColoringColors.FIFTY_SHADES) {
         	background = Color.decode("0x" + main.getFiftyShade(index % 50));
         }
-        else if(main.getColoring() == ColoringColors.RAINBOW) {
-        	background = Color.decode("0x" + main.getRainbow(index % 15));	
+        else if(main.getColoring() == ColoringColors.RAINBOW && !main.rainbowMode) {
+        	background = Color.getHSBColor((float)(index*0.01), 1, 1);	
+        }
+        else if(main.getColoring() == ColoringColors.RAINBOW && main.rainbowMode) {
+        	background = Color.getHSBColor((float)((index+(main.hue*100))*0.01), 1, 1);
         }
         else {
         	if(index % 2 == 0)

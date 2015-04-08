@@ -36,11 +36,15 @@ public class MainGUI extends JFrame implements ActionListener, KeyListener, Mous
 	private HashMap<String, String> colorMap = new HashMap<String, String>();
 	private ColoringColors coloring = ColoringColors.NORMAL;
 	
+	public volatile boolean rainbowMode = false;
+	public volatile float hue = 0;
+	
 	private HashMap<Integer, PrivateChat> chatMap = new HashMap<Integer, PrivateChat>();
 	
 	private JMenuBar menu;
 	private JMenu optionMenu;
 	private JMenuItem preferencesItem;
+	private JMenuItem rainbowModeItem;
 	private JMenu otherMenu;
 	private JMenuItem fileItem;
 	
@@ -62,6 +66,8 @@ public class MainGUI extends JFrame implements ActionListener, KeyListener, Mous
 	
 	private Application app;
 	private Alice alice;
+	
+	private Thread rbThread;
 	
 	/**
 	 * Constuctor of the <code>class</code>.
@@ -155,12 +161,16 @@ public class MainGUI extends JFrame implements ActionListener, KeyListener, Mous
 		preferencesItem = new JMenuItem("Preferences");
 		preferencesItem.addActionListener(this);
 		
+		rainbowModeItem = new JMenuItem("Rainbow Mode");
+		rainbowModeItem.addActionListener(this);
+		
 		otherMenu = new JMenu("Other");
 		
 		fileItem = new JMenuItem("Open file...");
 		fileItem.addActionListener(this);
 		
 		optionMenu.add(preferencesItem);
+		optionMenu.add(rainbowModeItem);
 		menu.add(optionMenu);
 		otherMenu.add(fileItem);
 		menu.add(otherMenu);
@@ -453,6 +463,17 @@ public class MainGUI extends JFrame implements ActionListener, KeyListener, Mous
 			menu.setVisible(true);
 		}
 		
+		if(e.getSource().equals(rainbowModeItem)) {
+			if(rainbowMode) {
+				rainbowMode = false;
+			}
+			else {
+				rainbowMode = true;
+				rbThread = new Thread(new RainBowMode());
+				rbThread.start();
+			}
+		}
+		
 		if(e.getSource().equals(fileItem)) {
 			JFileChooser chooser = new JFileChooser();
 		    int returnVal = chooser.showOpenDialog(this);
@@ -548,6 +569,7 @@ public class MainGUI extends JFrame implements ActionListener, KeyListener, Mous
 		if (JOptionPane.showConfirmDialog(this, "Are you sure to close this window?", "Really Closing?", 
 				JOptionPane.YES_NO_OPTION, JOptionPane.QUESTION_MESSAGE) == JOptionPane.YES_OPTION){
 			app.stop();
+			rainbowMode = false;
 	        this.dispose();
 	    }
 	}
@@ -607,5 +629,22 @@ public class MainGUI extends JFrame implements ActionListener, KeyListener, Mous
 	@Override
 	public void onPrivateChatMessageReceived(String user, String message) {
 		receiveText(message, user, true);
+	}
+	
+	public class RainBowMode extends Thread {
+		
+		@Override
+		public void run() {
+			while(rainbowMode) {
+				setBGColor(Color.getHSBColor(hue, 1, 1));
+				hue+=0.001;
+				if(hue == 1) hue = 0;
+				repaintAll();
+				try {
+					Thread.sleep(10);
+				}	
+				catch (InterruptedException e) { }
+			}
+		}
 	}
 }
