@@ -2,6 +2,7 @@ package gui;
 
 import javax.swing.*;
 
+import client.Client;
 import application.Application;
 
 import java.awt.*;
@@ -87,7 +88,10 @@ public class PrivateChat extends JPanel implements ActionListener, KeyListener {
 			receiveText(alice.getResponse(txt), "Alice");
 			return;
 		}
-		app.onSendPrivateMessage(clientName, txt);
+		
+		// TODO: Fix this hack.
+		Client client = Client.fromString(clientName);
+		app.onSendPrivateMessage(client, txt);
 	}
 	
 	public void receiveText(String str, String name) {

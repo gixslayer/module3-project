@@ -114,11 +114,11 @@ public class Application implements MulticastCallbacks, CacheCallbacks, GUICallb
 	}
 	
 	private void handleChatPacket(ChatPacket packet) {
-		callbacks.onChatMessageReceived(packet.getName(), packet.getMessage());
+		callbacks.onChatMessageReceived(packet.getClient(), packet.getMessage());
 	}
 	
 	private void handlePrivateChatPacket(PrivateChatPacket packet) {
-		callbacks.onPrivateChatMessageReceived(packet.getName(), packet.getMessage());
+		callbacks.onPrivateChatMessageReceived(packet.getClient(), packet.getMessage());
 	}
 	
 	//-------------------------------------------
@@ -148,14 +148,14 @@ public class Application implements MulticastCallbacks, CacheCallbacks, GUICallb
 	// GUICallbacks.
 	//-------------------------------------------
 	@Override
-	public void onSendPrivateMessage(String user, String message) {
-		PrivateChatPacket packet = new PrivateChatPacket(user, message);
+	public void onSendPrivateMessage(Client client, String message) {
+		PrivateChatPacket packet = new PrivateChatPacket(client, message);
 		sendToAll(packet);
 	}
 	
 	@Override
 	public void onSendMessage(String message) {
-		ChatPacket packet = new ChatPacket(localClient.getName(), message);
+		ChatPacket packet = new ChatPacket(localClient, message);
 		sendToAll(packet);
 	}
 }

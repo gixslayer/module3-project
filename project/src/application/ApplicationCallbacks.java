@@ -8,6 +8,6 @@ public interface ApplicationCallbacks {
 	void onClientTimedOut(Client client);
 	void onClientLostRoute(Client client);
 	
-	void onChatMessageReceived(String user, String message);
-	void onPrivateChatMessageReceived(String user, String message);
+	void onChatMessageReceived(Client client, String message);
+	void onPrivateChatMessageReceived(Client client, String message);
 }

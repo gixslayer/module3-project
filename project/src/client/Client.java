@@ -180,4 +180,11 @@ public class Client {
 	public String toString() {
 		return String.format("%s@%s", name, address.getHostAddress());
 	}
+	
+	//-------------------------------------------
+	// !!!TEMP HACK METHOD!!!
+	//-------------------------------------------
+	public static Client fromString(String str) {
+		return null;
+	}
 }

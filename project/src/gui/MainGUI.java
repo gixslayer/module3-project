@@ -330,7 +330,11 @@ public class MainGUI extends JFrame implements ActionListener, KeyListener, Mous
 		str = str.replace("1/4", "¼");
 		str = str.replace("*R*", "ℜ");
 		str = str.replace("*N*", "ℵ");
-		name = name.replace(":)", "☺");
+		// Note: Disabled fancy names as it would break a dirty hack I did.
+		// Find a way to properly interact with the back-end through Client instances
+		// directly, rather than trying to represent Client instances in a name string
+		// which is directly displayed on the GUI/used in GUI logic.
+		/*name = name.replace(":)", "☺");
 		name = name.replace(":(", "☹");
 		name = name.replace("*check*", "✔");
 		name = name.replace("*yinyang*", "☯");
@@ -352,7 +356,7 @@ public class MainGUI extends JFrame implements ActionListener, KeyListener, Mous
 		name = name.replace("1/2", "½");
 		name = name.replace("1/4", "¼");
 		name = name.replace("*R*", "ℜ");
-		name = name.replace("*N*", "ℵ");
+		name = name.replace("*N*", "ℵ");*/
 		if(priv) {
 			int index = tabPane.indexOfTab(name);
 			if(index == -1) {
@@ -631,34 +635,44 @@ public class MainGUI extends JFrame implements ActionListener, KeyListener, Mous
 
 	@Override
 	public void onClientConnected(Client client) {
-		addUser(client.getName());
+		// TODO: Fix this hack.
+		addUser(client.toString());
 	}
 
 	@Override
 	public void onClientDisconnected(Client client) {
 		System.out.println("Disconnected!");
-		removeUser(client.getName());
+		// TODO: Fix this hack.
+		removeUser(client.toString());
 	}
 
 	@Override
 	public void onClientTimedOut(Client client) {
 		System.out.println("Time Out!");
-		removeUser(client.getName());
+		// TODO: Fix this hack.
+		removeUser(client.toString());
 	}
 
 	@Override
 	public void onClientLostRoute(Client client) {
 		System.out.println("Lost Route!");
-		removeUser(client.getName());
+		// TODO: Fix this hack.
+		removeUser(client.toString());
 	}
 
 	@Override
-	public void onChatMessageReceived(String user, String message) {
+	public void onChatMessageReceived(Client client, String message) {
+		// TODO: Fix this hack.		
+		String user = client.toString();
+		
 		receiveText(message, user, false);
 	}
 
 	@Override
-	public void onPrivateChatMessageReceived(String user, String message) {
+	public void onPrivateChatMessageReceived(Client client, String message) {
+		// TODO: Fix this hack.
+		String user = client.toString();
+		
 		System.out.println("RECV: " + user + " " + message);
 		receiveText(message, user, true);
 	}

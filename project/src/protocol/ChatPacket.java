@@ -1,56 +1,57 @@
 package protocol;
 
+import client.Client;
 import utils.ByteUtils;
 import utils.StringUtils;
 
 public final class ChatPacket extends Packet {
-	private String name;
+	private Client client;
 	private String message;
 	
 	public ChatPacket() {
-		this(null, null);
+		this(new Client(), null);
 	}
 	
-	public ChatPacket(String name, String message) {
+	public ChatPacket(Client client, String message) {
 		super(Packet.TYPE_CHAT);
 		
-		this.name = name;
+		this.client = client;
 		this.message = message;
 	}
 
 	@Override
 	protected byte[] serializeContent() {
-		byte[] nameBytes = StringUtils.getBytes(name);
+		byte[] clientBytes = client.serialize(Client.SERIALIZE_ADDRESS);
 		byte[] messageBytes = StringUtils.getBytes(message);
-		byte[] buffer = new byte[nameBytes.length + messageBytes.length + 8];
+		byte[] buffer = new byte[clientBytes.length + messageBytes.length + 8];
 		
-		ByteUtils.getIntBytes(nameBytes.length, buffer, 0);
+		ByteUtils.getIntBytes(clientBytes.length, buffer, 0);
 		ByteUtils.getIntBytes(messageBytes.length, buffer, 4);
-		System.arraycopy(nameBytes, 0, buffer, 8, nameBytes.length);
-		System.arraycopy(messageBytes, 0, buffer, 8 + nameBytes.length, messageBytes.length);
+		System.arraycopy(clientBytes, 0, buffer, 8, clientBytes.length);
+		System.arraycopy(messageBytes, 0, buffer, 8 + clientBytes.length, messageBytes.length);
 		
 		return buffer;
 	}
 
 	@Override
 	protected void deserializeContent(byte[] buffer, int offset, int length) {
-		int nameLength = ByteUtils.getIntFromBytes(buffer, offset + 0);
+		int clientLength = ByteUtils.getIntFromBytes(buffer, offset);
 		int messageLength = ByteUtils.getIntFromBytes(buffer, offset + 4);
 		
-		name = StringUtils.getString(buffer, offset + 8, nameLength);
-		message = StringUtils.getString(buffer, offset + 8 + nameLength, messageLength);
+		client.deserialize(buffer, offset + 8);
+		message = StringUtils.getString(buffer, offset + 8 + clientLength, messageLength);
 	}
 	
-	public void setName(String name) {
-		this.name = name;
+	public void setClient(Client client) {
+		this.client = client;
 	}
 	
 	public void setMessage(String message) {
 		this.message = message;
 	}
 	
-	public String getName() {
-		return name;
+	public Client getClient() {
+		return client;
 	}
 	
 	public String getMessage() {
