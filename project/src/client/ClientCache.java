@@ -68,7 +68,7 @@ public final class ClientCache {
 	}
 	
 	public void updateIndirect(Client source, Client client) {
-		if(client == localClient) {
+		if(client.equals(localClient)) {
 			return;
 		}
 		
