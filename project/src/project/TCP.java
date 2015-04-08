@@ -132,7 +132,7 @@ public class TCP {
 	}
 	
 	public static void main(String args[]) {
-		handlePacket(new Packet(1,3,1,1,1,true,true,true,1,new byte[3]));
+		TCP.openConnection(3);
 	}
 	
 	private static void sendSyn(int destination) {
