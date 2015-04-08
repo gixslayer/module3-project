@@ -13,6 +13,7 @@ public class TCP {
 	private static int myAddress;
 	private static Map<Integer, TCP.State> connections;
 	private static Map<Integer, Timer> timers;
+	private static Map<Integer, int[]> lastInfo;
 	private static boolean constructed = false;
 	
 	private static void init() {
@@ -23,6 +24,7 @@ public class TCP {
 				constructed = true;
 				connections = new HashMap<>();
 				timers = new HashMap<>();
+				lastInfo = new HashMap<>();
 			} catch (UnknownHostException e) {
 				// TODO Auto-generated catch block
 				e.printStackTrace();
@@ -37,6 +39,10 @@ public class TCP {
 	public static void handlePacket(Packet packet) {
 		init();
 		if(packet.getDestination() == myAddress) {
+			
+			//save info
+			lastInfo.put(packet.getSource(), new int[]{packet.getSeq(), packet.getAck()});
+			
 			int destination = packet.getSource();
 			if(packet.getSynFlag() && !packet.getAckFlag() && !packet.getFinFlag()) {
 				if(!connections.containsKey(destination) || connections.get(destination).equals(State.CLOSED)) {
@@ -45,7 +51,7 @@ public class TCP {
 				}
 			} else if(packet.getSynFlag() && packet.getAckFlag() && !packet.getFinFlag()) {
 				if(connections.containsKey(destination) && connections.get(destination).equals(State.SYNSENT)) {
-					sendAck(packet);
+					sendAckForSynAck(packet);
 					connections.put(destination, State.ESTABLISHED);
 				}
 			} else if(packet.getFinFlag() && !packet.getAckFlag()) {
@@ -55,7 +61,7 @@ public class TCP {
 				}
 			} else if(packet.getFinFlag() && packet.getAckFlag()) {
 				if(connections.containsKey(destination) && connections.get(destination).equals(State.FIN_WAIT)) {
-					sendAck(packet);
+					sendAckForFinAck(packet);
 					connections.put(destination, State.TIME_WAIT);
 					Timer timer = new Timer();
 					if(timers.containsKey(destination)) {
@@ -69,6 +75,14 @@ public class TCP {
 					connections.put(destination, State.ESTABLISHED);
 				} else if(connections.containsKey(destination) && connections.get(destination).equals(State.LAST_ACK)) {
 					connections.put(destination, State.CLOSED);
+				} else if(connections.containsKey(destination) && connections.get(destination).equals(State.ESTABLISHED)) {
+					if(packet.getLength() == 0) {
+						//no data, normal ACK
+						//TODO check seqs and acks.
+					} else {
+						//ACK with data
+						sendAck(packet);
+					}
 				}
 			}
 		}
@@ -132,7 +146,7 @@ public class TCP {
 	}
 	
 	public static void main(String args[]) {
-		TCP.openConnection(3);
+		System.out.println(System.currentTimeMillis()/1000);
 	}
 	
 	private static void sendSyn(int destination) {
@@ -145,23 +159,56 @@ public class TCP {
 	}
 	
 	private static void sendSynAck(Packet lastPacket) {
-		Packet synAck = new Packet(myAddress, lastPacket.getSource(), 0, 0, 0, true, true, false, 5, new byte[0]);
+		Packet synAck = new Packet(myAddress, lastPacket.getSource(), 0, 0, 1, true, true, false, 5, new byte[0]);
 		//TODO: send packet, ACK en SEQ goed doen
 	}
 	
-	private static void sendAck(Packet lastPacket) {
-		Packet ack = new Packet(myAddress, lastPacket.getSource(), 0, 0, 0, false, true, false, 5, new byte[0]);
+	private static void sendAckForSynAck(Packet lastPacket) {
+		int newSeq = 1;
+		int newAck = 1;
+		Packet ack = new Packet(myAddress, lastPacket.getSource(), 0, newSeq, newAck, false, true, false, 5, new byte[0]);
 		//TODO: send packet, ACK en SEQ goed doen
 
 	}
 	
+	private static void sendAckForFinAck(Packet lastPacket) {
+		int newSeq = lastPacket.getAck();
+		int newAck = lastPacket.getSeq()+1;
+		Packet ack = new Packet(myAddress, lastPacket.getSource(), 0, newSeq, newAck, false, true, false, 5, new byte[0]);
+		//TODO: send packet, ACK en SEQ goed doen
+	}
+	
+	private static void sendAck(Packet lastPacket) {
+		int newSeq = lastPacket.getAck();
+		int newAck = lastPacket.getSeq()+lastPacket.getLength();
+		Packet ack = new Packet(myAddress, lastPacket.getSource(), 0, newSeq, newAck, false, true, false, 5, new byte[0]);
+		//add to info
+		lastInfo.put(lastPacket.getSource(), new int[]{newSeq, newAck});
+		//TODO: send packet, ACK en SEQ goed doen
+	}
+	
 	private static void sendFin(int destination) {
-		Packet fin = new Packet(myAddress, destination, 0, 0, 0, false, false, true, 5, new byte[0]);
+		int newSeq = lastInfo.get(destination)[1];
+		int newAck = lastInfo.get(destination)[0];
+		Packet fin = new Packet(myAddress, destination, 0, newSeq, newAck, false, false, true, 5, new byte[0]);
 		//TODO: send packet, ACK en SEQ goed doen
 	}
 	
 	private static void sendFinAck(Packet lastPacket) {
-		Packet ack = new Packet(myAddress, lastPacket.getSource(), 0, 0, 0, false, true, true, 5, new byte[0]);
+		int newSeq = lastPacket.getAck();
+		int newAck = lastPacket.getSeq()+1;
+		Packet ack = new Packet(myAddress, lastPacket.getSource(), 0, newSeq, newAck, false, true, true, 5, new byte[0]);
 		//TODO: send packet, ACK en SEQ goed doen
+	}
+	
+	private static void sendData(int destination, byte[] data) {
+		if(connections.get(destination).equals(State.ESTABLISHED)) {
+			Packet toSend = new Packet(myAddress, destination, 0, lastInfo.get(destination)[0], lastInfo.get(destination)[1], false, true, false, 5, data);
+			//TODO send packet
+		}
+	}
+	
+	private static void sendData(InetAddress destination, byte[] data) {
+		sendData(inetToInt(destination), data);
 	}
 }
