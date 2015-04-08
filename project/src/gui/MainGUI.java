@@ -306,6 +306,29 @@ public class MainGUI extends JFrame implements ActionListener, KeyListener, Mous
 		str = str.replace("1/4", "¼");
 		str = str.replace("*R*", "ℜ");
 		str = str.replace("*N*", "ℵ");
+		name = name.replace(":)", "☺");
+		name = name.replace(":(", "☹");
+		name = name.replace("*check*", "✔");
+		name = name.replace("*yinyang*", "☯");
+		name = name.replace("*down*", "↓");
+		name = name.replace("*left*", "←");
+		name = name.replace("*right*", "→");
+		name = name.replace("*up*", "↑");
+		name = name.replace("*phone*", "☎");
+		name = name.replace("*skull*", "☠");
+		name = name.replace("*radio*", "☢");
+		name = name.replace("*bio*", "☣");
+		name = name.replace("*peace*", "☮");
+		name = name.replace("*spade*", "♠");
+		name = name.replace("*heart*", "♥");
+		name = name.replace("*diamond*", "♦");
+		name = name.replace("*club*", "♣");
+		name = name.replace("*plane*", "✈");
+		name = name.replace("*x*", "✖");
+		name = name.replace("1/2", "½");
+		name = name.replace("1/4", "¼");
+		name = name.replace("*R*", "ℜ");
+		name = name.replace("*N*", "ℵ");
 		if(priv) {
 			int index = tabPane.indexOfTab(name);
 			if(index == -1) {
