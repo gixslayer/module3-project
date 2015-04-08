@@ -86,7 +86,7 @@ public class PrivateChat extends JPanel implements ActionListener, KeyListener {
 			receiveText(alice.getResponse(txt), "Alice");
 			return;
 		}
-		app.onSendPrivateMessage(otherName, txt);
+		app.onSendPrivateMessage(clientName, txt);
 	}
 	
 	public void receiveText(String str, String name) {
