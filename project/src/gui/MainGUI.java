@@ -1,14 +1,11 @@
 package gui;
 
-import javax.sound.sampled.LineUnavailableException;
-import javax.sound.sampled.UnsupportedAudioFileException;
 import javax.swing.*;
+import javax.swing.filechooser.FileNameExtensionFilter;
 
 import client.Client;
-
 import application.Application;
 import application.ApplicationCallbacks;
-
 import java.awt.*;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
@@ -18,8 +15,6 @@ import java.awt.event.MouseEvent;
 import java.awt.event.MouseListener;
 import java.awt.event.WindowEvent;
 import java.awt.event.WindowListener;
-import java.io.File;
-import java.io.IOException;
 import java.util.HashMap;
 
 public class MainGUI extends JFrame implements ActionListener, KeyListener, MouseListener, WindowListener, ApplicationCallbacks {
@@ -46,6 +41,8 @@ public class MainGUI extends JFrame implements ActionListener, KeyListener, Mous
 	private JMenuBar menu;
 	private JMenu optionMenu;
 	private JMenuItem preferencesItem;
+	private JMenu otherMenu;
+	private JMenuItem fileItem;
 	
 	private JTabbedPane tabPane;
 	private JTextField typeField;
@@ -59,6 +56,7 @@ public class MainGUI extends JFrame implements ActionListener, KeyListener, Mous
 	private JScrollPane scrollPane;
 	
 	private JButton sendButton;
+	
 	private String clientName;
 	private Icon closeIcon;
 	
@@ -156,8 +154,15 @@ public class MainGUI extends JFrame implements ActionListener, KeyListener, Mous
 		preferencesItem = new JMenuItem("Preferences");
 		preferencesItem.addActionListener(this);
 		
+		otherMenu = new JMenu("Other");
+		
+		fileItem = new JMenuItem("Open file...");
+		fileItem.addActionListener(this);
+		
 		optionMenu.add(preferencesItem);
 		menu.add(optionMenu);
+		otherMenu.add(fileItem);
+		menu.add(otherMenu);
 		
 		setJMenuBar(menu);
 		
@@ -414,6 +419,14 @@ public class MainGUI extends JFrame implements ActionListener, KeyListener, Mous
 			PreferencesMenu menu = new PreferencesMenu(clientName, this);
 			menu.pack();
 			menu.setVisible(true);
+		}
+		
+		if(e.getSource().equals(fileItem)) {
+			JFileChooser chooser = new JFileChooser();
+		    int returnVal = chooser.showOpenDialog(this);
+		    if(returnVal == JFileChooser.APPROVE_OPTION) {
+		       addToScreen("You chose to open this file: " + chooser.getSelectedFile().getName());
+		    }
 		}
 	}
 
