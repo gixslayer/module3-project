@@ -1,5 +1,7 @@
 package gui;
 
+import javax.sound.sampled.LineUnavailableException;
+import javax.sound.sampled.UnsupportedAudioFileException;
 import javax.swing.*;
 
 import java.awt.*;
@@ -9,6 +11,8 @@ import java.awt.event.KeyEvent;
 import java.awt.event.KeyListener;
 import java.awt.event.MouseEvent;
 import java.awt.event.MouseListener;
+import java.io.File;
+import java.io.IOException;
 import java.util.HashMap;
 
 public class MainGUI extends JFrame implements ActionListener, KeyListener, MouseListener {
@@ -17,14 +21,16 @@ public class MainGUI extends JFrame implements ActionListener, KeyListener, Mous
 	private static final Color BGCOLOR = Color.GRAY;
 	
 	private static final String[] colors = {"Red", "Blue", "Green", "Yellow", "Purple", "Orange", "Black"};
-	public static final String[] fiftyShades = {"E0E0E0", "DEDEDE", "DBDBDB", "D9D9D9", "D6D6D6", "D4D4D4", "D1D1D1", "CFCFCF",
+	private static final String[] fiftyShades = {"E0E0E0", "DEDEDE", "DBDBDB", "D9D9D9", "D6D6D6", "D4D4D4", "D1D1D1", "CFCFCF",
 		"CCCCCC", "C9C9C9", "C7C7C7", "C4C4C4", "C2C2C2", "BFBFBF", "BDBDBD", "BABABA", "B8B8B8", "B5B5B5", "B3B3B3", "B0B0B0",
 		"ADADAD", "ABABAB", "A9A9A9", "A8A8A8", "A6A6A6", "A3A3A3", "A1A1A1", "9E9E9E", "9C9C9C", "969696", "949494", "919191",
 		"8F8F8F", "8C8C8C", "8A8A8A", "878787", "858585", "828282", "7F7F7F", "7D7D7D", "7A7A7A", "787878", "757575", "737373",
 		"707070", "6E6E6E", "6B6B6B", "696969", "666666", "636363", "616161"};
+	private static final String[] rainbow = {"F26C4F", "F68E55", "FBAF5C", "FFF467", "ACD372", "7CC576", "3BB878", "1ABBB4", "00BFF3",
+		"438CCA", "5574B9", "605CA8", "855FA8", "A763A8", "F06EA9", "F26D7D"};
 	
 	private HashMap<String, String> colorMap = new HashMap<String, String>();
-	public boolean fiftyEnabled = false;
+	private ColoringColors coloring = ColoringColors.NORMAL;
 	
 	private HashMap<Integer, PrivateChat> chatMap = new HashMap<Integer, PrivateChat>();
 	
@@ -47,6 +53,8 @@ public class MainGUI extends JFrame implements ActionListener, KeyListener, Mous
 	private String clientName;
 	private Icon closeIcon;
 	
+	private File joinWav;
+	
 	/**
 	 * Constuctor of the <code>class</code>.
 	 * @param name
@@ -61,7 +69,7 @@ public class MainGUI extends JFrame implements ActionListener, KeyListener, Mous
 	 * Inits the GUI and sets everything up. Creates the window and connects the User.
 	 */
 	public void init() {
-		loadIcons();
+		loadResources();
 		
 		c = getContentPane();
 		c.setLayout(new BorderLayout());
@@ -169,13 +177,18 @@ public class MainGUI extends JFrame implements ActionListener, KeyListener, Mous
 		peopleArea.ensureIndexIsVisible(peopleList.getSize()-1);
 		setUserColor(name, colors[(int)(Math.random()*7)]);
 		addToScreen("[JOIN]: User <font color=" + getUserColor(name) + ">" + name + "</font> entered the chat room.");
+		try {
+			PlaySound.playClip(joinWav);
+		} catch (IOException | UnsupportedAudioFileException
+				| LineUnavailableException | InterruptedException e) { e.printStackTrace(); }
 	}
 	
 	/**
-	 * Loads the icons of the GUI.
+	 * Loads the resources of the GUI.
 	 */
-	public void loadIcons() {
-		closeIcon = new ImageIcon("images/close.png");
+	public void loadResources() {
+		closeIcon = new ImageIcon("res/close.png");
+		joinWav = new File("res/userJoin.wav");
 	}
 	
 	/**
@@ -293,14 +306,6 @@ public class MainGUI extends JFrame implements ActionListener, KeyListener, Mous
 	}
 	
 	/**
-	 * Set the <code>boolean</code> which decides which coloring scheme is used.
-	 * @param enabled true if alternative coloring needs to be used | false if the standard coloring needs to be used.
-	 */
-	public void setFiftyEnabled(boolean enabled) {
-		this.fiftyEnabled = enabled;
-	}
-	
-	/**
 	 * Gets the component which holds the tabbed pages.
 	 * @return the component which holds the tabbed pages.
 	 */
@@ -309,11 +314,19 @@ public class MainGUI extends JFrame implements ActionListener, KeyListener, Mous
 	}
 	
 	/**
-	 * Gets the value of the <code>boolean</code> which decides which coloring scheme is used.
-	 * @return the value of the <code>boolean</code> which decides which coloring scheme is used.
+	 * Set the <code>ColoringColor</code> which decides which coloring scheme is used.
+	 * @param coloring the coloring scheme to be used.
 	 */
-	public boolean getFiftyEnabled() {
-		return fiftyEnabled;
+	public void setColoring(ColoringColors coloring) {
+		this.coloring = coloring;
+	}
+	
+	/**
+	 * Gets the value of the <code>ColoringColor</code> which decides which coloring scheme is used.
+	 * @return the value of the <code>ColoringColor</code> which decides which coloring scheme is used.
+	 */
+	public ColoringColors getColoring() {
+		return coloring;
 	}
 	
 	/**
@@ -332,6 +345,10 @@ public class MainGUI extends JFrame implements ActionListener, KeyListener, Mous
 	 */
 	public String getFiftyShade(int index) {
 		return fiftyShades[index];
+	}
+	
+	public String getRainbow(int index) {
+		return rainbow[index];
 	}
 	
 	/**
