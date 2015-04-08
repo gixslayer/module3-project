@@ -1,5 +1,6 @@
 package protocol;
 
+import utils.ByteUtils;
 import client.Client;
 
 public final class RouteRequestPacket extends Packet {

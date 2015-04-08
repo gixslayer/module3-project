@@ -3,7 +3,7 @@ package client;
 import java.net.InetAddress;
 import java.net.UnknownHostException;
 
-import protocol.ByteUtils;
+import utils.ByteUtils;
 import utils.StringUtils;
 
 public class Client {

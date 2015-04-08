@@ -1,5 +1,6 @@
 package protocol;
 
+import utils.ByteUtils;
 import utils.StringUtils;
 
 public final class PrivateChatPacket extends Packet {

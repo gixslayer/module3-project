@@ -1,4 +1,4 @@
-package protocol;
+package utils;
 
 public final class ByteUtils {
 	public static void getIntBytes(int value, byte[] dest, int offset) {

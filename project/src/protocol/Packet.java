@@ -2,6 +2,8 @@ package protocol;
 
 import java.net.InetAddress;
 
+import utils.ByteUtils;
+
 public abstract class Packet {
 	public static final int TYPE_ANNOUNCE = 0;
 	public static final int TYPE_CHAT = 1;

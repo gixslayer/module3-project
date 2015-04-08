@@ -3,7 +3,7 @@ package client;
 import java.util.ArrayList;
 import java.util.List;
 
-import application.DateUtils;
+import utils.DateUtils;
 
 public final class ClientCache {
 	public static final long TIMEOUT_DURATION = 10000; // Clients time out after not being seen for this many miliseconds.
