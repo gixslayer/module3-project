@@ -28,7 +28,7 @@ public final class ClientCache {
 		Map<Client, Client> routeLostClients = new HashMap<Client, Client>();
 		
 		synchronized(syncRoot) {
-			if(client.getLastSeen() == LAST_SEEN_DISCONNECTED) {
+			/*if(client.getLastSeen() == LAST_SEEN_DISCONNECTED) {
 				if(cache.containsKey(client.getName())) {
 					cache.remove(client.getName());
 					clientDisconnected = true;
@@ -39,7 +39,7 @@ public final class ClientCache {
 						}
 					}
 				}
-			} else if(!cache.containsKey(client.getName())) {
+			} else*/ if(!cache.containsKey(client.getName())) {
 				client.setDirect();
 				cache.put(client.getName(), client);
 				clientConnected = true;
@@ -58,13 +58,13 @@ public final class ClientCache {
 		// Process callbacks outside critical section to avoid holding the lock longer than needed.
 		if(clientConnected) {
 			callbacks.onClientConnected(client);
-		} else if(clientDisconnected) {
+		} /*else if(clientDisconnected) {
 			callbacks.onClientDisconnected(client);
 			
 			for(Client c : routeLostClients.keySet()) {
 				callbacks.onClientLostRoute(c, routeLostClients.get(c));
 			}
-		}
+		}*/
 	}
 	
 	public void updateIndirect(Client source, Client client) {
@@ -76,6 +76,7 @@ public final class ClientCache {
 		
 		synchronized(syncRoot) {
 			if(!cache.containsKey(client.getName())) {
+				System.out.printf("Adding indirect client %s via %s%n", client, source);
 				client.setIndirect(source.getName());
 				cache.put(client.getName(), client);
 				clientConnected = true;
@@ -84,6 +85,7 @@ public final class ClientCache {
 			
 				if(cachedClient.isIndirect()) {
 					if(client.getLastSeen() > cachedClient.getLastSeen()) {
+						System.out.printf("Updating indirect client %s via %s%n", client, source);
 						cachedClient.setRoute(source.getName());
 						cachedClient.setLastSeen(client.getLastSeen());
 					}
@@ -100,11 +102,13 @@ public final class ClientCache {
 	public void checkForTimeouts() {
 		List<Client> timedOutClients = new ArrayList<Client>();
 		Map<Client, Client> lostRouteClients = new HashMap<Client, Client>();
-		long now = System.currentTimeMillis();
 		
 		synchronized(syncRoot) {
+			long now = System.currentTimeMillis();
+			
 			for(Client client : cache.values()) {
 				if(now - client.getLastSeen() >= TIMEOUT_DURATION) {
+					System.out.printf("Detected timeout: %s, %d%n", client, now - client.getLastSeen());
 					timedOutClients.add(client);
 				}
 			}
@@ -114,6 +118,7 @@ public final class ClientCache {
 				
 				for(Client c : cache.values()) {
 					if(c.isIndirect() && c.getRoute().equals(client.getName())) {
+						System.out.printf("Detected route lost: %s via %s%n", c, client);
 						lostRouteClients.put(c, client);
 					}
 				}
