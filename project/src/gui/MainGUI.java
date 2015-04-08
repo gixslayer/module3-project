@@ -27,6 +27,8 @@ public class MainGUI extends JFrame implements ActionListener, KeyListener, Mous
 	
 	private static final Color BGCOLOR = Color.LIGHT_GRAY;
 	
+	public static final int LIST_MAX_SIZE = 300;
+	
 	private static final String[] colors = {"Red", "Blue", "Green", "Yellow", "Purple", "Orange", "Black"};
 	private static final String[] fiftyShades = {"E0E0E0", "DEDEDE", "DBDBDB", "D9D9D9", "D6D6D6", "D4D4D4", "D1D1D1", "CFCFCF",
 		"CCCCCC", "C9C9C9", "C7C7C7", "C4C4C4", "C2C2C2", "BFBFBF", "BDBDBD", "BABABA", "B8B8B8", "B5B5B5", "B3B3B3", "B0B0B0",
@@ -248,6 +250,9 @@ public class MainGUI extends JFrame implements ActionListener, KeyListener, Mous
 	public void addToScreen(String str) {
 		list.addElement(str);
 		receiveArea.ensureIndexIsVisible(list.getSize() -1);
+		if(list.getSize() > LIST_MAX_SIZE) {
+			list.removeElement(list.firstElement());
+		}
 	}
 	
 	/**
@@ -255,7 +260,7 @@ public class MainGUI extends JFrame implements ActionListener, KeyListener, Mous
 	 */
 	public void sendText() {
 		String txt = typeField.getText();
-		if(txt.length() == 0) return;
+		if(txt.length() == 0 || txt.matches("\\s*")) return;
 		app.onSendMessage(txt);
 		receiveText(txt, clientName, false);
 		typeField.setText("");
