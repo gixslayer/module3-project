@@ -11,14 +11,16 @@ import java.awt.event.KeyEvent;
 import java.awt.event.KeyListener;
 import java.awt.event.MouseEvent;
 import java.awt.event.MouseListener;
+import java.awt.event.WindowEvent;
+import java.awt.event.WindowListener;
 import java.io.File;
 import java.io.IOException;
 import java.util.HashMap;
 
-public class MainGUI extends JFrame implements ActionListener, KeyListener, MouseListener {
+public class MainGUI extends JFrame implements ActionListener, KeyListener, MouseListener, WindowListener {
 	private Container c;
 	
-	private static final Color BGCOLOR = Color.GRAY;
+	private static final Color BGCOLOR = Color.LIGHT_GRAY;
 	
 	private static final String[] colors = {"Red", "Blue", "Green", "Yellow", "Purple", "Orange", "Black"};
 	private static final String[] fiftyShades = {"E0E0E0", "DEDEDE", "DBDBDB", "D9D9D9", "D6D6D6", "D4D4D4", "D1D1D1", "CFCFCF",
@@ -71,21 +73,22 @@ public class MainGUI extends JFrame implements ActionListener, KeyListener, Mous
 	public void init() {
 		loadResources();
 		
+		addWindowListener(this);
+		setDefaultCloseOperation(WindowConstants.DO_NOTHING_ON_CLOSE);
+		
 		c = getContentPane();
 		c.setLayout(new BorderLayout());
-		setDefaultCloseOperation(DISPOSE_ON_CLOSE);
 		
 		peopleList = new DefaultListModel<String>();
 		list = new DefaultListModel<String>();
 		
 		tabPane = new JTabbedPane();
-		c.setBackground(BGCOLOR);
 		
 		typeField = new JTextField();
 		typeField.addKeyListener(this);
 		
 		peopleArea = new JList<String>(peopleList);
-		peopleArea.setForeground(Color.WHITE);
+		peopleArea.setForeground(Color.BLACK);
 		peopleScrollPane = new JScrollPane(peopleArea);
 		
 		receiveArea = new JList<String>(list);
@@ -119,7 +122,6 @@ public class MainGUI extends JFrame implements ActionListener, KeyListener, Mous
 		gbc.ipadx = 30;
 		
 		sideBar.add(peopleScrollPane, gbc);
-		peopleArea.setBackground(BGCOLOR);
 		
 		gbc = new GridBagConstraints();
 		sideBar.add(userLabel);
@@ -150,6 +152,8 @@ public class MainGUI extends JFrame implements ActionListener, KeyListener, Mous
 		
 		setJMenuBar(menu);
 		
+		setBGColor(BGCOLOR);
+		
 		setSize(800,800);
 		setVisible(true);
 	}
@@ -177,10 +181,6 @@ public class MainGUI extends JFrame implements ActionListener, KeyListener, Mous
 		peopleArea.ensureIndexIsVisible(peopleList.getSize()-1);
 		setUserColor(name, colors[(int)(Math.random()*7)]);
 		addToScreen("[JOIN]: User <font color=" + getUserColor(name) + ">" + name + "</font> entered the chat room.");
-		try {
-			PlaySound.playClip(joinWav);
-		} catch (IOException | UnsupportedAudioFileException
-				| LineUnavailableException | InterruptedException e) { e.printStackTrace(); }
 	}
 	
 	/**
@@ -188,7 +188,6 @@ public class MainGUI extends JFrame implements ActionListener, KeyListener, Mous
 	 */
 	public void loadResources() {
 		closeIcon = new ImageIcon("res/close.png");
-		joinWav = new File("res/userJoin.wav");
 	}
 	
 	/**
@@ -351,6 +350,11 @@ public class MainGUI extends JFrame implements ActionListener, KeyListener, Mous
 		return rainbow[index];
 	}
 	
+	public void setBGColor(Color color) {
+		c.setBackground(color);
+		peopleArea.setBackground(color);
+	}
+	
 	/**
 	 * Repaints all text areas.
 	 */
@@ -449,4 +453,48 @@ public class MainGUI extends JFrame implements ActionListener, KeyListener, Mous
 	public static void main(String[] args) {
 		new MainGUI("Test");
 	}
+
+	@Override
+	/**
+	 * Unused
+	 */
+	public void windowActivated(WindowEvent arg0) {}
+
+	@Override
+	/**
+	 * Unused
+	 */
+	public void windowClosed(WindowEvent arg0) {}
+
+	@Override
+	public void windowClosing(WindowEvent arg0) {
+		if (JOptionPane.showConfirmDialog(this, "Are you sure to close this window?", "Really Closing?", 
+				JOptionPane.YES_NO_OPTION, JOptionPane.QUESTION_MESSAGE) == JOptionPane.YES_OPTION){
+	        this.dispose();
+	    }
+	}
+
+	@Override
+	/**
+	 * Unused
+	 */
+	public void windowDeactivated(WindowEvent arg0) {}
+
+	@Override
+	/**
+	 * Unused
+	 */
+	public void windowDeiconified(WindowEvent arg0) {}
+
+	@Override
+	/**
+	 * Unused
+	 */
+	public void windowIconified(WindowEvent arg0) {}
+
+	@Override
+	/**
+	 * Unused
+	 */
+	public void windowOpened(WindowEvent arg0) {}
 }
