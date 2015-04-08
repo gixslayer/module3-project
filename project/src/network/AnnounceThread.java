@@ -1,5 +1,5 @@
-package network;
 
+package network;
 import protocol.AnnouncePacket;
 import client.Client;
 import client.ClientCache;

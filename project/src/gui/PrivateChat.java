@@ -2,6 +2,8 @@ package gui;
 
 import javax.swing.*;
 
+import application.Application;
+
 import java.awt.*;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
@@ -20,11 +22,15 @@ public class PrivateChat extends JPanel implements ActionListener, KeyListener {
 	private JButton sendButton;
 	
 	private String clientName;
+	private String otherName;
 	private MainGUI main;
+	private Application app;
 	
-	public PrivateChat(String name, MainGUI main) {
+	public PrivateChat(String name, String otherName, MainGUI main, Application app) {
 		clientName = name;
+		this.otherName = otherName;
 		this.main = main;
+		this.app = app;
 		init();
 	}
 	
@@ -67,6 +73,7 @@ public class PrivateChat extends JPanel implements ActionListener, KeyListener {
 	public void sendText() {
 		String txt = typeField.getText();
 		if(txt.length() == 0) return;
+		app.onSendPrivateMessage(otherName, txt);
 		addToScreen(clientName + ": " + txt);
 		typeField.setText("");
 	}

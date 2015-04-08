@@ -209,7 +209,7 @@ public class MainGUI extends JFrame implements ActionListener, KeyListener, Mous
 		if(name.equals(clientName)) return;
 		JPanel privChat = new JPanel();
 		privChat.setLayout(new BorderLayout());
-		PrivateChat pChat = new PrivateChat(clientName, this);
+		PrivateChat pChat = new PrivateChat(clientName, name, this, app);
 		privChat.add(pChat, BorderLayout.CENTER);
 		
 		tabPane.addTab(name, privChat);
@@ -256,6 +256,7 @@ public class MainGUI extends JFrame implements ActionListener, KeyListener, Mous
 	public void sendText() {
 		String txt = typeField.getText();
 		if(txt.length() == 0) return;
+		app.onSendMessage(txt);
 		receiveText(txt, clientName, false);
 		typeField.setText("");
 	}
