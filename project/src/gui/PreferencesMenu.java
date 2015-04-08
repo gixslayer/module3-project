@@ -20,6 +20,7 @@ import javax.swing.colorchooser.AbstractColorChooserPanel;
 import javax.swing.event.ChangeEvent;
 import javax.swing.event.ChangeListener;
 
+@SuppressWarnings("serial")
 public class PreferencesMenu extends JFrame implements ActionListener, ChangeListener {
 	private JLabel[] labels = new JLabel[3];
 	private JButton doneButton;
@@ -31,12 +32,12 @@ public class PreferencesMenu extends JFrame implements ActionListener, ChangeLis
     
     private JColorChooser bgColor;
     
-    private String name;
+    //private String name;
     private MainGUI main;
     
     public PreferencesMenu(String name, MainGUI main){
     	this.main = main;
-        this.name = name;
+        //this.name = name;
         setDefaultCloseOperation(DISPOSE_ON_CLOSE);
         setLayout(new BorderLayout());
         
@@ -78,6 +79,7 @@ public class PreferencesMenu extends JFrame implements ActionListener, ChangeLis
 	@Override
 	public void actionPerformed(ActionEvent arg0) {
 		if(arg0.getSource().equals(areaColor)) {
+			@SuppressWarnings("unchecked") // TODO: Verify this cast cannot blow up on us.
 			JComboBox<String> jb = (JComboBox<String>)arg0.getSource();
 			if(jb.getSelectedItem().equals("Normal")) main.setColoring(ColoringColors.NORMAL);
 			else if(jb.getSelectedItem().equals("Fifty Shades of Gray")) main.setColoring(ColoringColors.FIFTY_SHADES);
@@ -100,6 +102,7 @@ public class PreferencesMenu extends JFrame implements ActionListener, ChangeLis
 	}
 }
 
+@SuppressWarnings("serial")
 class MyChooserPanel extends AbstractColorChooserPanel {
 	public void buildChooser() {
 		setLayout(new GridLayout(0, 3));

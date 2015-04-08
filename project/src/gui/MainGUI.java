@@ -1,11 +1,11 @@
 package gui;
 
 import javax.swing.*;
-import javax.swing.filechooser.FileNameExtensionFilter;
 
 import client.Client;
 import application.Application;
 import application.ApplicationCallbacks;
+
 import java.awt.*;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
@@ -17,6 +17,7 @@ import java.awt.event.WindowEvent;
 import java.awt.event.WindowListener;
 import java.util.HashMap;
 
+@SuppressWarnings("serial")
 public class MainGUI extends JFrame implements ActionListener, KeyListener, MouseListener, WindowListener, ApplicationCallbacks {
 	private Container c;
 	

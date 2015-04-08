@@ -1,9 +1,7 @@
 package gui;
 
-import java.util.HashMap;
-
 public class Alice {
-	private MainGUI main;
+	//private MainGUI main;
 	private String name;
 	
 	private String[] triggers = {".*(hey).*", ".*(like)\\s(bob).*", ".*(how).*(are).*(you).*", ".*(i).*(fine).*", ".*(i).*(bad).*",
@@ -13,7 +11,7 @@ public class Alice {
 			"Hmm.. I don't know. Maybe you should ask Bob. He's a lot smarter than me. He's never around, though..."};
 	
 	public Alice(MainGUI main, String name) {
-		this.main = main;
+		//this.main = main;
 		this.name = name;
 	}
 	

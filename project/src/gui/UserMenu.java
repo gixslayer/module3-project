@@ -7,6 +7,7 @@ import javax.swing.JMenu;
 import javax.swing.JMenuItem;
 import javax.swing.JPopupMenu;
 
+@SuppressWarnings("serial")
 public class UserMenu extends JPopupMenu implements ActionListener {
 	private JMenuItem privChatItem;
     private JMenuItem pokeItem;

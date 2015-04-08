@@ -10,8 +10,9 @@ import java.awt.event.ActionListener;
 import java.awt.event.KeyEvent;
 import java.awt.event.KeyListener;
 
+@SuppressWarnings("serial")
 public class PrivateChat extends JPanel implements ActionListener, KeyListener {
-	private Container c;
+	//private Container c;
 
 	private JTextField typeField;
 	
@@ -72,7 +73,7 @@ public class PrivateChat extends JPanel implements ActionListener, KeyListener {
 	public void addToScreen(String str) {
 		list.addElement(str);
 		receiveArea.ensureIndexIsVisible(list.getSize() -1);
-		if(list.getSize() > main.LIST_MAX_SIZE) {
+		if(list.getSize() > MainGUI.LIST_MAX_SIZE) {
 			list.removeElement(list.firstElement());
 		}
 	}

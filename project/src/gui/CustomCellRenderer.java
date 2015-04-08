@@ -7,10 +7,11 @@ import javax.swing.JLabel;
 import javax.swing.JList;
 import javax.swing.ListCellRenderer;
 
+@SuppressWarnings("serial")
 public class CustomCellRenderer extends JLabel implements ListCellRenderer<Object> {
 	private MainGUI main;
 	private AnimationThread animation;
-	private int rb = 0;
+	//private int rb = 0;
 	
     public CustomCellRenderer(MainGUI main, AnimationThread animation) {
     	this.main = main;
