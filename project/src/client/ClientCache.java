@@ -105,11 +105,15 @@ public final class ClientCache {
 		List<Client> timedOutClients = new ArrayList<Client>();
 		Map<Client, Client> lostRouteClients = new HashMap<Client, Client>();
 		
+		System.out.println("[Checking timeouts]");
+		
 		synchronized(syncRoot) {
 			//long now = System.currentTimeMillis();
 			long now = DateUtils.getEpochTime();
 			
 			for(Client client : cache.values()) {
+				System.out.printf("Client %s last seen: %d diff: %d%n", client, client.getLastSeen(), now - client.getLastSeen());
+				
 				if(now - client.getLastSeen() >= TIMEOUT_DURATION) {
 					System.out.printf("Detected timeout: %s, %d%n", client, now - client.getLastSeen());
 					timedOutClients.add(client);
