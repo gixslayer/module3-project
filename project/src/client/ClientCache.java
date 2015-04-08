@@ -137,12 +137,56 @@ public final class ClientCache {
 		}
 	}
 	
+	public void clientDisconnected(String name) {
+		// TODO: Route lost is a recursive problem!
+		Client disconnectedClient;
+		Map<Client, Client> lostRouteClients;
+		
+		synchronized(syncRoot) {
+			disconnectedClient = cache.get(name);
+			
+			if(disconnectedClient == null) {
+				return;
+			}
+			
+			cache.remove(name);
+			lostRouteClients = new HashMap<Client, Client>();
+			
+			for(Client client : cache.values()) {
+				if(client.isIndirect() && client.getRoute().equals(name)) {
+					lostRouteClients.put(client, disconnectedClient);
+				}
+			}
+			
+			for(Client client : lostRouteClients.keySet()) {
+				cache.remove(client.getName());
+			}
+		}
+		
+		callbacks.onClientDisconnected(disconnectedClient);
+		
+		for(Client client : lostRouteClients.keySet()) {
+			callbacks.onClientLostRoute(client, lostRouteClients.get(name));
+		}
+	}
+	
 	public Client getLocalClient() {
 		return localClient;
 	}
 	
-	public Collection<Client> getClients() {
-		// TODO: This is problematic with multi-threading, return a copy?
-		return cache.values();
+	public Client[] getClients() {
+		// TODO: This is problematic with multi-threading, return a deep copy?
+		Client[] buffer;
+		int offset = 0;
+		
+		synchronized(syncRoot) {
+			buffer = new Client[cache.values().size()];
+		
+			for(Client client : cache.values()) {
+				buffer[offset++] = client;
+			}
+		}
+		
+		return buffer;
 	}
 }

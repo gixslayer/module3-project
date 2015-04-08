@@ -5,7 +5,7 @@ import client.Client;
 import java.util.ArrayList;
 import java.util.List;
 
-public class AnnouncePacket extends Packet {
+public final class AnnouncePacket extends Packet {
 	private Client sourceClient;
 	private List<Client> knownClients;
 	

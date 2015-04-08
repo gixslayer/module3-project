@@ -1,15 +1,15 @@
 package protocol;
 
-public final class MulticastChatPacket extends Packet {
+public final class ChatPacket extends Packet {
 	private String name;
 	private String message;
 	
-	public MulticastChatPacket() {
-		super(Packet.TYPE_MULTICAST_CHAT);
+	public ChatPacket() {
+		this(null, null);
 	}
 	
-	public MulticastChatPacket(String name, String message) {
-		super(Packet.TYPE_MULTICAST_CHAT);
+	public ChatPacket(String name, String message) {
+		super(Packet.TYPE_CHAT);
 		
 		this.name = name;
 		this.message = message;

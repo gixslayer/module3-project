@@ -4,7 +4,10 @@ import java.net.InetAddress;
 
 public abstract class Packet {
 	public static final int TYPE_ANNOUNCE = 0;
-	public static final int TYPE_MULTICAST_CHAT = 1;
+	public static final int TYPE_CHAT = 1;
+	public static final int TYPE_DISCONNECT = 2;
+	public static final int TYPE_ROUTE_REQUEST = 3;
+	public static final int TYPE_PRIVATE_CHAT = 4;
 	
 	private final int type;
 	private InetAddress address;

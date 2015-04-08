@@ -1,11 +1,17 @@
 package application;
 
+import java.net.InetAddress;
+import java.net.NetworkInterface;
+import java.net.SocketException;
+
 import client.CacheCallbacks;
 import client.Client;
 import client.ClientCache;
 import protocol.AnnouncePacket;
-import protocol.MulticastChatPacket;
+import protocol.ChatPacket;
+import protocol.DisconnectPacket;
 import protocol.Packet;
+import protocol.PrivateChatPacket;
 import network.AnnounceThread;
 import network.MulticastCallbacks;
 import network.MulticastInterface;
@@ -35,12 +41,30 @@ public class Application implements MulticastCallbacks, CacheCallbacks, GUICallb
 	}
 
 	public void stop() {
+		sendToAll(new DisconnectPacket(localClient.getName()));
+		
 		announceThread.close();
 		mci.close();
 	}
 	
 	public void sendToAll(Packet packet) {
 		mci.send(packet);
+		
+		Client[] clients = clientCache.getClients();
+		
+		for(Client client : clients) {
+			if(!client.isIndirect()) {
+				continue;
+			}
+		}
+	}
+	
+	private boolean isOwnIP(InetAddress address) {
+		try {
+			return NetworkInterface.getByInetAddress(address) != null;
+		} catch (SocketException e) {
+			throw new RuntimeException(String.format("Failed to get network interfaces by address: %s%n", e.getMessage()));
+		}
 	}
 	
 	//-------------------------------------------
@@ -48,18 +72,31 @@ public class Application implements MulticastCallbacks, CacheCallbacks, GUICallb
 	//-------------------------------------------
 	@Override
 	public void onMulticastPacketReceived(Packet packet) {
-		if(packet.getType() == Packet.TYPE_ANNOUNCE) {
+		int type = packet.getType();
+		InetAddress address = packet.getAddress();
+		InetAddress localAddress = localClient.getAddress();
+		
+		if(localAddress == null) {
+			if(isOwnIP(address)) {
+				localClient.setAddress(address);
+				return;
+			}
+		} else if(localAddress.equals(address)) {
+			return;
+		}
+		
+		if(type == Packet.TYPE_ANNOUNCE) {
 			handleAnnouncePacket((AnnouncePacket)packet);
-		} else if(packet.getType() == Packet.TYPE_MULTICAST_CHAT) {
-			handleMulticastChatPacket((MulticastChatPacket)packet);
+		} else if(type == Packet.TYPE_DISCONNECT) {
+			handleDisconnectPacket((DisconnectPacket)packet);
+		} else if(type == Packet.TYPE_CHAT) {
+			handleChatPacket((ChatPacket)packet);
+		} else if(type == Packet.TYPE_PRIVATE_CHAT) {
+			handlePrivateChatPacket((PrivateChatPacket)packet);
 		}
 	}
 	
 	private void handleAnnouncePacket(AnnouncePacket packet) {
-		if(packet.getSourceClient().equals(localClient)) {
-			return;
-		}
-		
 		Client source = packet.getSourceClient();
 		source.setAddress(packet.getAddress());
 		clientCache.updateDirect(source);
@@ -69,14 +106,18 @@ public class Application implements MulticastCallbacks, CacheCallbacks, GUICallb
 		}
 	}
 	
-	private void handleMulticastChatPacket(MulticastChatPacket packet) {
-		if(packet.getName().equals(localClient.getName())) {
-			return;
-		}
-		
+	private void handleDisconnectPacket(DisconnectPacket packet) {
+		clientCache.clientDisconnected(packet.getName());
+	}
+	
+	private void handleChatPacket(ChatPacket packet) {
 		callbacks.onChatMessageReceived(packet.getName(), packet.getMessage());
 	}
-
+	
+	private void handlePrivateChatPacket(PrivateChatPacket packet) {
+		callbacks.onPrivateChatMessageReceived(packet.getName(), packet.getMessage());
+	}
+	
 	//-------------------------------------------
 	// CacheCallbacks.
 	//-------------------------------------------
@@ -110,7 +151,7 @@ public class Application implements MulticastCallbacks, CacheCallbacks, GUICallb
 	
 	@Override
 	public void onSendMessage(String message) {
-		MulticastChatPacket packet = new MulticastChatPacket(localClient.getName(), message);
+		ChatPacket packet = new ChatPacket(localClient.getName(), message);
 		sendToAll(packet);
 	}
 }
