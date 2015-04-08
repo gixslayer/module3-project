@@ -10,6 +10,7 @@ import javax.swing.JPopupMenu;
 public class UserMenu extends JPopupMenu implements ActionListener {
 	private JMenuItem privChatItem;
     private JMenuItem pokeItem;
+    private JMenuItem lastSeen;
     private JMenu chooseColor;
     private JMenuItem[] color = new JMenuItem[7];
     private String name;
@@ -35,6 +36,10 @@ public class UserMenu extends JPopupMenu implements ActionListener {
 	        pokeItem = new JMenuItem("Poke");
 	        pokeItem.addActionListener(this);
 	        add(pokeItem);
+	        
+	        lastSeen = new JMenuItem("Last Seen");
+	        lastSeen.addActionListener(this);
+	        add(lastSeen);
         }
     }
     
@@ -43,12 +48,17 @@ public class UserMenu extends JPopupMenu implements ActionListener {
 		if(arg0.getSource().equals(privChatItem)) {
 			main.addPrivateChat(name, true);
 		}
-		if(arg0.getSource().equals(pokeItem)) {
+		else if(arg0.getSource().equals(pokeItem)) {
 			main.receiveText("Hey! Don't poke me! :(", name, true);
 		}
-		for(int i=0; i<color.length; i++) {
-			if(arg0.getSource().equals(color[i])) {
-				main.setUserColor(name, main.getColor(i));
+		else if(arg0.getSource().equals(lastSeen)) {
+			main.addToScreen(name + " was last seen at: " + main.getLastSeen(name));
+		}
+		else {
+			for(int i=0; i<color.length; i++) {
+				if(arg0.getSource().equals(color[i])) {
+					main.setUserColor(name, main.getColor(i));
+				}
 			}
 		}
 	}

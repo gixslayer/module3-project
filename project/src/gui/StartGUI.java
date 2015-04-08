@@ -48,6 +48,9 @@ public class StartGUI extends JFrame implements ActionListener, KeyListener {
 	public void keyPressed(KeyEvent arg0) {
 		if(arg0.getSource().equals(name)) {
 			if(arg0.getKeyCode() == KeyEvent.VK_ENTER) {
+				if(name.getText().matches(".*<.*>.*")) {
+					name.setText("Pu$$y");
+				}
 				new MainGUI(name.getText());
 				this.dispose();
 			}
