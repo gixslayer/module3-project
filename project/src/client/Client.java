@@ -6,21 +6,18 @@ import java.net.UnknownHostException;
 import protocol.ByteUtils;
 
 public class Client {
-	public static final int SERIALIZE_DEFAULT = 0x0;
+	public static final int SERIALIZE_NAME_ONLY = 0x0;
 	public static final int SERIALIZE_ADDRESS = 0x1;
+	public static final int SERIALIZE_LASTSEEN = 0x2;
 	
 	private String name;
 	private InetAddress address;
 	private long lastSeen;
 	private boolean indirect;
-	private String route;
+	private Client route;
 	
 	public Client() {
-		this.name = null;
-		this.address = null;
-		this.lastSeen = 0;
-		this.indirect = false;
-		this.route = null;
+		this(null);
 	}
 	
 	public Client(String name) {
@@ -30,50 +27,58 @@ public class Client {
 		this.indirect = false;
 		this.route = null;
 	}
-	
-	public Client(String name, InetAddress address, long lastSeen) {
-		this.name = name;
-		this.address = address;
-		this.lastSeen = lastSeen;
-		this.indirect = false;
-		this.route = null;
-	}
-	
+
+	//-------------------------------------------
+	// Serialization.
+	//-------------------------------------------	
 	public byte[] serialize(int flags) {
 		boolean serializeAddress = (flags & SERIALIZE_ADDRESS) == SERIALIZE_ADDRESS;
-		byte[] nameBytes = name.getBytes(); // TOOD: Specify a charset
+		boolean serializeLastSeen = (flags & SERIALIZE_LASTSEEN) == SERIALIZE_LASTSEEN;
+
+		byte[] nameBytes = name.getBytes(); // TODO: Specify a charset
 		byte[] addressBytes = serializeAddress ? address.getAddress() : null;
 		int nameLength = nameBytes.length;
 		int addressLength = serializeAddress ? addressBytes.length : 0;
-		int totalLength = nameLength + addressLength + 16;
-		byte[] buffer = serializeAddress ? new byte[totalLength + 4] : new byte[totalLength];
+		int totalLength = 8 + nameLength;
+		int offset = 8 + nameLength;
 		
-		ByteUtils.getLongBytes(lastSeen, buffer, 0);
-		ByteUtils.getIntBytes(flags, buffer, 8);
-		ByteUtils.getIntBytes(nameLength, buffer, 12);
-		System.arraycopy(nameBytes, 0, buffer, 16, nameLength);
+		if(serializeAddress) totalLength += 4 + addressBytes.length;
+		if(serializeLastSeen) totalLength += 8;
+		
+		byte[] buffer = new byte[totalLength];
+		
+		ByteUtils.getIntBytes(flags, buffer, 0);
+		ByteUtils.getIntBytes(nameLength, buffer, 4);
+		System.arraycopy(nameBytes, 0, buffer, 8, nameLength);
+		
 		if(serializeAddress) {
-			ByteUtils.getIntBytes(addressLength, buffer, 16 + nameLength);
-			System.arraycopy(addressBytes, 0, buffer, 20 + nameLength, addressLength);
+			ByteUtils.getIntBytes(addressLength, buffer, offset);
+			System.arraycopy(addressBytes, 0, buffer, offset + 4, addressLength);
+			offset += 4 + addressLength;
+		}
+		
+		if(serializeLastSeen) {
+			ByteUtils.getLongBytes(lastSeen, buffer, offset);
 		}
 		
 		return buffer;
 	}
 	
 	public int deserialize(byte[] buffer, int offset) {
-		long lastSeen = ByteUtils.getLongFromBytes(buffer, offset);
-		int flags = ByteUtils.getIntFromBytes(buffer, offset + 8);
-		int nameLength = ByteUtils.getIntFromBytes(buffer, offset + 12);
-		String name = new String(buffer, offset + 16, nameLength);
+		int flags = ByteUtils.getIntFromBytes(buffer, offset);
+		int nameLength = ByteUtils.getIntFromBytes(buffer, offset + 4);
+		String name = new String(buffer, offset + 8, nameLength);
 		InetAddress address = null;
-		int bytesRead = 16 + nameLength;
+		long lastSeen = 0;
+		int bytesRead = 8 + nameLength;
 
 		boolean serializedAddress = (flags & SERIALIZE_ADDRESS) == SERIALIZE_ADDRESS;
+		boolean serializedLastSeen = (flags & SERIALIZE_LASTSEEN) == SERIALIZE_LASTSEEN;
 		
 		if(serializedAddress) {
-			int addressLength = ByteUtils.getIntFromBytes(buffer, offset + 16 + nameLength);
+			int addressLength = ByteUtils.getIntFromBytes(buffer, offset + bytesRead);
 			byte[] addressBytes = new byte[addressLength];
-			System.arraycopy(buffer, offset + 20 + nameLength, addressBytes, 0, addressLength);
+			System.arraycopy(buffer, offset + bytesRead + 4, addressBytes, 0, addressLength);
 			bytesRead += 4 + addressLength;
 
 			try {
@@ -83,15 +88,23 @@ public class Client {
 			}
 		}
 		
-		this.lastSeen = lastSeen;
-		this.address = address;
+		if(serializedLastSeen) {
+			lastSeen = ByteUtils.getLongFromBytes(buffer, offset + bytesRead);
+			bytesRead += 8;
+		}
+		
 		this.name = name;
-		indirect = false;
-		route = null;
+		this.address = address;
+		this.lastSeen = lastSeen;
+		this.indirect = false;
+		this.route = null;
 		
 		return bytesRead;
 	}
 	
+	//-------------------------------------------
+	// Setters.
+	//-------------------------------------------
 	public void setName(String name) {
 		this.name = name;
 	}
@@ -109,15 +122,18 @@ public class Client {
 		this.route = null;
 	}
 	
-	public void setIndirect(String route) {
+	public void setIndirect(Client route) {
 		this.indirect = true;
 		this.route = route;
 	}
 	
-	public void setRoute(String route) {
+	public void setRoute(Client route) {
 		this.route = route;
 	}
 	
+	//-------------------------------------------
+	// Getters.
+	//-------------------------------------------
 	public String getName() {
 		return name;
 	}
@@ -134,16 +150,29 @@ public class Client {
 		return indirect;		
 	}
 	
-	public String getRoute() {
+	public Client getRoute() {
 		return route;
 	}
 	
-	public boolean equals(Client other) {
-		if(other == null) {
-			return false;
-		}
+	//-------------------------------------------
+	// Object overrides.
+	//-------------------------------------------
+	@Override
+	public boolean equals(Object obj) {
+		if(obj == null) return false;
+		if(!(obj instanceof Client)) return false;
 		
-		return this.name.equals(other.name);
+		Client other = (Client)obj;
+		
+		if(!this.name.equals(other.name)) return false;
+		if(!this.address.equals(other.address)) return false;
+		
+		return true;
+	}
+	
+	@Override
+	public int hashCode() {
+		return name.hashCode() ^ address.hashCode();
 	}
 	
 	@Override

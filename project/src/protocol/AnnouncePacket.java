@@ -3,11 +3,12 @@ package protocol;
 import client.Client; 
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 
 public final class AnnouncePacket extends Packet {
-	private Client sourceClient;
-	private List<Client> knownClients;
+	private final Client sourceClient;
+	private final List<Client> knownClients;
 	
 	public AnnouncePacket() {
 		super(Packet.TYPE_ANNOUNCE);
@@ -16,21 +17,25 @@ public final class AnnouncePacket extends Packet {
 		this.knownClients = new ArrayList<Client>();
 	}
 	
-	public AnnouncePacket(Client sourceClient, List<Client> knownClients) {
+	public AnnouncePacket(Client sourceClient, Client[] knownClients) {
 		super(Packet.TYPE_ANNOUNCE);
 		
 		this.sourceClient = sourceClient;
-		this.knownClients = knownClients;
+		this.knownClients = new ArrayList<Client>();
+		
+		if(knownClients != null) {
+			this.knownClients.addAll(Arrays.asList(knownClients));
+		}
 	}
 	
 	protected byte[] serializeContent() {
 		byte[][] serializedClients = new byte[knownClients.size() + 1][];
 		int totalLength = 0;
 		
-		serializedClients[0] = sourceClient.serialize(Client.SERIALIZE_DEFAULT);
+		serializedClients[0] = sourceClient.serialize(Client.SERIALIZE_LASTSEEN);
 		totalLength += serializedClients[0].length;
 		for(int i = 0; i < serializedClients.length - 1; i++) {
-			serializedClients[i + 1] = knownClients.get(i).serialize(Client.SERIALIZE_ADDRESS);
+			serializedClients[i + 1] = knownClients.get(i).serialize(Client.SERIALIZE_ADDRESS | Client.SERIALIZE_LASTSEEN);
 			totalLength += serializedClients[i + 1].length;
 		}
 		
@@ -56,11 +61,7 @@ public final class AnnouncePacket extends Packet {
 			knownClients.add(knownClient);
 		}
 	}
-	
-	public void setSourceClient(Client client) {
-		this.sourceClient = client;
-	}
-	
+
 	public Client getSourceClient() {
 		return sourceClient;
 	}

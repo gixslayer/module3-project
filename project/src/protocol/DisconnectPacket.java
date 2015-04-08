@@ -1,40 +1,31 @@
 package protocol;
 
+import client.Client;
+
 public final class DisconnectPacket extends Packet {
-	private String name;
+	private final Client client;
 	
 	public DisconnectPacket() {
-		this(null);
+		this(new Client());
 	}
 	
-	public DisconnectPacket(String name) {
+	public DisconnectPacket(Client client) {
 		super(Packet.TYPE_DISCONNECT);
 		
-		this.name = name;
+		this.client = client;
 	}
 
 	@Override
 	protected byte[] serializeContent() {
-		byte[] nameBytes = name.getBytes();
-		byte[] buffer = new byte[nameBytes.length + 4];
-		
-		ByteUtils.getIntBytes(nameBytes.length, buffer, 0);
-		System.arraycopy(nameBytes, 0, buffer, 4, nameBytes.length);
-		
-		return buffer;
+		return client.serialize(Client.SERIALIZE_ADDRESS);
 	}
 
 	@Override
 	protected void deserializeContent(byte[] buffer, int offset, int length) {
-		int nameLength = ByteUtils.getIntFromBytes(buffer, offset);
-		name = new String(buffer, offset + 4, nameLength);
+		client.deserialize(buffer, offset);
 	}
 	
-	public void setName(String name) {
-		this.name = name;
-	}
-	
-	public String getName() {
-		return name;
+	public Client getClient() {
+		return client;
 	}
 }

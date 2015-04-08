@@ -28,6 +28,9 @@ public class Application implements MulticastCallbacks, CacheCallbacks, GUICallb
 	private final ApplicationCallbacks callbacks;
 
 	public Application(String username, ApplicationCallbacks callbacks) {
+		// TODO: Grab the correct local IP (In this case 192.168.5.X) from the network interfaces and set it in the local client field.
+		// A client currently deduces the IP from incoming multicast packets, but if it tries to disconnect before receiving a multicast
+		// packet it send it will not have the correct address set and will break things for other clients.
 		this.mci = new MulticastInterface(GROUP, PORT, this);
 		this.localClient = new Client(username);
 		this.clientCache = new ClientCache(localClient, this);
@@ -41,7 +44,7 @@ public class Application implements MulticastCallbacks, CacheCallbacks, GUICallb
 	}
 
 	public void stop() {
-		sendToAll(new DisconnectPacket(localClient.getName()));
+		sendToAll(new DisconnectPacket(localClient));
 		
 		announceThread.close();
 		mci.close();
@@ -107,7 +110,7 @@ public class Application implements MulticastCallbacks, CacheCallbacks, GUICallb
 	}
 	
 	private void handleDisconnectPacket(DisconnectPacket packet) {
-		clientCache.clientDisconnected(packet.getName());
+		clientCache.clientDisconnected(packet.getClient());
 	}
 	
 	private void handleChatPacket(ChatPacket packet) {

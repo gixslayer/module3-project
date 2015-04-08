@@ -24,16 +24,12 @@ public final class AnnounceThread extends Thread {
 		keepRunning = true;
 		
 		while(keepRunning) {
-			// Construct the announcement packet.
-			AnnouncePacket packet = new AnnouncePacket();
-			
+			// Update the last seen time-stamp of the local client to the current epoch time.
 			localClient.setLastSeen(DateUtils.getEpochTime());
-			packet.setSourceClient(localClient);
-			
-			for(Client client : clientCache.getClients()) {
-				packet.getKnownClients().add(client);
-			}
-			
+
+			// Construct the announcement packet.
+			AnnouncePacket packet = new AnnouncePacket(localClient, clientCache.getClients());
+
 			// Broadcast the announcement to all clients within range.
 			mci.send(packet);
 			

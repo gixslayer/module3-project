@@ -1,9 +1,7 @@
 package client;
 
 import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
 
 import application.DateUtils;
 
@@ -13,13 +11,13 @@ public final class ClientCache {
 	
 	private final Object syncRoot;
 	private final Client localClient;
-	private final Map<String, Client> cache;
+	private final List<Client> cache;
 	private final CacheCallbacks callbacks;
 	
 	public ClientCache(Client localClient, CacheCallbacks callbacks) {
 		this.syncRoot = new Object();
 		this.localClient = localClient;
-		this.cache = new HashMap<String, Client>();
+		this.cache = new ArrayList<Client>();
 		this.callbacks = callbacks;
 	}
 	
@@ -27,18 +25,18 @@ public final class ClientCache {
 		boolean clientConnected = false;
 		
 		synchronized(syncRoot) {
-			if(!cache.containsKey(client.getName())) {
+			if(!cache.contains(client)) {
 				client.setDirect();
-				cache.put(client.getName(), client);
+				cache.add(client);
 				clientConnected = true;
 			} else {
-				Client cachedClient = cache.get(client.getName());
-			
+				Client cachedClient = cache.get(cache.indexOf(client));
+				
 				if(client.getLastSeen() > cachedClient.getLastSeen()) {
 					cachedClient.setLastSeen(client.getLastSeen());
 				}
-				if(client.isIndirect()) {
-					client.setDirect();
+				if(cachedClient.isIndirect()) {
+					cachedClient.setDirect();
 				}
 			}
 		}
@@ -57,16 +55,17 @@ public final class ClientCache {
 		boolean clientConnected = false;
 		
 		synchronized(syncRoot) {
-			if(!cache.containsKey(client.getName())) {
-				client.setIndirect(source.getName());
-				cache.put(client.getName(), client);
+			if(!cache.contains(client)) {
+				// TODO: Check if this client was recently disconnected due to a disconnect packet.
+				client.setIndirect(source);
+				cache.add(client);
 				clientConnected = true;
 			} else {
-				Client cachedClient = cache.get(client.getName());
+				Client cachedClient = cache.get(cache.indexOf(client));
 			
 				if(cachedClient.isIndirect()) {
 					if(client.getLastSeen() > cachedClient.getLastSeen()) {
-						cachedClient.setRoute(source.getName());
+						cachedClient.setRoute(source);
 						cachedClient.setLastSeen(client.getLastSeen());
 					}
 				}
@@ -80,31 +79,21 @@ public final class ClientCache {
 	}
 	
 	public void checkForTimeouts() {
-		// TODO: Route lost is a recursive problem!
 		List<Client> timedOutClients = new ArrayList<Client>();
-		Map<Client, Client> lostRouteClients = new HashMap<Client, Client>();
+		List<Client> lostRouteClients = new ArrayList<Client>();
 		
 		synchronized(syncRoot) {
 			long now = DateUtils.getEpochTime();
 			
-			for(Client client : cache.values()) {
+			for(Client client : cache) {
 				if(now - client.getLastSeen() >= TIMEOUT_DURATION) {
 					timedOutClients.add(client);
 				}
 			}
 		
 			for(Client client : timedOutClients) {
-				cache.remove(client.getName());
-				
-				for(Client c : cache.values()) {
-					if(c.isIndirect() && c.getRoute().equals(client.getName())) {
-						lostRouteClients.put(c, client);
-					}
-				}
-			}
-			
-			for(Client client : lostRouteClients.keySet()) {
-				cache.remove(client.getName());
+				timedOutClients.add(client);
+				lostRouteClients.addAll(removeClient(client));
 			}
 		}
 		
@@ -113,43 +102,48 @@ public final class ClientCache {
 			callbacks.onClientTimedOut(client);
 		}
 		
-		for(Client client : lostRouteClients.keySet()) {
-			callbacks.onClientLostRoute(client, lostRouteClients.get(client));
+		for(Client client : lostRouteClients) {
+			// TODO: Remove route parameter from callback as the client object now has access to it directly.
+			callbacks.onClientLostRoute(client, client.getRoute());
 		}
 	}
 	
-	public void clientDisconnected(String name) {
-		// TODO: Route lost is a recursive problem!
-		// TODO: Disconnect clients might get added as indirect through case, prevent this!
-		Client disconnectedClient;
-		Map<Client, Client> lostRouteClients;
+	public void clientDisconnected(Client client) {
+		List<Client> lostRouteClients;
 		
 		synchronized(syncRoot) {
-			disconnectedClient = cache.get(name);
-			
-			if(disconnectedClient == null) {
+			if(!cache.contains(client)) {
 				return;
 			}
 			
-			cache.remove(name);
-			lostRouteClients = new HashMap<Client, Client>();
-			
-			for(Client client : cache.values()) {
-				if(client.isIndirect() && client.getRoute().equals(name)) {
-					lostRouteClients.put(client, disconnectedClient);
-				}
-			}
-			
-			for(Client client : lostRouteClients.keySet()) {
-				cache.remove(client.getName());
+			lostRouteClients = removeClient(client);
+		}
+		
+		// Process callbacks outside critical section to avoid holding the lock longer than needed.
+		callbacks.onClientDisconnected(client);
+		
+		for(Client c : lostRouteClients) {
+			// TODO: Remove route parameter from callback as the client object now has access to it directly.
+			callbacks.onClientLostRoute(c, c.getRoute());
+		}
+	}
+	
+	private List<Client> removeClient(Client client) {
+		List<Client> lostRouteClients = new ArrayList<Client>();
+		
+		cache.remove(client);
+		
+		for(Client c : cache) {
+			if(c.isIndirect() && c.getRoute().equals(client)) {
+				lostRouteClients.add(c);
 			}
 		}
 		
-		callbacks.onClientDisconnected(disconnectedClient);
-		
-		for(Client client : lostRouteClients.keySet()) {
-			callbacks.onClientLostRoute(client, lostRouteClients.get(name));
+		for(Client c : lostRouteClients) {
+			lostRouteClients.addAll(removeClient(c));
 		}
+		
+		return lostRouteClients;
 	}
 	
 	public Client getLocalClient() {
@@ -157,14 +151,14 @@ public final class ClientCache {
 	}
 	
 	public Client[] getClients() {
-		// TODO: This is problematic with multi-threading, return a deep copy?
+		// TODO: Is this problematic with multi-threading, return a deep copy perhaps?
 		Client[] buffer;
 		int offset = 0;
 		
 		synchronized(syncRoot) {
-			buffer = new Client[cache.values().size()];
+			buffer = new Client[cache.size()];
 		
-			for(Client client : cache.values()) {
+			for(Client client : cache) {
 				buffer[offset++] = client;
 			}
 		}
