@@ -83,28 +83,21 @@ public class Application implements MulticastCallbacks, CacheCallbacks, GUICallb
 	@Override
 	public void onClientTimedOut(Client client) {
 		callbacks.onClientTimedOut(client);
-		//String lastSeen = DateUtils.timestampToDateString(client.getLastSeen(), "HH:mm:ss");
-		//System.out.printf("Client %s has timed out (last seen: %s)%n", client, lastSeen);
 	}
 
 	@Override
 	public void onClientConnected(Client client) {
 		callbacks.onClientConnected(client);
-		//String lastSeen = DateUtils.timestampToDateString(client.getLastSeen(), "HH:mm:ss");
-		//System.out.printf("Client %s has connected (last seen: %s)%n", client, lastSeen);	
 	}
 
 	@Override
 	public void onClientDisconnected(Client client) {
 		callbacks.onClientDisconnected(client);
-		//String lastSeen = DateUtils.timestampToDateString(client.getLastSeen(), "HH:mm:ss");
-		//System.out.printf("Client %s has disconnected (last seen: %s)%n", client, lastSeen);	
 	}
 	
 	@Override
 	public void onClientLostRoute(Client client, Client route) {
 		callbacks.onClientLostRoute(client, route);
-		//System.out.printf("Client %s has disconnected as its route %s has disconnected%n", client, route);
 	}
 	
 	//-------------------------------------------

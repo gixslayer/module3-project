@@ -74,11 +74,10 @@ public final class ClientCache {
 			return;
 		}
 		
-		/*boolean clientConnected = false;
+		boolean clientConnected = false;
 		
 		synchronized(syncRoot) {
 			if(!cache.containsKey(client.getName())) {
-				System.out.printf("Adding indirect client %s via %s%n", client, source);
 				client.setIndirect(source.getName());
 				cache.put(client.getName(), client);
 				clientConnected = true;
@@ -87,7 +86,6 @@ public final class ClientCache {
 			
 				if(cachedClient.isIndirect()) {
 					if(client.getLastSeen() > cachedClient.getLastSeen()) {
-						System.out.printf("Updating indirect client %s via %s%n", client, source);
 						cachedClient.setRoute(source.getName());
 						cachedClient.setLastSeen(client.getLastSeen());
 					}
@@ -98,7 +96,7 @@ public final class ClientCache {
 		// Process callback outside critical section to avoid holding the lock longer than needed.
 		if(clientConnected) {
 			callbacks.onClientConnected(client);
-		}*/
+		}
 	}
 	
 	public void checkForTimeouts() {
@@ -108,12 +106,9 @@ public final class ClientCache {
 		System.out.println("[Checking timeouts]");
 		
 		synchronized(syncRoot) {
-			//long now = System.currentTimeMillis();
 			long now = DateUtils.getEpochTime();
 			
 			for(Client client : cache.values()) {
-				System.out.printf("Client %s last seen: %d diff: %d%n", client, client.getLastSeen(), now - client.getLastSeen());
-				
 				if(now - client.getLastSeen() >= TIMEOUT_DURATION) {
 					System.out.printf("Detected timeout: %s, %d%n", client, now - client.getLastSeen());
 					timedOutClients.add(client);
