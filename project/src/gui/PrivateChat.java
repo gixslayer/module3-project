@@ -26,13 +26,15 @@ public class PrivateChat extends JPanel implements ActionListener, KeyListener {
 	private MainGUI main;
 	private Application app;
 	private Alice alice;
+	private AnimationThread animation;
 	
-	public PrivateChat(String name, String otherName, MainGUI main, Application app, Alice alice) {
+	public PrivateChat(String name, String otherName, MainGUI main, Application app, Alice alice, AnimationThread animation) {
 		clientName = name;
 		this.otherName = otherName;
 		this.main = main;
 		this.app = app;
 		this.alice = alice;
+		this.animation = animation;
 		init();
 	}
 	
@@ -45,7 +47,7 @@ public class PrivateChat extends JPanel implements ActionListener, KeyListener {
 		typeField.addKeyListener(this);
 		
 		receiveArea = new JList<String>(list);
-		receiveArea.setCellRenderer(new CustomCellRenderer(main));
+		receiveArea.setCellRenderer(new CustomCellRenderer(main, animation));
 		scrollPane = new JScrollPane(receiveArea);
 	
 		sendButton = new JButton("Send");

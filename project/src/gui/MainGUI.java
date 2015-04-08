@@ -232,7 +232,7 @@ public class MainGUI extends JFrame implements ActionListener, KeyListener, Mous
 		if(name.equals(clientName)) return;
 		JPanel privChat = new JPanel();
 		privChat.setLayout(new BorderLayout());
-		PrivateChat pChat = new PrivateChat(clientName, name, this, app, alice);
+		PrivateChat pChat = new PrivateChat(clientName, name, this, app, alice, animation);
 		privChat.add(pChat, BorderLayout.CENTER);
 		
 		tabPane.addTab(name, privChat);
