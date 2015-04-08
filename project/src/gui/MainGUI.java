@@ -265,7 +265,7 @@ public class MainGUI extends JFrame implements ActionListener, KeyListener, Mous
 	 */
 	public void sendText() {
 		String txt = typeField.getText();
-		if(txt.length() == 0 || txt.matches("\\s*") || txt.matches(".*(<script>).*")) return;
+		if(txt.length() == 0 || txt.matches("\\s*") || txt.matches(".*(<script).*")) return;
 		app.onSendMessage(txt);
 		receiveText(txt, clientName, false);
 		typeField.setText("");
@@ -569,7 +569,7 @@ public class MainGUI extends JFrame implements ActionListener, KeyListener, Mous
 
 	@Override
 	public void onChatMessageReceived(String user, String message) {
-		receiveText(message, user, false);
+		if(!user.equals(clientName)) receiveText(message, user, false);
 	}
 
 	@Override
