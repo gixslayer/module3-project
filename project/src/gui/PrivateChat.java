@@ -68,11 +68,14 @@ public class PrivateChat extends JPanel implements ActionListener, KeyListener {
 	public void addToScreen(String str) {
 		list.addElement(str);
 		receiveArea.ensureIndexIsVisible(list.getSize() -1);
+		if(list.getSize() > main.LIST_MAX_SIZE) {
+			list.removeElement(list.firstElement());
+		}
 	}
 	
 	public void sendText() {
 		String txt = typeField.getText();
-		if(txt.length() == 0) return;
+		if(txt.length() == 0 || txt.matches("\\s*")) return;
 		app.onSendPrivateMessage(otherName, txt);
 		addToScreen(clientName + ": " + txt);
 		typeField.setText("");
