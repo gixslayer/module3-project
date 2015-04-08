@@ -70,6 +70,10 @@ public class Application implements MulticastCallbacks, CacheCallbacks, GUICallb
 	}
 	
 	private void handleMulticastChatPacket(MulticastChatPacket packet) {
+		if(packet.getName().equals(localClient.getName())) {
+			return;
+		}
+		
 		callbacks.onChatMessageReceived(packet.getName(), packet.getMessage());
 	}
 

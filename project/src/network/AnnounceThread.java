@@ -1,5 +1,6 @@
 
 package network;
+import application.DateUtils;
 import protocol.AnnouncePacket;
 import client.Client;
 import client.ClientCache;
@@ -26,7 +27,7 @@ public final class AnnounceThread extends Thread {
 			// Construct the announcement packet.
 			AnnouncePacket packet = new AnnouncePacket();
 			
-			localClient.setLastSeen(System.currentTimeMillis());
+			localClient.setLastSeen(DateUtils.getEpochTime());
 			packet.setSourceClient(localClient);
 			
 			for(Client client : clientCache.getClients()) {

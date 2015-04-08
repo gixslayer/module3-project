@@ -6,6 +6,8 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+import application.DateUtils;
+
 public final class ClientCache {
 	public static final long TIMEOUT_DURATION = 10000; // Clients time out after not being seen for this many miliseconds.
 	public static final long LAST_SEEN_DISCONNECTED = -1;
@@ -104,7 +106,8 @@ public final class ClientCache {
 		Map<Client, Client> lostRouteClients = new HashMap<Client, Client>();
 		
 		synchronized(syncRoot) {
-			long now = System.currentTimeMillis();
+			//long now = System.currentTimeMillis();
+			long now = DateUtils.getEpochTime();
 			
 			for(Client client : cache.values()) {
 				if(now - client.getLastSeen() >= TIMEOUT_DURATION) {
@@ -118,7 +121,6 @@ public final class ClientCache {
 				
 				for(Client c : cache.values()) {
 					if(c.isIndirect() && c.getRoute().equals(client.getName())) {
-						System.out.printf("Detected route lost: %s via %s%n", c, client);
 						lostRouteClients.put(c, client);
 					}
 				}
