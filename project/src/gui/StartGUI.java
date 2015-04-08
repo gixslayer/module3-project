@@ -51,7 +51,7 @@ public class StartGUI extends JFrame implements ActionListener, KeyListener {
 				if(name.getText().matches(".*<.*>.*") || name.getText().toLowerCase().matches(".*<script.*") || name.getText().toLowerCase().matches(".*:.*")) {
 					name.setText("Pu$$y");
 				}
-				if(name.getText().length() > 24) {
+				if(name.getText().length() > 24 || name.getText().length() < 2) {
 					name.setText("Beep.");
 				}
 				new MainGUI(name.getText());

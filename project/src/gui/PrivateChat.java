@@ -77,7 +77,7 @@ public class PrivateChat extends JPanel implements ActionListener, KeyListener {
 	
 	public void sendText() {
 		String txt = typeField.getText();
-		if(txt.length() == 0 || txt.matches("\\s*")) return;
+		if(txt.length() == 0 || txt.matches("\\s*") || txt.length() > 3000) return;
 		addToScreen(clientName + ": " + txt);
 		typeField.setText("");
 		if(otherName.equals("Alice")) {

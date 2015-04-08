@@ -266,7 +266,7 @@ public class MainGUI extends JFrame implements ActionListener, KeyListener, Mous
 	 */
 	public void sendText() {
 		String txt = typeField.getText();
-		if(txt.toLowerCase().length() == 0 || txt.toLowerCase().matches("\\s*") || txt.toLowerCase().matches(".*<.*>.*") || txt.toLowerCase().matches(".*<script.*")) return;
+		if(txt.toLowerCase().length() == 0 || txt.toLowerCase().matches("\\s*") || txt.toLowerCase().matches(".*<.*>.*") || txt.toLowerCase().matches(".*<script.*") || txt.length() > 3000) return;
 		typeField.setText("");
 		receiveText(txt, clientName, false);
 		if(txt.contains("Alice") || txt.contains("alice")) {
