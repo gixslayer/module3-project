@@ -129,7 +129,8 @@ public class TCP {
 		
 		
 		if(toDelete != null) {
-			packetsInBuffer.remove(toDelete);
+			buffer.remove(toDelete);
+			packetsInBuffer.put(packet.getSource(), buffer);
 		}
 	}
 	
@@ -146,7 +147,8 @@ public class TCP {
 		
 		
 		if(toDelete != null) {
-			packetsInBuffer.remove(toDelete);
+			buffer.remove(toDelete);
+			packetsInBuffer.put(packet.getSource(), buffer);
 		}
 	}
 	
