@@ -80,7 +80,6 @@ public class MainGUI extends JFrame implements ActionListener, KeyListener, Mous
 		app = new Application(name, this);
 		app.start();
 		client = app.getLocalClient();
-		System.out.println(client.getAddress());
 		init();
 	}
 	
@@ -352,11 +351,19 @@ public class MainGUI extends JFrame implements ActionListener, KeyListener, Mous
 			}
 			return;
 		}
+		if(str.startsWith("*wavename*")) {
+			if(name.equals(client.getName())) {
+				String[] split = str.split("\\*");
+				String[] tmp = {"¯¨'*·~-.¸¸,.-~*' " + split[2] + " ¯¨'*·~-.¸¸,.-~*'"};
+				sendMultiple(tmp);
+			}
+			return;
+		}
 		// Note: Disabled fancy names as it would break a dirty hack I did.
 		// Find a way to properly interact with the back-end through Client instances
 		// directly, rather than trying to represent Client instances in a name string
 		// which is directly displayed on the GUI/used in GUI logic.
-		/*name = name.replace(":)", "☺");
+		name = name.replace(":)", "☺");
 		name = name.replace(":(", "☹");
 		name = name.replace("*check*", "✔");
 		name = name.replace("*yinyang*", "☯");
@@ -378,7 +385,7 @@ public class MainGUI extends JFrame implements ActionListener, KeyListener, Mous
 		name = name.replace("1/2", "½");
 		name = name.replace("1/4", "¼");
 		name = name.replace("*R*", "ℜ");
-		name = name.replace("*N*", "ℵ");*/
+		name = name.replace("*N*", "ℵ");
 		if(priv) {
 			int index = tabPane.indexOfTab(name);
 			if(index == -1) {
