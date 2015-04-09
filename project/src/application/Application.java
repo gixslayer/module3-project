@@ -1,5 +1,7 @@
 package application;
 
+import gui.GUICallbacks;
+
 import java.net.InetAddress;
 
 import client.CacheCallbacks;
@@ -20,8 +22,8 @@ import network.NetworkInterface;
 
 public class Application implements NetworkCallbacks, MulticastCallbacks, CacheCallbacks, GUICallbacks {
 	public static final String GROUP = "228.0.0.0";
-	public static final int PORT = 6969;
-	public static final int NI_PORT = 6970;
+	public static final int MC_PORT = 6969;
+	public static final int UDP_PORT = 6970;
 	public static final int ANNOUNCE_INTERVAL = 1000;
 	
 	private final MulticastInterface mci;
@@ -34,8 +36,8 @@ public class Application implements NetworkCallbacks, MulticastCallbacks, CacheC
 	public Application(String username, ApplicationCallbacks callbacks) {
 		InetAddress localAddress = NetworkUtils.getLocalAddress();
 
-		this.mci = new MulticastInterface(GROUP, PORT, this);
-		this.ni = new NetworkInterface(localAddress, NI_PORT, this);
+		this.mci = new MulticastInterface(GROUP, MC_PORT, this);
+		this.ni = new NetworkInterface(localAddress, UDP_PORT, this);
 		this.localClient = new Client(username, localAddress);
 		this.clientCache = new ClientCache(localClient, this);
 		this.announceThread = new AnnounceThread(mci, clientCache, ANNOUNCE_INTERVAL);

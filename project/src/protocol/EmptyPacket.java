@@ -12,7 +12,7 @@ public class EmptyPacket extends Packet {
 
 	@Override
 	protected byte[] serializeContent() {
-		return null;
+		return new byte[0];
 	}
 
 	@Override

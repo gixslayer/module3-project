@@ -27,7 +27,7 @@ public final class NetworkInterface {
 			this.recvBuffer = new byte[RECV_BUFFER_SIZE];
 			this.callbacks = callbacks;
 		} catch (SocketException e) {
-			throw new RuntimeException(String.format("Failed to create network interface: %s%n", e.getMessage()));
+			throw new RuntimeException(String.format("Failed to create network interface: %s", e.getMessage()));
 		}
 	}
 	
@@ -52,7 +52,7 @@ public final class NetworkInterface {
 		try {
 			socket.send(datagram);
 		} catch (IOException e) {
-			System.err.printf("IOException during DatagramSocket.send: %s%n", e.getMessage());
+			System.err.printf("IOException during DatagramSocket.send: %s", e.getMessage());
 		}
 	}
 	
@@ -89,6 +89,8 @@ public final class NetworkInterface {
 	class ReceiveThread extends Thread {
 		@Override
 		public void run() {
+			setName("UDP-recv");
+			
 			while(true) {
 				Packet packet = recv();
 				

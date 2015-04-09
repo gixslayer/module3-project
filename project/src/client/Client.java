@@ -189,6 +189,7 @@ public class Client {
 	// !!!TEMP HACK METHOD!!!
 	//-------------------------------------------
 	public static Client fromString(String str) {
+		// TODO: See if we no longer need this.
 		try {
 			int splitIndex = str.lastIndexOf('@');
 			String name = str.substring(0, splitIndex);

@@ -121,7 +121,7 @@ public final class ClientCache {
 	}
 	
 	public void clientDisconnected(Client client) {
-		
+		// TODO: Is this a proper place to call this?
 		TCP.closeConnection(client.getAddress());
 		
 		List<Client> lostRouteClients;
@@ -163,6 +163,9 @@ public final class ClientCache {
 	}
 	
 	public Client getClientFromName(String name) {
+		// TODO: This should be synchronized on syncRoot to avoid concurrent modification exceptions, but ideally
+		// this method shouldn't even exists and clients are identified by the combination of their name and
+		// address instead of just their name.
 		for(Client c : cache) {
 			if(c.getName().equals(name)) return c;
 		}
@@ -186,10 +189,12 @@ public final class ClientCache {
 	}
 	
 	private boolean hasRecentlyDisconnected(Client client) {
+		// Note: Must always be called from within a synchronized(syncRoot) block.
 		return recentlyDisconnected.containsKey(client);
 	}
 	
 	private List<Client> removeClient(Client client) {
+		// Note: Must always be called from within a synchronized(syncRoot) block.
 		List<Client> lostRouteClients = new ArrayList<Client>();
 		
 		cache.remove(client);

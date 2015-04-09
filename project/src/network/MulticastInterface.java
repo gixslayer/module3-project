@@ -24,7 +24,7 @@ public class MulticastInterface {
 			this.recvBuffer = new byte[RECV_BUFFER_SIZE];
 			this.callbacks = callbacks;
 		} catch (IOException e) {
-			throw new RuntimeException(String.format("Failed to create multicast interface: %s%n", e.getMessage()));
+			throw new RuntimeException(String.format("Failed to create multicast interface: %s", e.getMessage()));
 		}
 	}
 	
@@ -33,7 +33,7 @@ public class MulticastInterface {
 			socket.joinGroup(group);
 			(new ReceiveThread()).start();
 		} catch (IOException e) {
-			throw new RuntimeException(String.format("Failed to start multicast interface: %s%n", e.getMessage()));
+			throw new RuntimeException(String.format("Failed to start multicast interface: %s", e.getMessage()));
 		}
 	}
 	
@@ -47,25 +47,16 @@ public class MulticastInterface {
 	}
 	
 	public void send(Packet packet) {
-		byte[] data = packet.serialize();
-		
-		DatagramPacket datagram = new DatagramPacket(data, data.length, group, port);
-		
-		try {
-			socket.send(datagram);
-		} catch (IOException e) {
-			System.err.printf("IOException during MulticastSocket.send: %s%n", e.getMessage());
-		}
+		send(packet.serialize());
 	}
 	
 	public void send(byte[] data) {
-		
 		DatagramPacket datagram = new DatagramPacket(data, data.length, group, port);
 		
 		try {
 			socket.send(datagram);
 		} catch (IOException e) {
-			System.err.printf("IOException during MulticastSocket.send: %s%n", e.getMessage());
+			System.err.printf("IOException during MulticastSocket.send: %s", e.getMessage());
 		}
 	}
 	
@@ -87,6 +78,8 @@ public class MulticastInterface {
 	class ReceiveThread extends Thread {
 		@Override
 		public void run() {
+			setName("Multicast-recv");
+			
 			while(true) {
 				Packet packet = recv();
 				

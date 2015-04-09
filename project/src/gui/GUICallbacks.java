@@ -1,4 +1,4 @@
-package application;
+package gui;
 
 import client.Client;
 
