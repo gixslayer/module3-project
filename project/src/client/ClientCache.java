@@ -1,23 +1,28 @@
 package client;
 
 import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.Iterator;
 import java.util.List;
+import java.util.Map;
 
 import utils.DateUtils;
 
 public final class ClientCache {
-	public static final long TIMEOUT_DURATION = 10000; // Clients time out after not being seen for this many miliseconds.
-	public static final long LAST_SEEN_DISCONNECTED = -1;
+	public static final long TIMEOUT_DURATION = 10000; // Clients time out after not being seen for this many milliseconds.
+	public static final long RECONNECT_DURATION = 2500; // A client from the same IP/name cannot be indirectly added after it manually disconnects before this many milliseconds expire.
 	
 	private final Object syncRoot;
 	private final Client localClient;
 	private final List<Client> cache;
+	private final Map<Client, Long> recentlyDisconnected;
 	private final CacheCallbacks callbacks;
 	
 	public ClientCache(Client localClient, CacheCallbacks callbacks) {
 		this.syncRoot = new Object();
 		this.localClient = localClient;
 		this.cache = new ArrayList<Client>();
+		this.recentlyDisconnected = new HashMap<Client, Long>();
 		this.callbacks = callbacks;
 	}
 	
@@ -56,10 +61,16 @@ public final class ClientCache {
 		
 		synchronized(syncRoot) {
 			if(!cache.contains(client)) {
-				// TODO: Check if this client was recently disconnected due to a disconnect packet.
-				client.setIndirect(source);
-				cache.add(client);
-				clientConnected = true;
+				// If a client disconnects through a disconnect packet this client might receive the
+				// disconnect packet and remove it from the cache before other clients do (due to latency/packetloss etc).
+				// If that client would then send its announce packet we would indirectly add the disconnected client again.
+				// This effect can bounce around in the network causing a lot of connected/disconnected spam and possibly
+				// other issues. This is a bit of a hack, but should work fine.
+				if(!hasRecentlyDisconnected(client)) {
+					client.setIndirect(source);
+					cache.add(client);
+					clientConnected = true;
+				}
 			} else {
 				Client cachedClient = cache.get(cache.indexOf(client));
 			
@@ -115,6 +126,7 @@ public final class ClientCache {
 				return;
 			}
 			
+			recentlyDisconnected.put(client, DateUtils.getEpochTime());
 			lostRouteClients = removeClient(client);
 		}
 		
@@ -126,22 +138,19 @@ public final class ClientCache {
 		}
 	}
 	
-	private List<Client> removeClient(Client client) {
-		List<Client> lostRouteClients = new ArrayList<Client>();
-		
-		cache.remove(client);
-		
-		for(Client c : cache) {
-			if(c.isIndirect() && c.getRoute().equals(client)) {
-				lostRouteClients.add(c);
+	public void updateRecentlyDisconnected() {
+		synchronized(syncRoot) {
+			Iterator<Map.Entry<Client, Long> > it = recentlyDisconnected.entrySet().iterator();
+			long now = DateUtils.getEpochTime();
+			
+			while(it.hasNext()) {
+				Map.Entry<Client, Long> entry = it.next();
+				
+				if(now - entry.getValue() >= RECONNECT_DURATION) {
+					it.remove();
+				}
 			}
 		}
-		
-		for(Client c : lostRouteClients) {
-			lostRouteClients.addAll(removeClient(c));
-		}
-		
-		return lostRouteClients;
 	}
 	
 	public Client getLocalClient() {
@@ -169,5 +178,27 @@ public final class ClientCache {
 		}
 		
 		return buffer;
+	}
+	
+	private boolean hasRecentlyDisconnected(Client client) {
+		return recentlyDisconnected.containsKey(client);
+	}
+	
+	private List<Client> removeClient(Client client) {
+		List<Client> lostRouteClients = new ArrayList<Client>();
+		
+		cache.remove(client);
+		
+		for(Client c : cache) {
+			if(c.isIndirect() && c.getRoute().equals(client)) {
+				lostRouteClients.add(c);
+			}
+		}
+		
+		for(Client c : lostRouteClients) {
+			lostRouteClients.addAll(removeClient(c));
+		}
+		
+		return lostRouteClients;
 	}
 }

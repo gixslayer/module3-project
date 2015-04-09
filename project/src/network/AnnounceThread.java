@@ -36,6 +36,9 @@ public final class AnnounceThread extends Thread {
 			// Check if any clients timed out.
 			clientCache.checkForTimeouts();
 			
+			// Update the recently disconnected table.
+			clientCache.updateRecentlyDisconnected();
+			
 			// Sleep the thread for the interval duration before exiting the loop iteration.
 			sleep(interval);
 		}
