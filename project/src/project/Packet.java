@@ -44,7 +44,7 @@ public class Packet {
 		int flags = (synFlag? 1:0)*4 +(ackFlag? 1:0)*2+(finFlag? 1:0);
 		int windowSize1 = windowSize>>>8;
 		int windowSize2 = windowSize-((windowSize>>>8)<<8);
-		temp = calculateChecksum();
+		temp = calculateChecksum(data);
 		checksum = temp;
 		int checkSum1 = temp>>>8;
 		int checkSum2 = temp-((temp>>>8)<<8);
@@ -71,9 +71,33 @@ public class Packet {
 	public byte[] getBytes() {
 		return packet;
 	}
-	
-	private int calculateChecksum() {
-		return 32000;
+		
+	public int calculateChecksum(byte[] data){
+	    int length = data.length;
+	    int i = 0;
+	    int sum = 0;
+	    
+	    while( length > 1 ){
+	        sum += ( ((data[i] << 8) & 0xFF00) | ((data[i + 1]) & 0xFF));
+	        if( (sum & 0xFFFF0000) > 0 ){
+	            sum = sum & 0xFFFF;
+	            sum += 1;
+	        }
+	        i += 2;
+	        length -= 2;
+	    }
+
+	    if (length > 0 ){ 
+	        sum += (data[i] << 8 & 0xFF00); 
+	        if( (sum & 0xFFFF0000) > 0) {
+	            sum = sum & 0xFFFF;
+	            sum += 1;
+	        }
+	    }
+
+	    sum = ~sum; 
+	    sum = sum & 0xFFFF;
+	    return sum;
 	}
 	
 	private int getUnsignedInt(int x) {
