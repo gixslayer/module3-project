@@ -44,7 +44,7 @@ public class TCP {
 		init(inetToInt(myAddr), packet.getSource());
 		int destAddress = packet.getSource();
 		TCP.ni = ni;
-		if(packet.getDestination() == myAddress/* && checksumCheck(packet)*/) {
+		if(packet.getDestination() == myAddress && checksumCheck(packet)) {
 			System.out.println("From:" + packet.getSource() + ", seq: " + packet.getSeq() +", ack: " + packet.getAck());
 			//save info
 			lastInfo.put(packet.getSource(), new int[]{packet.getSeq(), packet.getAck()});
@@ -143,25 +143,16 @@ public class TCP {
 	}
 	
 	public static boolean closeConnection(int destination) {
-		
-		if(connections.containsKey(destination) && (connections.get(destination).equals(State.ESTABLISHED) || connections.get(destination).equals(State.SYN_RECEIVED))) {
-			sendFin(destination);
-			connections.put(destination, State.FIN_WAIT);
-			return true;
-		} else {
-			return false;
-		}
+		connections.put(destination, State.CLOSED);
+		timers.remove(destination);
+		lastInfo.remove(destination);
+		toSend.remove(destination);
+		return true;
 	}
 	
 	public static boolean closeConnection(InetAddress destination) {
 		int dest = Integer.parseInt(""+destination.getHostAddress().charAt(10));
-		if(connections.containsKey(dest) && (connections.get(dest).equals(State.ESTABLISHED) || connections.get(dest).equals(State.SYN_RECEIVED))) {
-			sendFin(dest);
-			connections.put(dest, State.FIN_WAIT);
-			return true;
-		} else {
-			return false;
-		}
+		return closeConnection(dest);
 	}
 	
 	private static void sendSyn(int destination) {
