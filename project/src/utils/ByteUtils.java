@@ -1,6 +1,17 @@
 package utils;
 
+/**
+ * Utility class to handle binary conversions of primitive types.
+ * @author ciske
+ *
+ */
 public final class ByteUtils {
+	/**
+	 * Converts the specified value to a little-endian binary format.
+	 * @param value The value to convert
+	 * @param dest The destination buffer to store the converted data
+	 * @param offset The offset within the buffer to begin storing data
+	 */
 	public static void getIntBytes(int value, byte[] dest, int offset) {
 		dest[offset++] = (byte)(value & 0xff);
 		dest[offset++] = (byte)((value >> 8) & 0xff);
@@ -8,6 +19,12 @@ public final class ByteUtils {
 		dest[offset++] = (byte)((value >> 24) & 0xff);
 	}
 	
+	/**
+	 * Converts the specified value to a little-endian binary format.
+	 * @param value The value to convert
+	 * @param dest The destination buffer to store the converted data
+	 * @param offset The offset within the buffer to begin storing data
+	 */
 	public static void getLongBytes(long value, byte[] dest, int offset) {
 		dest[offset++] = (byte)(value & 0xff);
 		dest[offset++] = (byte)((value >> 8) & 0xff);
@@ -19,6 +36,12 @@ public final class ByteUtils {
 		dest[offset++] = (byte)((value >> 56) & 0xff);
 	}
 	
+	/**
+	 * Converts the specified buffer to a signed integer.
+	 * @param src The source buffer containing the little-endian integer bytes
+	 * @param offset The offset within the buffer to begin reading data
+	 * @return The converted signed integer.
+	 */
 	public static int getIntFromBytes(byte[] src, int offset) {
 		return (src[offset++] & 0xff) | 
 				(src[offset++] & 0xff) << 8 | 
@@ -26,6 +49,12 @@ public final class ByteUtils {
 				(src[offset++] & 0xff) << 24;
 	}
 	
+	/**
+	 * Converts the specified buffer to a signed long.
+	 * @param src The source buffer containing the little-endian long bytes
+	 * @param offset The offset within the buffer to begin reading data
+	 * @return The converted signed long.
+	 */
 	public static long getLongFromBytes(byte[] src, int offset) {
 		long result = 0;
 		
