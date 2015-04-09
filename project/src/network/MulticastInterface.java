@@ -5,7 +5,6 @@ import java.net.DatagramPacket;
 import java.net.InetAddress;
 import java.net.MulticastSocket;
 
-import project.TCP;
 import protocol.Packet;
 
 public class MulticastInterface {

@@ -6,9 +6,7 @@ import java.net.DatagramSocket;
 import java.net.InetAddress;
 import java.net.SocketException;
 
-import client.Client;
 import project.TCP;
-import protocol.AnnouncePacket;
 import protocol.Packet;
 import protocol.PacketFactory;
 

@@ -161,11 +161,12 @@ public class Application implements NetworkCallbacks, MulticastCallbacks, CacheC
 		sendToAll(packet);
 	}
 
+	//-------------------------------------------
+	// NetworkCallbacks.
+	//-------------------------------------------
 	@Override
 	public void onPacketReceived(Packet packet) {
 		int type = packet.getType();
-		InetAddress address = packet.getAddress();
-		InetAddress localAddress = localClient.getAddress();
 		
 		System.out.println("Got a packet! " + type);
 		

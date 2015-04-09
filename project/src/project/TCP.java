@@ -7,11 +7,9 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.Timer;
 
-import network.MulticastInterface;
 import network.NetworkInterface;
 
 public class TCP {
-	private static InetAddress myInetAddress;
 	private static int myAddress;
 	private static Map<Integer, TCP.State> connections;
 	private static Map<Integer, Timer> timers;
@@ -24,19 +22,14 @@ public class TCP {
 	
 	private static void init(int source, int dest) {
 		if(!constructed) {
-			try {
-				myInetAddress = InetAddress.getByName("192.168.5." + source); //TODO: get myAdress from another static function
-				myAddress = source;
-				constructed = true;
-				connections = new HashMap<>();
-				toSend = new HashMap<>();
-				timers = new HashMap<>();
-				lastInfo = new HashMap<>();
-				packetsInBuffer = new HashMap<>();
-				timerOfPacket = new HashMap<>();
-			} catch (UnknownHostException e) {
-				e.printStackTrace();
-			}
+			myAddress = source;
+			constructed = true;
+			connections = new HashMap<>();
+			toSend = new HashMap<>();
+			timers = new HashMap<>();
+			lastInfo = new HashMap<>();
+			packetsInBuffer = new HashMap<>();
+			timerOfPacket = new HashMap<>();
 		}
 	}
 	
