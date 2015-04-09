@@ -21,6 +21,7 @@ import network.NetworkInterface;
 public class Application implements NetworkCallbacks, MulticastCallbacks, CacheCallbacks, GUICallbacks {
 	public static final String GROUP = "228.0.0.0";
 	public static final int PORT = 6969;
+	public static final int NI_PORT = 6970;
 	public static final int ANNOUNCE_INTERVAL = 1000;
 	
 	private static final String[] availableAddresses = {"192.168.5.1", "192.168.5.2", "192.168.5.3", "192.168.5.4"};
@@ -46,7 +47,7 @@ public class Application implements NetworkCallbacks, MulticastCallbacks, CacheC
 			} catch (UnknownHostException e) { }
 		}
 		this.mci = new MulticastInterface(GROUP, PORT, this);
-		this.ni = new NetworkInterface(myAddress, PORT, this);
+		this.ni = new NetworkInterface(myAddress, NI_PORT, this);
 		this.localClient = new Client(username);
 		localClient.setAddress(myAddress);
 		this.clientCache = new ClientCache(localClient, this);
