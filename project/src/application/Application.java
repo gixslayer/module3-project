@@ -62,6 +62,10 @@ public class Application implements MulticastCallbacks, CacheCallbacks, GUICallb
 		}
 	}
 	
+	public Client getLocalClient() {
+		return localClient;
+	}
+	
 	private boolean isOwnIP(InetAddress address) {
 		try {
 			return NetworkInterface.getByInetAddress(address) != null;
@@ -148,9 +152,10 @@ public class Application implements MulticastCallbacks, CacheCallbacks, GUICallb
 	// GUICallbacks.
 	//-------------------------------------------
 	@Override
-	public void onSendPrivateMessage(Client client, String message) {
+	public void onSendPrivateMessage(Client client, String message, String otherName) {
 		PrivateChatPacket packet = new PrivateChatPacket(client, message);
-		sendToAll(packet);
+		Client otherClient = clientCache.getClientFromName(otherName);
+		mci.send(packet, otherClient.getAddress());
 	}
 	
 	@Override

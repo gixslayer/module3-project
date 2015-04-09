@@ -31,13 +31,11 @@ public class PreferencesMenu extends JFrame implements ActionListener, ChangeLis
     private JCheckBox rainbowMode;
     
     private JColorChooser bgColor;
-    
-    //private String name;
+  
     private MainGUI main;
     
-    public PreferencesMenu(String name, MainGUI main){
+    public PreferencesMenu(MainGUI main){
     	this.main = main;
-        //this.name = name;
         setDefaultCloseOperation(DISPOSE_ON_CLOSE);
         setLayout(new BorderLayout());
         

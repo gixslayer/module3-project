@@ -5,6 +5,7 @@ import java.net.DatagramPacket;
 import java.net.InetAddress;
 import java.net.MulticastSocket;
 
+import project.TCP;
 import protocol.Packet;
 
 public class MulticastInterface {
@@ -46,8 +47,15 @@ public class MulticastInterface {
 		socket.close();
 	}
 	
+	public void send(Packet packet, InetAddress destination) {
+		byte[] data = packet.serialize();
+		System.out.println("Sending packet to: " + destination.getCanonicalHostName());
+		TCP.sendData(destination, data);
+	}
+	
 	public void send(Packet packet) {
 		byte[] data = packet.serialize();
+		
 		DatagramPacket datagram = new DatagramPacket(data, data.length, group, port);
 		
 		try {

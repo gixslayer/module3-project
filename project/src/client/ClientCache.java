@@ -148,6 +148,13 @@ public final class ClientCache {
 		return localClient;
 	}
 	
+	public Client getClientFromName(String name) {
+		for(Client c : cache) {
+			if(c.getName().equals(name)) return c;
+		}
+		return null;
+	}
+	
 	public Client[] getClients() {
 		// TODO: Is this problematic with multi-threading, return a deep copy perhaps?
 		Client[] buffer;

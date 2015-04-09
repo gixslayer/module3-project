@@ -7,6 +7,8 @@ import javax.swing.JMenu;
 import javax.swing.JMenuItem;
 import javax.swing.JPopupMenu;
 
+import client.Client;
+
 @SuppressWarnings("serial")
 public class UserMenu extends JPopupMenu implements ActionListener {
 	private JMenuItem privChatItem;
@@ -17,10 +19,10 @@ public class UserMenu extends JPopupMenu implements ActionListener {
     private String name;
     private MainGUI main;
     
-    public UserMenu(String name, String clientName, MainGUI main){
+    public UserMenu(String name, Client client, MainGUI main){
         this.name = name;
         this.main = main;
-        if(name.equals(clientName)) {
+        if(name.equals(client.getName())) {
         	chooseColor = new JMenu("Choose Color");
         	for(int i=0; i<color.length; i++) {
         		color[i] = new JMenuItem(main.getColor(i));

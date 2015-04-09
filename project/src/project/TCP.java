@@ -212,7 +212,8 @@ public class TCP {
 		//TODO: send packet, ACK en SEQ goed doen
 	}
 	
-	private static void sendData(int destination, byte[] data) {
+	public static void sendData(int destination, byte[] data) {
+		init();
 		if(connections.containsKey(destination) && connections.get(destination).equals(State.ESTABLISHED)) {
 			Packet toSend = new Packet(myAddress, destination, 0, lastInfo.get(destination)[0], lastInfo.get(destination)[1], false, true, false, 5, data);
 			lastInfo.put(destination, new int[]{toSend.getSeq()+toSend.getLength(),toSend.getAck()});
@@ -229,7 +230,7 @@ public class TCP {
 		}
 	}
 	
-	private static void sendData(InetAddress destination, byte[] data) {
+	public static void sendData(InetAddress destination, byte[] data) {
 		sendData(inetToInt(destination), data);
 	}
 }

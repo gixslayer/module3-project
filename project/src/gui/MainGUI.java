@@ -62,7 +62,7 @@ public class MainGUI extends JFrame implements ActionListener, KeyListener, Mous
 	
 	private JButton sendButton;
 	
-	private String clientName;
+	private Client client;
 	private Icon closeIcon;
 	
 	private Application app;
@@ -79,7 +79,7 @@ public class MainGUI extends JFrame implements ActionListener, KeyListener, Mous
 		super("Chat");
 		app = new Application(name, this);
 		app.start();
-		clientName = name;
+		client = app.getLocalClient();
 		init();
 	}
 	
@@ -156,7 +156,7 @@ public class MainGUI extends JFrame implements ActionListener, KeyListener, Mous
 		c.add(tabPane, BorderLayout.CENTER);
 		c.add(sideBar, BorderLayout.WEST);
 		
-		addUser(clientName);
+		addUser(client.getName());
 		addUser("Alice");
 		alice = new Alice(this, "Alice");
 		
@@ -230,10 +230,10 @@ public class MainGUI extends JFrame implements ActionListener, KeyListener, Mous
 			tabPane.setSelectedIndex(tabPane.indexOfTab(name));
 			return;
 		}
-		if(name.equals(clientName)) return;
+		if(name.equals(client.getName())) return;
 		JPanel privChat = new JPanel();
 		privChat.setLayout(new BorderLayout());
-		PrivateChat pChat = new PrivateChat(clientName, name, this, app, alice, animation);
+		PrivateChat pChat = new PrivateChat(client, name, this, app, alice, animation);
 		privChat.add(pChat, BorderLayout.CENTER);
 		
 		tabPane.addTab(name, privChat);
@@ -284,12 +284,19 @@ public class MainGUI extends JFrame implements ActionListener, KeyListener, Mous
 		String txt = typeField.getText();
 		if(txt.toLowerCase().length() == 0 || txt.toLowerCase().matches("\\s*") || txt.toLowerCase().matches(".*<.*>.*") || txt.toLowerCase().matches(".*<script.*") || txt.length() > 3000) return;
 		typeField.setText("");
-		receiveText(txt, clientName, false);
+		receiveText(txt, client.getName(), false);
 		if(txt.contains("Alice") || txt.contains("alice")) {
 			receiveText(alice.getResponse(txt), "Alice", false);
 			return;
 		}
 		app.onSendMessage(txt);
+	}
+	
+	public void sendMultiple(String[] strs) {
+		for(int i=0; i<strs.length; i++) {
+			typeField.setText(strs[i]);
+			sendText();
+		}
 	}
 	
 	/**
@@ -330,6 +337,20 @@ public class MainGUI extends JFrame implements ActionListener, KeyListener, Mous
 		str = str.replace("1/4", "¼");
 		str = str.replace("*R*", "ℜ");
 		str = str.replace("*N*", "ℵ");
+		if(str.equals("*music*")) {
+			if(name.equals(client.getName())) {
+				String[] tmp = {"╔══╗ ♫", "║██║ ♪♪", "║██║♫♪", "║ ◎♫♪♫", "╚══╝"};
+				sendMultiple(tmp);
+			}
+			return;
+		}
+		if(str.equals("*fatbunny*")) {
+			if(name.equals(client.getName())) {
+				String[] tmp = {"(\\____/)", "(='.'=)", "(\")__(\")"};
+				sendMultiple(tmp);
+			}
+			return;
+		}
 		// Note: Disabled fancy names as it would break a dirty hack I did.
 		// Find a way to properly interact with the back-end through Client instances
 		// directly, rather than trying to represent Client instances in a name string
@@ -492,7 +513,7 @@ public class MainGUI extends JFrame implements ActionListener, KeyListener, Mous
 		}
 		
 		if(e.getSource().equals(preferencesItem)) {
-			PreferencesMenu menu = new PreferencesMenu(clientName, this);
+			PreferencesMenu menu = new PreferencesMenu(this);
 			menu.pack();
 			menu.setVisible(true);
 		}
@@ -549,7 +570,7 @@ public class MainGUI extends JFrame implements ActionListener, KeyListener, Mous
 			String name = peopleArea.getSelectedValue();
 			if(name == null) return;
 			
-			UserMenu menu = new UserMenu(name, clientName, this);
+			UserMenu menu = new UserMenu(name, client, this);
 		    menu.show(arg0.getComponent(), arg0.getX(), arg0.getY());
 		}
 	}
@@ -635,43 +656,37 @@ public class MainGUI extends JFrame implements ActionListener, KeyListener, Mous
 
 	@Override
 	public void onClientConnected(Client client) {
-		// TODO: Fix this hack.
-		addUser(client.toString());
+		addUser(client.getName());
 	}
 
 	@Override
 	public void onClientDisconnected(Client client) {
 		System.out.println("Disconnected!");
-		// TODO: Fix this hack.
-		removeUser(client.toString());
+		removeUser(client.getName());
 	}
 
 	@Override
 	public void onClientTimedOut(Client client) {
 		System.out.println("Time Out!");
-		// TODO: Fix this hack.
-		removeUser(client.toString());
+		removeUser(client.getName());
 	}
 
 	@Override
 	public void onClientLostRoute(Client client) {
 		System.out.println("Lost Route!");
-		// TODO: Fix this hack.
-		removeUser(client.toString());
+		removeUser(client.getName());
 	}
 
 	@Override
 	public void onChatMessageReceived(Client client, String message) {
-		// TODO: Fix this hack.		
-		String user = client.toString();
+		String user = client.getName();
 		
 		receiveText(message, user, false);
 	}
 
 	@Override
 	public void onPrivateChatMessageReceived(Client client, String message) {
-		// TODO: Fix this hack.
-		String user = client.toString();
+		String user = client.getName();
 		
 		System.out.println("RECV: " + user + " " + message);
 		receiveText(message, user, true);
