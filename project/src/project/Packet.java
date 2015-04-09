@@ -116,7 +116,7 @@ public class Packet {
 		ackFlag = (packet[7]-(packet[7]>>>2<<2)>>>1) == 1;
 		finFlag = (packet[7]-packet[7]>>>1<<1) == 1;
 		windowSize = ((getUnsignedInt(packet[8]))<<8) + getUnsignedInt(packet[9]); 
-		checksum = (((int)packet[10])<<8) + packet[11];
+		checksum = ((getUnsignedInt(packet[10]))<<8) + getUnsignedInt(packet[11]);
 		
 		data = Arrays.copyOfRange(packet, 12, packet.length);
 	}
