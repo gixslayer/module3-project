@@ -332,7 +332,7 @@ public class MainGUI extends JFrame implements ActionListener, KeyListener, Mous
 	
 	private void addToHistory(String str) {
 		String[] tmp = new String[0];
-		if(history.length+1 <= 20) {
+		if(history.length+1 <= HISTORY_MAX_SIZE) {
 			tmp = new String[history.length+1];
 		}
 		else {
