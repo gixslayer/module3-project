@@ -82,7 +82,7 @@ public final class NetworkInterface {
 				Packet packet = Packet.deserialize(address, data);
 				return packet;
 			}
-			return new AnnouncePacket();
+			return null;
 		} catch (IOException e) {
 			return null;
 		}

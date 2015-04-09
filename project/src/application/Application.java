@@ -165,15 +165,6 @@ public class Application implements NetworkCallbacks, MulticastCallbacks, CacheC
 		
 		System.out.println("Got a packet!");
 		
-		if(localAddress == null) {
-			if(isOwnIP(address)) {
-				localClient.setAddress(address);
-				return;
-			}
-		} else if(localAddress.equals(address)) {
-			return;
-		}
-		
 		if(type == Packet.TYPE_ANNOUNCE) {
 			handleAnnouncePacket((AnnouncePacket)packet);
 		} else if(type == Packet.TYPE_DISCONNECT) {
