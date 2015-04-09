@@ -5,6 +5,7 @@ import java.net.InetAddress;
 import client.CacheCallbacks;
 import client.Client;
 import client.ClientCache;
+import project.TCP;
 import protocol.AnnouncePacket;
 import protocol.ChatPacket;
 import protocol.DisconnectPacket;
@@ -126,6 +127,7 @@ public class Application implements NetworkCallbacks, MulticastCallbacks, CacheC
 	@Override
 	public void onClientTimedOut(Client client) {
 		callbacks.onClientTimedOut(client);
+		TCP.closeConnection(client.getAddress());
 	}
 
 	@Override

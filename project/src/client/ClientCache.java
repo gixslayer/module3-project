@@ -6,6 +6,8 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 
+import project.TCP;
+
 import utils.DateUtils;
 
 public final class ClientCache {
@@ -119,6 +121,9 @@ public final class ClientCache {
 	}
 	
 	public void clientDisconnected(Client client) {
+		
+		TCP.closeConnection(client.getAddress());
+		
 		List<Client> lostRouteClients;
 		
 		synchronized(syncRoot) {
