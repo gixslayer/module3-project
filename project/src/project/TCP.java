@@ -27,7 +27,6 @@ public class TCP {
 				timers = new HashMap<>();
 				lastInfo = new HashMap<>();
 			} catch (UnknownHostException e) {
-				// TODO Auto-generated catch block
 				e.printStackTrace();
 			}
 		}
@@ -39,7 +38,7 @@ public class TCP {
 	
 	public static void handlePacket(Packet packet) {
 		init();
-		if(packet.getDestination() == myAddress) {
+		if(packet.getDestination() == myAddress && checksumCheck(packet)) {
 			
 			//save info
 			lastInfo.put(packet.getSource(), new int[]{packet.getSeq(), packet.getAck()});
@@ -99,6 +98,11 @@ public class TCP {
 		}
 	}
 	
+	private static boolean checksumCheck(Packet packet) {
+		
+		return packet.getCheckSum()==packet.calculateChecksum(packet.getData());
+	}
+
 	public static void timeOut(int destination) {
 		if(connections.containsKey(destination) && connections.get(destination).equals(State.TIME_WAIT)) {
 			connections.put(destination, State.CLOSED);
@@ -134,7 +138,7 @@ public class TCP {
 	}
 	
 	public static boolean closeConnection(int destination) {
-		//TODO: change state
+		
 		if(connections.containsKey(destination) && (connections.get(destination).equals(State.ESTABLISHED) || connections.get(destination).equals(State.SYN_RECEIVED))) {
 			sendFin(destination);
 			connections.put(destination, State.FIN_WAIT);
@@ -145,7 +149,6 @@ public class TCP {
 	}
 	
 	public static boolean closeConnection(InetAddress destination) {
-		//TODO: change state
 		int dest = Integer.parseInt(""+destination.getHostAddress().charAt(10));
 		if(connections.containsKey(dest) && (connections.get(dest).equals(State.ESTABLISHED) || connections.get(dest).equals(State.SYN_RECEIVED))) {
 			sendFin(dest);
@@ -212,7 +215,7 @@ public class TCP {
 		//TODO: send packet, ACK en SEQ goed doen
 	}
 	
-	private static void sendData(int destination, byte[] data) {
+	public static void sendData(int destination, byte[] data) {
 		if(connections.containsKey(destination) && connections.get(destination).equals(State.ESTABLISHED)) {
 			Packet toSend = new Packet(myAddress, destination, 0, lastInfo.get(destination)[0], lastInfo.get(destination)[1], false, true, false, 5, data);
 			lastInfo.put(destination, new int[]{toSend.getSeq()+toSend.getLength(),toSend.getAck()});
@@ -229,7 +232,7 @@ public class TCP {
 		}
 	}
 	
-	private static void sendData(InetAddress destination, byte[] data) {
+	public static void sendData(InetAddress destination, byte[] data) {
 		sendData(inetToInt(destination), data);
 	}
 }
