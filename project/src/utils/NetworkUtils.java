@@ -12,12 +12,11 @@ import java.util.Enumeration;
  */
 public final class NetworkUtils {
 	private static final String NAME_REGEX = "(eth\\d+)|(wlan\\d+)";
-	//private static final String ADDRESS_REGEX = "\\d{1,3}\\.\\d{1,3}\\.\\d{1,3}\\.\\d{1,3}";
-	private static final String ADDRESS_REGEX = "192\\.168\\.5\\.\\d{1,3}";
+	private static final String ADDRESS_REGEX = "\\d{1,3}\\.\\d{1,3}\\.\\d{1,3}\\.\\d{1,3}";
 	
 	/**
-	 * Returns the IPv4 address of the wlan network interface.
-	 * @return the IPv4 address of the wlan network interface.
+	 * Returns the IPv4 address of the network interface.
+	 * @return the IPv4 address of the network interface.
 	 */
 	public static InetAddress getLocalAddress() {
 		// This method works in our setup, but still seems a bit messy and potentially problematic.
