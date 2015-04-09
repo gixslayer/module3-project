@@ -224,7 +224,6 @@ public final class ClientCache implements Subscribable<CacheCallbacks>{
 	}
 	
 	public Client[] getClients() {
-		// TODO: Is this problematic with multi-threading, return a deep copy perhaps?
 		Client[] buffer;
 		int offset = 0;
 		

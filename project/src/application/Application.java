@@ -235,8 +235,8 @@ public class Application implements NetworkCallbacks, MulticastCallbacks, CacheC
 			Client cachedDest = clientCache.getCachedClient(dest);
 		
 			if(cachedDest == null) {
-				// TODO: If this happens we should probable send a reply to our source (which should 'walk back' the route chain to the
-				// original sender) indicating we can no longer route to this client.
+				// The client that sent this route request thinks it can reach the destination through us, but that is no longer
+				// the case. Inform him of this.
 				CannotRoutePacket cannotRoutePacket = new CannotRoutePacket(packet.getSrc(), localClient, packet.getDest());
 				ni.sendReliable(packet.getSourceAddress(), cannotRoutePacket);
 			}
