@@ -83,12 +83,9 @@ public class MulticastInterface {
 			byte[] receivedData = new byte[datagram.getLength()];
 			System.arraycopy(datagram.getData(), datagram.getOffset(), receivedData, 0, receivedData.length);
 			InetAddress address = datagram.getAddress();
-			byte[] data = TCP.handlePacket(group, new project.Packet(receivedData));
-			if(data != null) {
-				Packet packet = Packet.deserialize(address, data);
-				return packet;
-			}
-			else return null;
+			//byte[] data = TCP.handlePacket(group, new project.Packet(receivedData));
+			Packet packet = Packet.deserialize(address, receivedData);
+			return packet;
 		} catch(IOException e) {
 			return null;
 		}
