@@ -48,7 +48,9 @@ public class TCP {
 		TCP.ni = ni;
 		if(packet.getDestination() == myAddress /*&& checksumCheck(packet)*/) {
 			System.out.println("From:" + packet.getSource() + ", seq: " + packet.getSeq() +", ack: " + packet.getAck());
-			System.out.println("SEQACK INFO FROM: " + destAddress + " :" + packetsInBuffer.get(destAddress).size());
+			if(packetsInBuffer.get(destAddress) != null) {
+				System.out.println("SEQACK INFO FROM: " + destAddress + " :" + packetsInBuffer.get(destAddress).size());
+			}
 			lastInfo.put(packet.getSource(), new int[]{packet.getSeq(), packet.getAck()});
 			
 			if(packet.getSynFlag() && !packet.getAckFlag() && !packet.getFinFlag()) {
