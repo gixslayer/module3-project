@@ -24,6 +24,7 @@ public class MainGUI extends JFrame implements ActionListener, KeyListener, Mous
 	private static final Color BGCOLOR = Color.LIGHT_GRAY;
 	
 	public static final int LIST_MAX_SIZE = 300;
+	private static final int HISTORY_MAX_SIZE = 20;
 	
 	private static final String[] colors = {"Red", "Blue", "Green", "Yellow", "Purple", "Orange", "Black"};
 	private static final String[] fiftyShades = {"E0E0E0", "DEDEDE", "DBDBDB", "D9D9D9", "D6D6D6", "D4D4D4", "D1D1D1", "CFCFCF",
@@ -38,6 +39,7 @@ public class MainGUI extends JFrame implements ActionListener, KeyListener, Mous
 	private ColoringColors coloring = ColoringColors.NORMAL;
 	
 	private String[] history = new String[0];
+	private int currentHistory;
 	
 	private volatile boolean rainbowMode = false;
 	private boolean altRBMode = false;
@@ -72,8 +74,6 @@ public class MainGUI extends JFrame implements ActionListener, KeyListener, Mous
 	
 	private Thread rbThread;
 	private AnimationThread animation;
-	
-	private int currentHistory;
 	
 	/**
 	 * Constuctor of the <code>class</code>.
@@ -311,14 +311,59 @@ public class MainGUI extends JFrame implements ActionListener, KeyListener, Mous
 	 * @param priv true if it is part of the private chat between the two Users | false if it is part of the global chat.
 	 */
 	public void receiveText(String str, String name, boolean priv) {
-		// Note: The Windows Eclipse client seems to struggle saving/displaying the file under the default settings.
-		// This is due to the encoding used (Cp1252 on Windows, UTF-8 on Linux).
-		// The GUI itself also doesn't display the characters correctly and they end up as garbage.
-		// I fixed the editor issue by forcing Java source files to use UTF-8 on Windows (Preferences -> General -> Content Types
-		// -> expand Text -> Select Java source file -> Set Default encoding to UTF-8).
-		// Doing this also seems to run the program with UTF-8 encoding (for whatever reason), but if it doesn't Windows clients
-		// will have to run the program with the '-Dfile.encoding=UTF-8' Java VM argument to possibly set the correct encoding.
-		// This is a giant hack though as the Java VM doesn't have to use the specified encoding. Windows clients might just be SOL.
+		str = changeText(str);
+		if(checkMultiple(str, name)) return;
+		name = changeName(name);
+		
+		if(priv) {
+			System.out.println("DSDS");
+			int index = tabPane.indexOfTab(name);
+			if(index == -1) {
+				addPrivateChat(name, false);
+				index = tabPane.indexOfTab(name);
+			}
+			PrivateChat pChat = chatMap.get(index);
+			pChat.receiveText(str, name);
+		}
+		else {
+			addToScreen(name + ": " + str);
+		}
+	}
+	
+	private void addToHistory(String str) {
+		String[] tmp = new String[0];
+		if(history.length+1 <= 20) {
+			tmp = new String[history.length+1];
+		}
+		else {
+			tmp = new String[history.length];
+		}
+		tmp[0] = str;
+		System.arraycopy(history, 0, tmp, 1, history.length);
+		history = tmp;
+	}
+	
+	private void printArray(String[] array) {
+		System.out.print("Array: [");
+		for(int i=0; i<array.length-1; i++) {
+			System.out.print(array[i] + ", ");
+		}
+		System.out.print(array[array.length-1] + "]" + System.lineSeparator());
+	}
+	
+	private String getFromHistory(int index) {
+		if(index >= history.length) {
+			currentHistory = history.length-1;
+			return history[history.length-1];
+		}
+		if(index < 0) {
+			currentHistory = 0;
+			return history[0];
+		}
+		else return history[index];
+	}
+	
+	public String changeText(String str) {
 		str = str.replace(":)", "☺");
 		str = str.replace(":(", "☹");
 		str = str.replace("*check*", "✔");
@@ -342,32 +387,10 @@ public class MainGUI extends JFrame implements ActionListener, KeyListener, Mous
 		str = str.replace("1/4", "¼");
 		str = str.replace("*R*", "ℜ");
 		str = str.replace("*N*", "ℵ");
-		if(str.equals("*music*")) {
-			if(name.equals(client.getName())) {
-				String[] tmp = {"╔══╗ ♫", "║██║ ♪♪", "║██║♫♪", "║ ◎♫♪♫", "╚══╝"};
-				sendMultiple(tmp);
-			}
-			return;
-		}
-		if(str.equals("*fatbunny*")) {
-			if(name.equals(client.getName())) {
-				String[] tmp = {"(\\____/)", "(='.'=)", "(\")__(\")"};
-				sendMultiple(tmp);
-			}
-			return;
-		}
-		if(str.startsWith("*wavename*")) {
-			if(name.equals(client.getName())) {
-				String[] split = str.split("\\*");
-				String[] tmp = {"¯¨'*·~-.¸¸,.-~*' " + split[2] + " ¯¨'*·~-.¸¸,.-~*'"};
-				sendMultiple(tmp);
-			}
-			return;
-		}
-		// Note: Disabled fancy names as it would break a dirty hack I did.
-		// Find a way to properly interact with the back-end through Client instances
-		// directly, rather than trying to represent Client instances in a name string
-		// which is directly displayed on the GUI/used in GUI logic.
+		return str;
+	}
+	
+	private String changeName(String name) {
 		name = name.replace(":)", "☺");
 		name = name.replace(":(", "☹");
 		name = name.replace("*check*", "✔");
@@ -391,47 +414,33 @@ public class MainGUI extends JFrame implements ActionListener, KeyListener, Mous
 		name = name.replace("1/4", "¼");
 		name = name.replace("*R*", "ℜ");
 		name = name.replace("*N*", "ℵ");
-		if(priv) {
-			System.out.println("DSDS");
-			int index = tabPane.indexOfTab(name);
-			if(index == -1) {
-				addPrivateChat(name, false);
-				index = tabPane.indexOfTab(name);
+		return name;
+	}
+	
+	private boolean checkMultiple(String str, String name) {
+		if(str.equals("*music*")) {
+			if(name.equals(client.getName())) {
+				String[] tmp = {"╔══╗ ♫", "║██║ ♪♪", "║██║♫♪", "║ ◎♫♪♫", "╚══╝"};
+				sendMultiple(tmp);
 			}
-			PrivateChat pChat = chatMap.get(index);
-			pChat.receiveText(str, name);
+			return true;
 		}
-		else {
-			addToScreen(name + ": " + str);
+		if(str.equals("*fatbunny*")) {
+			if(name.equals(client.getName())) {
+				String[] tmp = {"(\\____/)", "(='.'=)", "(\")__(\")"};
+				sendMultiple(tmp);
+			}
+			return true;
 		}
-	}
-	
-	private void addToHistory(String str) {
-		String[] tmp = new String[history.length+1];
-		tmp[0] = str;
-		System.arraycopy(history, 0, tmp, 1, history.length);
-		history = tmp;
-		printArray(history);
-	}
-	
-	private void printArray(String[] array) {
-		System.out.print("Array: [");
-		for(int i=0; i<array.length-1; i++) {
-			System.out.print(array[i] + ", ");
+		if(str.startsWith("*wavename*")) {
+			if(name.equals(client.getName())) {
+				String[] split = str.split("\\*");
+				String[] tmp = {"¯¨'*·~-.¸¸,.-~*' " + split[2] + " ¯¨'*·~-.¸¸,.-~*'"};
+				sendMultiple(tmp);
+			}
+			return true;
 		}
-		System.out.print(array[array.length-1] + "]" + System.lineSeparator());
-	}
-	
-	private String getFromHistory(int index) {
-		if(index >= history.length) {
-			currentHistory = history.length-1;
-			return history[history.length-1];
-		}
-		if(index < 0) {
-			currentHistory = 0;
-			return history[0];
-		}
-		else return history[index];
+		return false;
 	}
 	
 //=============================================================================
