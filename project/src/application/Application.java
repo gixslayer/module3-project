@@ -86,7 +86,7 @@ public class Application implements NetworkCallbacks, MulticastCallbacks, CacheC
 	@Override
 	public void onMulticastPacketReceived(Packet packet) {
 		int type = packet.getType();
-		InetAddress address = packet.getAddress();
+		InetAddress address = packet.getSourceAddress();
 		InetAddress localAddress = localClient.getAddress();
 		
 		if(localAddress.equals(address)) {
@@ -109,7 +109,7 @@ public class Application implements NetworkCallbacks, MulticastCallbacks, CacheC
 	
 	private void handleAnnouncePacket(AnnouncePacket packet) {
 		Client source = packet.getSourceClient();
-		source.setAddress(packet.getAddress());
+		source.setAddress(packet.getSourceAddress());
 		clientCache.updateDirect(source);
 		
 		for(Client client : packet.getKnownClients()) {
