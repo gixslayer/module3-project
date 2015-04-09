@@ -1,8 +1,6 @@
 package application;
 
 import java.net.InetAddress;
-import java.net.SocketException;
-import java.net.UnknownHostException;
 
 import client.CacheCallbacks;
 import client.Client;
@@ -12,6 +10,7 @@ import protocol.ChatPacket;
 import protocol.DisconnectPacket;
 import protocol.Packet;
 import protocol.PrivateChatPacket;
+import utils.NetworkUtils;
 import network.AnnounceThread;
 import network.MulticastCallbacks;
 import network.MulticastInterface;
@@ -24,8 +23,6 @@ public class Application implements NetworkCallbacks, MulticastCallbacks, CacheC
 	public static final int NI_PORT = 6970;
 	public static final int ANNOUNCE_INTERVAL = 1000;
 	
-	private static final String[] availableAddresses = {"192.168.5.1", "192.168.5.2", "192.168.5.3", "192.168.5.4"};
-	
 	private final MulticastInterface mci;
 	private final NetworkInterface ni;
 	private final Client localClient;
@@ -34,22 +31,11 @@ public class Application implements NetworkCallbacks, MulticastCallbacks, CacheC
 	private final ApplicationCallbacks callbacks;
 
 	public Application(String username, ApplicationCallbacks callbacks) {
-		// TODO: Grab the correct local IP (In this case 192.168.5.X) from the network interfaces and set it in the local client field.
-		// A client currently deduces the IP from incoming multicast packets, but if it tries to disconnect before receiving a multicast
-		// packet it send it will not have the correct address set and will break things for other clients.
-		InetAddress myAddress = null;
-		for(int i=0; i<availableAddresses.length; i++) {
-			try {
-				if(isOwnIP(InetAddress.getByName(availableAddresses[i]))) {
-					myAddress = InetAddress.getByName(availableAddresses[i]);
-				break;
-			}
-			} catch (UnknownHostException e) { }
-		}
+		InetAddress localAddress = NetworkUtils.getLocalAddress();
+
 		this.mci = new MulticastInterface(GROUP, PORT, this);
-		this.ni = new NetworkInterface(myAddress, NI_PORT, this);
-		this.localClient = new Client(username);
-		localClient.setAddress(myAddress);
+		this.ni = new NetworkInterface(localAddress, NI_PORT, this);
+		this.localClient = new Client(username, localAddress);
 		this.clientCache = new ClientCache(localClient, this);
 		this.announceThread = new AnnounceThread(mci, clientCache, ANNOUNCE_INTERVAL);
 		this.callbacks = callbacks;
@@ -85,14 +71,6 @@ public class Application implements NetworkCallbacks, MulticastCallbacks, CacheC
 		return localClient;
 	}
 	
-	private boolean isOwnIP(InetAddress address) {
-		try {
-			return java.net.NetworkInterface.getByInetAddress(address) != null;
-		} catch (SocketException e) {
-			throw new RuntimeException(String.format("Failed to get network interfaces by address: %s%n", e.getMessage()));
-		}
-	}
-	
 	//-------------------------------------------
 	// MulticastCallbacks.
 	//-------------------------------------------
@@ -102,12 +80,8 @@ public class Application implements NetworkCallbacks, MulticastCallbacks, CacheC
 		InetAddress address = packet.getAddress();
 		InetAddress localAddress = localClient.getAddress();
 		
-		if(localAddress == null) {
-			if(isOwnIP(address)) {
-				localClient.setAddress(address);
-				return;
-			}
-		} else if(localAddress.equals(address)) {
+		if(localAddress.equals(address)) {
+			// Don't do anything if we receive a multicast packet we sent.
 			return;
 		}
 		
