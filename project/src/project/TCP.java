@@ -131,6 +131,8 @@ public class TCP {
 		
 		
 		if(toDelete != null) {
+			timerOfPacket.get(toDelete).cancel();
+			timerOfPacket.remove(toDelete);
 			buffer.remove(toDelete);
 			packetsInBuffer.put(packet.getSource(), buffer);
 		}
@@ -163,6 +165,13 @@ public class TCP {
 			connections.put(destination, State.CLOSED);
 			timers.remove(destination);
 		}
+	}
+	
+	public static void ackTimeOut(Packet packet) {
+		Timer timer = new Timer();
+		timer.schedule(new AckTimeOut(packet), 100);
+		timerOfPacket.put(packet, timer);
+		sendPacket(packet, packet.getDestination());
 	}
 	
 	private static int inetToInt(InetAddress destination) {
@@ -213,6 +222,9 @@ public class TCP {
 		
 		temp.add(syn);
 		packetsInBuffer.put(destination, temp);
+		Timer timer = new Timer();
+		timer.schedule(new AckTimeOut(syn), 100);
+		timerOfPacket.put(syn, timer);
 		
 		sendPacket(syn, destination);
 	}
@@ -232,6 +244,9 @@ public class TCP {
 		
 		temp.add(synAck);
 		packetsInBuffer.put(synAck.getDestination(), temp);
+		Timer timer = new Timer();
+		timer.schedule(new AckTimeOut(synAck), 100);
+		timerOfPacket.put(synAck, timer);
 		
 		sendPacket(synAck, synAck.getDestination());
 	}
@@ -276,6 +291,9 @@ public class TCP {
 		
 		temp.add(fin);
 		packetsInBuffer.put(destination, temp);
+		Timer timer = new Timer();
+		timer.schedule(new AckTimeOut(fin), 100);
+		timerOfPacket.put(fin, timer);
 		sendPacket(fin, destination);
 	}
 	
@@ -291,6 +309,9 @@ public class TCP {
 		
 		temp.add(ack);
 		packetsInBuffer.put(ack.getDestination(), temp);
+		Timer timer = new Timer();
+		timer.schedule(new AckTimeOut(ack), 100);
+		timerOfPacket.put(ack, timer);
 		sendPacket(ack, ack.getDestination());
 	}
 	
@@ -307,6 +328,9 @@ public class TCP {
 			
 			temp.add(toSend);
 			packetsInBuffer.put(destination, temp);
+			Timer timer = new Timer();
+			timer.schedule(new AckTimeOut(toSend), 100);
+			timerOfPacket.put(toSend, timer);
 			sendPacket(toSend, destination);
 		} else if(!connections.containsKey(destination) || connections.get(destination).equals(State.CLOSED)){
 			openConnection(destination);
