@@ -47,6 +47,7 @@ public final class NetworkInterface {
 	
 	public void send(InetAddress dest, byte[] data) {
 		DatagramPacket datagram = new DatagramPacket(data,  0, data.length, dest, port);
+		System.out.println("Sending! " + dest.getCanonicalHostName());
 		
 		try {
 			socket.send(datagram);
@@ -74,12 +75,12 @@ public final class NetworkInterface {
 			byte[] receivedData = new byte[datagram.getLength()];
 			System.arraycopy(recvBuffer, datagram.getOffset(), receivedData, 0, receivedData.length);
 			InetAddress address = datagram.getAddress();
-			
 			byte[] data = TCP.handlePacket(myAddress, new project.Packet(receivedData));
-			
-			Packet packet = Packet.deserialize(address, data);
-			
-			return packet;
+		
+			if(data != null) {
+				Packet packet = Packet.deserialize(address, data);
+				return packet;
+			}
 		} catch (IOException e) {
 			return null;
 		}

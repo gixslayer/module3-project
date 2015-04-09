@@ -57,6 +57,7 @@ public class Application implements NetworkCallbacks, MulticastCallbacks, CacheC
 	
 	public void start() {
 		mci.start();
+		ni.start();
 		announceThread.start();
 	}
 
@@ -65,6 +66,7 @@ public class Application implements NetworkCallbacks, MulticastCallbacks, CacheC
 		
 		announceThread.close();
 		mci.close();
+		ni.stop();
 	}
 	
 	public void sendToAll(Packet packet) {
@@ -183,6 +185,29 @@ public class Application implements NetworkCallbacks, MulticastCallbacks, CacheC
 
 	@Override
 	public void onPacketReceived(Packet packet) {
+		int type = packet.getType();
+		InetAddress address = packet.getAddress();
+		InetAddress localAddress = localClient.getAddress();
 		
+		System.out.println("Got a packet!");
+		
+		if(localAddress == null) {
+			if(isOwnIP(address)) {
+				localClient.setAddress(address);
+				return;
+			}
+		} else if(localAddress.equals(address)) {
+			return;
+		}
+		
+		if(type == Packet.TYPE_ANNOUNCE) {
+			handleAnnouncePacket((AnnouncePacket)packet);
+		} else if(type == Packet.TYPE_DISCONNECT) {
+			handleDisconnectPacket((DisconnectPacket)packet);
+		} else if(type == Packet.TYPE_CHAT) {
+			handleChatPacket((ChatPacket)packet);
+		} else if(type == Packet.TYPE_PRIVATE_CHAT) {
+			handlePrivateChatPacket((PrivateChatPacket)packet);
+		}
 	}
 }
