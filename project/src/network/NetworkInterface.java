@@ -8,6 +8,7 @@ import java.net.SocketException;
 
 import client.Client;
 import project.TCP;
+import protocol.AnnouncePacket;
 import protocol.Packet;
 
 public final class NetworkInterface {
@@ -81,6 +82,7 @@ public final class NetworkInterface {
 				Packet packet = Packet.deserialize(address, data);
 				return packet;
 			}
+			return new AnnouncePacket();
 		} catch (IOException e) {
 			return null;
 		}
