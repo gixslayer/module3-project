@@ -141,16 +141,20 @@ public class TCP {
 	private static void ackReceived(Packet packet) {
 		ArrayList<Packet> buffer = packetsInBuffer.get(packet.getSource());
 		Packet toDelete = null;
+		System.out.println("ack RECEIVED!!! " + buffer.size());
 				
 		for(Packet p: buffer) {
 			if(p.getSeq()+p.getLength() == packet.getAck()) {
 				//This is packet to remove
 				toDelete = p;
+				System.out.println("IFFFFFFFFFFFFFFFf");
+				break;
 			}
 		}
 		
 		
 		if(toDelete != null) {
+			System.out.println("DELETING PACKET");
 			buffer.remove(toDelete);
 			packetsInBuffer.put(packet.getSource(), buffer);
 		}
@@ -242,6 +246,8 @@ public class TCP {
 			temp = new ArrayList<>();
 		}
 		
+		lastInfo.put(lastPacket.getSource(), new int[]{synAck.getSeq(), synAck.getAck()});
+		
 		temp.add(synAck);
 		packetsInBuffer.put(synAck.getDestination(), temp);
 		Timer timer = new Timer();
@@ -256,7 +262,7 @@ public class TCP {
 		int newAck = 1;
 		Packet ack = new Packet(myAddress, lastPacket.getSource(), 0, newSeq, newAck, false, true, false, 5, new byte[0]);
 		System.out.println(ack.getDestination() + ", seq: " + ack.getSeq() +", ack: " + ack.getAck());
-		
+		lastInfo.put(lastPacket.getSource(), new int[]{newSeq, newAck});
 		sendPacket(ack, ack.getDestination());
 
 	}
@@ -352,7 +358,7 @@ public class TCP {
 	}
 	
 	public static void sendPacket(Packet packet, int destination) {
-		
+		System.out.println("I AM ACKING WITH: ACK=" + packet.getAck() + " SEQ=" + packet.getSeq());
 		InetAddress destAddress = null;
 		try {
 			destAddress = InetAddress.getByName("192.168.5."+destination);
