@@ -13,6 +13,8 @@ public final class PacketFactory {
 			return new RouteRequestPacket();
 		case Packet.TYPE_PRIVATE_CHAT:
 			return new PrivateChatPacket();
+		case Packet.TYPE_EMPTY_PACKET:
+			return new EmptyPacket();
 		}
 		
 		throw new IllegalArgumentException("Invalid type");

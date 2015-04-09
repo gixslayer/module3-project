@@ -10,6 +10,7 @@ import client.Client;
 import project.TCP;
 import protocol.AnnouncePacket;
 import protocol.Packet;
+import protocol.PacketFactory;
 
 public final class NetworkInterface {
 	public static final int RECV_BUFFER_SIZE = 4096;
@@ -82,7 +83,7 @@ public final class NetworkInterface {
 				Packet packet = Packet.deserialize(address, data);
 				return packet;
 			}
-			return null;
+			return PacketFactory.fromType(Packet.TYPE_EMPTY_PACKET);
 		} catch (IOException e) {
 			return null;
 		}

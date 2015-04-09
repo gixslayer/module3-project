@@ -10,6 +10,7 @@ public abstract class Packet {
 	public static final int TYPE_DISCONNECT = 2;
 	public static final int TYPE_ROUTE_REQUEST = 3;
 	public static final int TYPE_PRIVATE_CHAT = 4;
+	public static final int TYPE_EMPTY_PACKET = 5;
 	
 	private final int type;
 	private InetAddress address;

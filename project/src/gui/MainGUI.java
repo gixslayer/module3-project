@@ -37,6 +37,8 @@ public class MainGUI extends JFrame implements ActionListener, KeyListener, Mous
 	private HashMap<String, String> colorMap = new HashMap<String, String>();
 	private ColoringColors coloring = ColoringColors.NORMAL;
 	
+	private String[] history;
+	
 	private volatile boolean rainbowMode = false;
 	private boolean altRBMode = false;
 	

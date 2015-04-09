@@ -93,6 +93,8 @@ public class Application implements NetworkCallbacks, MulticastCallbacks, CacheC
 			handleChatPacket((ChatPacket)packet);
 		} else if(type == Packet.TYPE_PRIVATE_CHAT) {
 			handlePrivateChatPacket((PrivateChatPacket)packet);
+		} else if(type == Packet.TYPE_EMPTY_PACKET) {
+			return;
 		}
 	}
 	
@@ -173,6 +175,8 @@ public class Application implements NetworkCallbacks, MulticastCallbacks, CacheC
 			handleChatPacket((ChatPacket)packet);
 		} else if(type == Packet.TYPE_PRIVATE_CHAT) {
 			handlePrivateChatPacket((PrivateChatPacket)packet);
+		} else if(type == Packet.TYPE_EMPTY_PACKET) {
+			return;
 		}
 	}
 }
