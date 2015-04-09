@@ -37,7 +37,7 @@ public class MainGUI extends JFrame implements ActionListener, KeyListener, Mous
 	private HashMap<String, String> colorMap = new HashMap<String, String>();
 	private ColoringColors coloring = ColoringColors.NORMAL;
 	
-	private String[] history;
+	private String[] history = new String[0];
 	
 	private volatile boolean rainbowMode = false;
 	private boolean altRBMode = false;
@@ -72,6 +72,8 @@ public class MainGUI extends JFrame implements ActionListener, KeyListener, Mous
 	
 	private Thread rbThread;
 	private AnimationThread animation;
+	
+	private int currentHistory;
 	
 	/**
 	 * Constuctor of the <code>class</code>.
@@ -286,6 +288,7 @@ public class MainGUI extends JFrame implements ActionListener, KeyListener, Mous
 		String txt = typeField.getText();
 		if(txt.toLowerCase().length() == 0 || txt.toLowerCase().matches("\\s*") || txt.toLowerCase().matches(".*<.*>.*") || txt.toLowerCase().matches(".*<script.*") || txt.length() > 3000) return;
 		typeField.setText("");
+		addToHistory(txt);
 		receiveText(txt, client.getName(), false);
 		if(txt.contains("Alice") || txt.contains("alice")) {
 			receiveText(alice.getResponse(txt), "Alice", false);
@@ -401,6 +404,34 @@ public class MainGUI extends JFrame implements ActionListener, KeyListener, Mous
 		else {
 			addToScreen(name + ": " + str);
 		}
+	}
+	
+	private void addToHistory(String str) {
+		String[] tmp = new String[history.length+1];
+		tmp[0] = str;
+		System.arraycopy(history, 0, tmp, 1, history.length);
+		history = tmp;
+		printArray(history);
+	}
+	
+	private void printArray(String[] array) {
+		System.out.print("Array: [");
+		for(int i=0; i<array.length-1; i++) {
+			System.out.print(array[i] + ", ");
+		}
+		System.out.print(array[array.length-1] + "]" + System.lineSeparator());
+	}
+	
+	private String getFromHistory(int index) {
+		if(index >= history.length) {
+			currentHistory = history.length-1;
+			return history[history.length-1];
+		}
+		if(index < 0) {
+			currentHistory = 0;
+			return history[0];
+		}
+		else return history[index];
 	}
 	
 //=============================================================================
@@ -555,8 +586,20 @@ public class MainGUI extends JFrame implements ActionListener, KeyListener, Mous
 	 */
 	public void keyPressed(KeyEvent arg0) {
 		if(arg0.getSource().equals(typeField)) {
-			if(arg0.getKeyCode() == KeyEvent.VK_ENTER) 
+			if(arg0.getKeyCode() == KeyEvent.VK_ENTER) {
 				sendText();
+				currentHistory = 0;
+			}
+			if(arg0.getKeyCode() == KeyEvent.VK_UP) {
+				System.out.println(currentHistory);
+				typeField.setText(getFromHistory(currentHistory));
+				currentHistory++;
+			}
+			if(arg0.getKeyCode() == KeyEvent.VK_DOWN) {
+				System.out.println(currentHistory);
+				currentHistory--;
+				typeField.setText(getFromHistory(currentHistory));
+			}
 		}
 	}
 
