@@ -19,8 +19,6 @@ public class TCP {
 	private static Map<Integer, ArrayList<byte[]>> toSend;
 	private static boolean constructed = false;
 	private static NetworkInterface ni;
-	private static InetAddress destInetAddress;
-	private static int destAddress;
 	
 	private static void init(int source, int dest) {
 		if(!constructed) {
@@ -32,8 +30,6 @@ public class TCP {
 				toSend = new HashMap<>();
 				timers = new HashMap<>();
 				lastInfo = new HashMap<>();
-				destInetAddress = InetAddress.getByName("192.168.5." + dest);
-				destAddress = dest;
 			} catch (UnknownHostException e) {
 				e.printStackTrace();
 			}
@@ -46,6 +42,7 @@ public class TCP {
 	
 	public static byte[] handlePacket(NetworkInterface ni, InetAddress myAddr, Packet packet) {
 		init(inetToInt(myAddr), packet.getSource());
+		int destAddress = packet.getSource();
 		TCP.ni = ni;
 		if(packet.getDestination() == myAddress/* && checksumCheck(packet)*/) {
 			System.out.println("From:" + packet.getSource() + ", seq: " + packet.getSeq() +", ack: " + packet.getAck());
@@ -171,7 +168,7 @@ public class TCP {
 		Packet syn = new Packet(myAddress, destination, 0, 0, 0, true, false, false, 5, new byte[0]);
 		System.out.println(syn.getDestination() + ", seq: " + syn.getSeq() +", ack: " + syn.getAck());
 		
-		sendPacket(syn);
+		sendPacket(syn, destination);
 	}
 	
 	private static void sendSyn(InetAddress destination) {
@@ -182,7 +179,7 @@ public class TCP {
 		Packet synAck = new Packet(myAddress, lastPacket.getSource(), 0, 0, 1, true, true, false, 5, new byte[0]);
 		System.out.println(synAck.getDestination() + ", seq: " + synAck.getSeq() +", ack: " + synAck.getAck());
 		
-		sendPacket(synAck);
+		sendPacket(synAck, synAck.getDestination());
 	}
 	
 	private static void sendAckForSynAck(Packet lastPacket) {
@@ -191,7 +188,7 @@ public class TCP {
 		Packet ack = new Packet(myAddress, lastPacket.getSource(), 0, newSeq, newAck, false, true, false, 5, new byte[0]);
 		System.out.println(ack.getDestination() + ", seq: " + ack.getSeq() +", ack: " + ack.getAck());
 		
-		sendPacket(ack);
+		sendPacket(ack, ack.getDestination());
 
 	}
 	
@@ -200,7 +197,7 @@ public class TCP {
 		int newAck = lastPacket.getSeq()+1;
 		Packet ack = new Packet(myAddress, lastPacket.getSource(), 0, newSeq, newAck, false, true, false, 5, new byte[0]);
 		System.out.println(ack.getDestination() + ", seq: " + ack.getSeq() +", ack: " + ack.getAck());
-		sendPacket(ack);
+		sendPacket(ack, ack.getDestination());
 	}
 	
 	private static void sendAck(Packet lastPacket) {
@@ -210,7 +207,7 @@ public class TCP {
 		System.out.println(ack.getDestination() + ", seq: " + ack.getSeq() +", ack: " + ack.getAck());
 		//add to info
 		lastInfo.put(lastPacket.getSource(), new int[]{newSeq, newAck});
-		sendPacket(ack);
+		sendPacket(ack, ack.getDestination());
 	}
 	
 	private static void sendFin(int destination) {
@@ -218,7 +215,7 @@ public class TCP {
 		int newAck = lastInfo.get(destination)[0];
 		Packet fin = new Packet(myAddress, destination, 0, newSeq, newAck, false, false, true, 5, new byte[0]);
 		System.out.println(fin.getDestination() + ", seq: " + fin.getSeq() +", ack: " + fin.getAck());
-		sendPacket(fin);
+		sendPacket(fin, destination);
 	}
 	
 	private static void sendFinAck(Packet lastPacket) {
@@ -226,7 +223,7 @@ public class TCP {
 		int newAck = lastPacket.getSeq()+1;
 		Packet ack = new Packet(myAddress, lastPacket.getSource(), 0, newSeq, newAck, false, true, true, 5, new byte[0]);
 		System.out.println(ack.getDestination() + ", seq: " + ack.getSeq() +", ack: " + ack.getAck());
-		sendPacket(ack);
+		sendPacket(ack, ack.getDestination());
 	}
 	
 	public static void sendData(int source, int destination, byte[] data) {
@@ -235,7 +232,7 @@ public class TCP {
 			Packet toSend = new Packet(myAddress, destination, 0, lastInfo.get(destination)[0], lastInfo.get(destination)[1], false, true, false, 5, data);
 			lastInfo.put(destination, new int[]{toSend.getSeq()+toSend.getLength(),toSend.getAck()});
 			System.out.println(toSend.getDestination() + ", seq: " + toSend.getSeq() +", ack: " + toSend.getAck());
-			sendPacket(toSend);
+			sendPacket(toSend, destination);
 		} else if(!connections.containsKey(destination) || connections.get(destination).equals(State.CLOSED)){
 			openConnection(destination);
 			ArrayList<byte[]> array = toSend.get(destination);
@@ -255,7 +252,14 @@ public class TCP {
 		sendData(inetToInt(source), inetToInt(destination), data);
 	}
 	
-	public static void sendPacket(Packet packet) {
-		ni.send(destInetAddress, packet.getBytes());
+	public static void sendPacket(Packet packet, int destination) {
+		InetAddress destAddress = null;
+		try {
+			destAddress = InetAddress.getByName("192.168.5."+destination);
+		} catch (UnknownHostException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+		ni.send(destAddress, packet.getBytes());
 	}
 }
