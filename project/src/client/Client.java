@@ -22,8 +22,12 @@ public class Client {
 	}
 	
 	public Client(String name) {
+		this(name, null);
+	}
+	
+	public Client(String name, InetAddress address) {
 		this.name = name;
-		this.address = null;
+		this.address = address;
 		this.lastSeen = 0;
 		this.indirect = false;
 		this.route = null;
