@@ -4,16 +4,16 @@ import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 
 public class TabActionListener implements ActionListener {
-	private String name;
+	private int index;
 	private MainGUI main;
 	
-	public TabActionListener(String name, MainGUI main) {
-		this.name = name;
+	public TabActionListener(int index, MainGUI main) {
+		this.index = index;
 		this.main = main;
 	}
 	
 	@Override
 	public void actionPerformed(ActionEvent e) {
-		main.getTabPane().remove(main.getTabPane().indexOfTab(name));
+		main.getTabPane().remove(index);
 	}
 }

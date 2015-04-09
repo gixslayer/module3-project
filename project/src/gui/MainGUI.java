@@ -156,6 +156,7 @@ public class MainGUI extends JFrame implements ActionListener, KeyListener, Mous
 		mainChat.add(sendBar, BorderLayout.SOUTH);
 		
 		tabPane.addTab("Main Room", mainChat);
+		tabPane.addMouseListener(this);
 
 		c.add(tabPane, BorderLayout.CENTER);
 		c.add(sideBar, BorderLayout.WEST);
@@ -245,9 +246,15 @@ public class MainGUI extends JFrame implements ActionListener, KeyListener, Mous
 		
 		chatMap.put(i, pChat);
 		
+		addTabName(i, name);
+		
+		if(self) tabPane.setSelectedIndex(i);
+	}
+	
+	private void addTabName(int i, String str) {
 		JPanel tabPanel = new JPanel(new GridBagLayout());
 		tabPanel.setOpaque(false);
-		JLabel tabTitle = new JLabel(name + " ");
+		JLabel tabTitle = new JLabel(str + " ");
 		JButton tabClose = new JButton(closeIcon);
 		tabClose.setBorderPainted(false);
 		tabClose.setBorder(BorderFactory.createEmptyBorder());
@@ -264,9 +271,7 @@ public class MainGUI extends JFrame implements ActionListener, KeyListener, Mous
 		tabPanel.add(tabClose, gbc);
 
 		tabPane.setTabComponentAt(i, tabPanel);
-		tabClose.addActionListener(new TabActionListener(name, this));
-		
-		if(self) tabPane.setSelectedIndex(i);
+		tabClose.addActionListener(new TabActionListener(i, this));
 	}
 	
 	/**
@@ -316,7 +321,6 @@ public class MainGUI extends JFrame implements ActionListener, KeyListener, Mous
 		name = changeName(name);
 		
 		if(priv) {
-			System.out.println("DSDS");
 			int index = tabPane.indexOfTab(name);
 			if(index == -1) {
 				addPrivateChat(name, false);
@@ -324,9 +328,19 @@ public class MainGUI extends JFrame implements ActionListener, KeyListener, Mous
 			}
 			PrivateChat pChat = chatMap.get(index);
 			pChat.receiveText(str, name);
+			if(tabPane.getSelectedIndex() != index) {
+				tabPane.remove(index);
+				tabPane.add(pChat, index);
+				addTabName(index, name + " [!]");
+			}
 		}
 		else {
 			addToScreen(name + ": " + str);
+			if(tabPane.getSelectedIndex() == 0) {
+				JPanel mainChat = (JPanel)tabPane.getComponentAt(0);
+				tabPane.remove(0);
+				tabPane.add(mainChat, "Main Room [!]", 0);
+			}
 		}
 	}
 	
@@ -341,14 +355,6 @@ public class MainGUI extends JFrame implements ActionListener, KeyListener, Mous
 		tmp[0] = str;
 		System.arraycopy(history, 0, tmp, 1, history.length);
 		history = tmp;
-	}
-	
-	private void printArray(String[] array) {
-		System.out.print("Array: [");
-		for(int i=0; i<array.length-1; i++) {
-			System.out.print(array[i] + ", ");
-		}
-		System.out.print(array[array.length-1] + "]" + System.lineSeparator());
 	}
 	
 	private String getFromHistory(int index) {
@@ -635,6 +641,26 @@ public class MainGUI extends JFrame implements ActionListener, KeyListener, Mous
 			
 			UserMenu menu = new UserMenu(name, client, this);
 		    menu.show(arg0.getComponent(), arg0.getX(), arg0.getY());
+		}
+		
+		if(arg0.getSource().equals(tabPane) && arg0.getButton() == MouseEvent.BUTTON1) {
+			int index = tabPane.getSelectedIndex();
+			if(chatMap.get(index) == null) {
+				JPanel mainChat = (JPanel)tabPane.getComponentAt(index);
+				tabPane.remove(index);
+				tabPane.add(mainChat, "Main Room", index);
+				tabPane.setSelectedIndex(index);
+			}
+			else {
+				String otherName = chatMap.get(index).getOtherName();
+				if(!tabPane.getTitleAt(index).equals(otherName)) {
+					PrivateChat pChat = chatMap.get(index);
+					tabPane.remove(index);
+					tabPane.add(pChat, index);
+					addTabName(index, otherName);
+					tabPane.setSelectedIndex(index);
+				}
+			}
 		}
 	}
 

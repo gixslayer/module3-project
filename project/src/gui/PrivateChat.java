@@ -95,6 +95,10 @@ public class PrivateChat extends JPanel implements ActionListener, KeyListener {
 	public void receiveText(String str, String name) {
 		addToScreen(name + ": " + str);
 	}
+	
+	public String getOtherName() {
+		return otherName;
+	}
 
 	@Override
 	public void actionPerformed(ActionEvent e) {
