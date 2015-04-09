@@ -18,6 +18,7 @@ public class TCP {
 	private static Map<Integer, int[]> lastInfo;
 	private static Map<Integer, ArrayList<byte[]>> toSend;
 	private static Map<Integer, ArrayList<Packet>> packetsInBuffer;
+	private static Map<Packet, Timer> timerOfPacket;
 	private static boolean constructed = false;
 	private static NetworkInterface ni;
 	
@@ -32,6 +33,7 @@ public class TCP {
 				timers = new HashMap<>();
 				lastInfo = new HashMap<>();
 				packetsInBuffer = new HashMap<>();
+				timerOfPacket = new HashMap<>();
 			} catch (UnknownHostException e) {
 				e.printStackTrace();
 			}
@@ -46,7 +48,7 @@ public class TCP {
 		init(inetToInt(myAddr), packet.getSource());
 		int destAddress = packet.getSource();
 		TCP.ni = ni;
-		if(packet.getDestination() == myAddress /*&& checksumCheck(packet)*/) {
+		if(packet.getDestination() == myAddress && checksumCheck(packet)) {
 			System.out.println("From:" + packet.getSource() + ", seq: " + packet.getSeq() +", ack: " + packet.getAck());
 			if(packetsInBuffer.get(destAddress) != null) {
 				System.out.println("SEQACK INFO FROM: " + destAddress + " :" + packetsInBuffer.get(destAddress).size());
