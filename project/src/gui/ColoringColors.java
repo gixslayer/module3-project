@@ -1,15 +1,34 @@
 package gui;
 
 public enum ColoringColors {
-	NORMAL, FIFTY_SHADES, RAINBOW, ANIMATED_RAINBOW;
+	NORMAL, FIFTY_SHADES, RAINBOW, ANIMATED_RAINBOW, G2G, G2R, G2B, R2B, LB2G;
 	
 	public String toString() {
 		switch(this) {
-			case NORMAL: return "NORMAL";
-			case FIFTY_SHADES: return "FIFTY_SHADES";
-			case RAINBOW: return "RAINBOW";
-			case ANIMATED_RAINBOW: return "ANIMATED_RAINBOW";
+			case NORMAL: return "Normal";
+			case FIFTY_SHADES: return "Fifty Shades of Gray";
+			case RAINBOW: return "Rainbow";
+			case ANIMATED_RAINBOW: return "Animated Rainbow";
+			case G2G: return "Gray to Green";
+			case G2R: return "Gray to Red";
+			case G2B: return "Gray to Blue";
+			case R2B: return "Red to Blue";
+			case LB2G: return "Light Blue to Green";
 			default: return "NOPE";
+		}
+	}
+	
+	public static ColoringColors getColor(int color) {
+		switch(color) {
+			case 1: return FIFTY_SHADES;
+			case 2: return RAINBOW;
+			case 3: return ANIMATED_RAINBOW;
+			case 4: return G2G;
+			case 5: return G2R;
+			case 6: return G2B;
+			case 7: return R2B;
+			case 8: return LB2G;
+			default: return NORMAL;
 		}
 	}
 }

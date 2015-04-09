@@ -27,13 +27,6 @@ public class MainGUI extends JFrame implements ActionListener, KeyListener, Mous
 	private static final int HISTORY_MAX_SIZE = 20;
 	
 	private static final String[] colors = {"Red", "Blue", "Green", "Yellow", "Purple", "Orange", "Black"};
-	private static final String[] fiftyShades = {"E0E0E0", "DEDEDE", "DBDBDB", "D9D9D9", "D6D6D6", "D4D4D4", "D1D1D1", "CFCFCF",
-		"CCCCCC", "C9C9C9", "C7C7C7", "C4C4C4", "C2C2C2", "BFBFBF", "BDBDBD", "BABABA", "B8B8B8", "B5B5B5", "B3B3B3", "B0B0B0",
-		"ADADAD", "ABABAB", "A9A9A9", "A8A8A8", "A6A6A6", "A3A3A3", "A1A1A1", "9E9E9E", "9C9C9C", "969696", "949494", "919191",
-		"8F8F8F", "8C8C8C", "8A8A8A", "878787", "858585", "828282", "7F7F7F", "7D7D7D", "7A7A7A", "787878", "757575", "737373",
-		"707070", "6E6E6E", "6B6B6B", "696969", "666666", "636363", "616161"};
-	private static final String[] rainbow = {"F26C4F", "F68E55", "FBAF5C", "FFF467", "ACD372", "7CC576", "3BB878", "1ABBB4", "00BFF3",
-		"438CCA", "5574B9", "605CA8", "855FA8", "A763A8", "F06EA9", "F26D7D"};
 	
 	private HashMap<String, String> colorMap = new HashMap<String, String>();
 	private ColoringColors coloring = ColoringColors.NORMAL;
@@ -355,7 +348,8 @@ public class MainGUI extends JFrame implements ActionListener, KeyListener, Mous
 			tmp = new String[history.length];
 		}
 		tmp[0] = str;
-		System.arraycopy(history, 0, tmp, 1, history.length);
+		if(history.length+1 <= HISTORY_MAX_SIZE) System.arraycopy(history, 0, tmp, 1, history.length);
+		else System.arraycopy(history, 0, tmp, 1, history.length-1);
 		history = tmp;
 	}
 	
@@ -531,12 +525,35 @@ public class MainGUI extends JFrame implements ActionListener, KeyListener, Mous
 	 * @param index the index of the Color.
 	 * @return the color mapped to the specified index.
 	 */
-	public String getFiftyShade(int index) {
-		return fiftyShades[index];
+	
+	public String getColorFromArray(ColoringColors color, int index) {
+		switch(color) {
+			case FIFTY_SHADES: return ColorArrays.fiftyShades[index];
+			case RAINBOW: return ColorArrays.rainbow[index];
+			case G2G: return ColorArrays.gray2green[index];
+			case G2R: return ColorArrays.gray2red[index];
+			case G2B: return ColorArrays.gray2blue[index];
+			case R2B: return ColorArrays.red2blue[index];
+			case LB2G: return ColorArrays.lblue2green[index];
+			default: return "000000";
+		}
 	}
 	
-	public String getRainbow(int index) {
-		return rainbow[index];
+	public int getLenghtOfColoringArray(ColoringColors color) {
+		switch(color) {
+			case FIFTY_SHADES: return ColorArrays.fiftyShades.length;
+			case RAINBOW: return ColorArrays.rainbow.length;
+			case G2G: return ColorArrays.gray2green.length;
+			case G2R: return ColorArrays.gray2red.length;
+			case G2B: return ColorArrays.gray2blue.length;
+			case R2B: return ColorArrays.red2blue.length;
+			case LB2G: return ColorArrays.lblue2green.length;
+			default: return 0;
+		}
+	}
+	
+	public int getNumberofColoringArrays() {
+		return ColorArrays.COLORING_ARRAYS;
 	}
 	
 	public void setBGColor(Color color) {

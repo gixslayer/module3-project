@@ -11,7 +11,7 @@ import javax.swing.ListCellRenderer;
 public class CustomCellRenderer extends JLabel implements ListCellRenderer<Object> {
 	private MainGUI main;
 	private AnimationThread animation;
-	//private int rb = 0;
+	private boolean reverse = false;
 	
     public CustomCellRenderer(MainGUI main, AnimationThread animation) {
     	this.main = main;
@@ -23,21 +23,37 @@ public class CustomCellRenderer extends JLabel implements ListCellRenderer<Objec
         setText(value.toString());
         Color background = Color.WHITE;
         Color foreground = Color.BLACK;
-        if(main.getColoring() == ColoringColors.FIFTY_SHADES) {
-        	background = Color.decode("0x" + main.getFiftyShade(index % 50));
-        }
-        else if(main.getColoring() == ColoringColors.RAINBOW) {
+        
+        if(main.getColoring() == ColoringColors.RAINBOW) {
         	background = Color.getHSBColor((float)(index*0.01), 1, 1);	
         }
         else if(main.getColoring() == ColoringColors.ANIMATED_RAINBOW) {
-        	if(!main.getAltRBMode()) background = Color.getHSBColor(animation.getHue(), 1, 1);
-        	else background = Color.getHSBColor((float)((index+(animation.getHue()*100))*0.01), 1, 1);
+        	if(!main.getAltRBMode()) 
+        		background = Color.getHSBColor(animation.getHue(), 1, 1);
+        	else 
+        		background = Color.getHSBColor((float)((index+(animation.getHue()*100))*0.01), 1, 1);
+        }
+        else if(main.getColoring() != ColoringColors.NORMAL) {
+        	int length = main.getLenghtOfColoringArray(main.getColoring());
+        	if(index  % length == length-1) {
+        		reverse = true;
+        	}
+        	if(reverse) {
+        		if(length - (index % length) == 0)
+        			reverse = false;
+        		if(index % (2*length) >= length)
+        			background = Color.decode("0x" + main.getColorFromArray(main.getColoring(), (length-1) - (index % length)));
+        		else 
+            		background = Color.decode("0x" + main.getColorFromArray(main.getColoring(), index % length));
+        	}
+        	else 
+        		background = Color.decode("0x" + main.getColorFromArray(main.getColoring(), index % length));
         }
         else {
         	if(index % 2 == 0)
-        		background = Color.decode("0x" + main.getFiftyShade(10));
+        		background = Color.decode("0xC7C7C7");
        	 	else
-       	 		background = Color.decode("0x" + main.getFiftyShade(20));
+       	 		background = Color.decode("0xADADAD");
         }
         
         if(value.toString().startsWith("[JOIN]:")) 

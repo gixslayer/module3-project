@@ -26,8 +26,8 @@ public class PreferencesMenu extends JFrame implements ActionListener, ChangeLis
 	private JButton doneButton;
 	
     private JComboBox<String> areaColor;
-    private String[] areaStrings = {"Normal", "Fifty Shades of Gray", "Rainbow", "Animated Rainbow"};
-    
+    private String[] areaStrings;
+    		
     private JCheckBox rainbowMode;
     
     private JColorChooser bgColor;
@@ -44,6 +44,11 @@ public class PreferencesMenu extends JFrame implements ActionListener, ChangeLis
         
         labels[0] = new JLabel("Text Area Coloring: ");
         panel.add(labels[0]);
+        
+        areaStrings = new String[main.getNumberofColoringArrays()];
+        for(int i=0; i<main.getNumberofColoringArrays(); i++) {
+        	areaStrings[i] = ColoringColors.getColor(i).toString();
+        }
         
         areaColor = new JComboBox<String>(areaStrings);
         areaColor.addActionListener(this);
@@ -79,10 +84,9 @@ public class PreferencesMenu extends JFrame implements ActionListener, ChangeLis
 		if(arg0.getSource().equals(areaColor)) {
 			@SuppressWarnings("unchecked") // TODO: Verify this cast cannot blow up on us.
 			JComboBox<String> jb = (JComboBox<String>)arg0.getSource();
-			if(jb.getSelectedItem().equals("Normal")) main.setColoring(ColoringColors.NORMAL);
-			else if(jb.getSelectedItem().equals("Fifty Shades of Gray")) main.setColoring(ColoringColors.FIFTY_SHADES);
-			else if(jb.getSelectedItem().equals("Rainbow")) main.setColoring(ColoringColors.RAINBOW);
-			else if(jb.getSelectedItem().equals("Animated Rainbow")) main.setColoring(ColoringColors.ANIMATED_RAINBOW);
+			for(int i=0; i<main.getNumberofColoringArrays(); i++) {
+				if(jb.getSelectedItem().equals(ColoringColors.getColor(i).toString())) main.setColoring(ColoringColors.getColor(i));
+			}
 			main.repaintAll();
 		}
 		
