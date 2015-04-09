@@ -80,6 +80,7 @@ public class MainGUI extends JFrame implements ActionListener, KeyListener, Mous
 		app = new Application(name, this);
 		app.start();
 		client = app.getLocalClient();
+		System.out.println(client.getAddress());
 		init();
 	}
 	

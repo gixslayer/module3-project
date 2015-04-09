@@ -50,11 +50,22 @@ public class MulticastInterface {
 	public void send(Packet packet, InetAddress source, InetAddress destination) {
 		byte[] data = packet.serialize();
 		System.out.println("Sending packet to: " + destination.getCanonicalHostName());
-		TCP.sendData(source, destination, data);
+		TCP.sendData(this, source, destination, data);
 	}
 	
 	public void send(Packet packet) {
 		byte[] data = packet.serialize();
+		
+		DatagramPacket datagram = new DatagramPacket(data, data.length, group, port);
+		
+		try {
+			socket.send(datagram);
+		} catch (IOException e) {
+			System.err.printf("IOException during MulticastSocket.send: %s%n", e.getMessage());
+		}
+	}
+	
+	public void send(byte[] data) {
 		
 		DatagramPacket datagram = new DatagramPacket(data, data.length, group, port);
 		
@@ -72,9 +83,12 @@ public class MulticastInterface {
 			byte[] receivedData = new byte[datagram.getLength()];
 			System.arraycopy(datagram.getData(), datagram.getOffset(), receivedData, 0, receivedData.length);
 			InetAddress address = datagram.getAddress();
-			Packet packet = Packet.deserialize(address, receivedData);
-
-			return packet;
+			byte[] data = TCP.handlePacket(group, new project.Packet(receivedData));
+			if(data != null) {
+				Packet packet = Packet.deserialize(address, data);
+				return packet;
+			}
+			else return null;
 		} catch(IOException e) {
 			return null;
 		}

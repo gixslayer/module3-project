@@ -7,6 +7,8 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.Timer;
 
+import network.MulticastInterface;
+
 public class TCP {
 	private static InetAddress myInetAddress;
 	private static int myAddress;
@@ -15,6 +17,7 @@ public class TCP {
 	private static Map<Integer, int[]> lastInfo;
 	private static Map<Integer, ArrayList<byte[]>> toSend;
 	private static boolean constructed = false;
+	private static MulticastInterface mci;
 	
 	private static void init(int source) {
 		if(!constructed) {
@@ -36,7 +39,7 @@ public class TCP {
 		CLOSED, SYNSENT, SYN_RECEIVED, ESTABLISHED, FIN_WAIT, LAST_ACK, TIME_WAIT;
 	}
 	
-	public static void handlePacket(InetAddress myAddr, Packet packet) {
+	public static byte[] handlePacket(InetAddress myAddr, Packet packet) {
 		init(inetToInt(myAddr));
 		if(packet.getDestination() == myAddress && checksumCheck(packet)) {
 			System.out.println("From:" + packet.getSource() + ", seq: " + packet.getSeq() +", ack: " + packet.getAck());
@@ -90,12 +93,13 @@ public class TCP {
 						//no data, normal ACK
 						//TODO check seqs and acks.
 					} else {
-						//ACK with data
 						sendAck(packet);
+						return packet.getData();
 					}
 				}
 			}
 		}
+		return null;
 	}
 	
 	private static boolean checksumCheck(Packet packet) {
@@ -111,7 +115,7 @@ public class TCP {
 	}
 	
 	private static int inetToInt(InetAddress destination) {
-		return Integer.parseInt(""+destination.getHostAddress().charAt(10));
+		return destination.getAddress()[3];
 	}
 	
 	public static boolean openConnection(int destination) {
@@ -165,7 +169,7 @@ public class TCP {
 		Packet syn = new Packet(myAddress, destination, 0, 0, 0, true, false, false, 5, new byte[0]);
 		System.out.println(syn.getDestination() + ", seq: " + syn.getSeq() +", ack: " + syn.getAck());
 		
-		//TODO: send packet
+		sendPacket(syn);
 	}
 	
 	private static void sendSyn(InetAddress destination) {
@@ -176,7 +180,7 @@ public class TCP {
 		Packet synAck = new Packet(myAddress, lastPacket.getSource(), 0, 0, 1, true, true, false, 5, new byte[0]);
 		System.out.println(synAck.getDestination() + ", seq: " + synAck.getSeq() +", ack: " + synAck.getAck());
 		
-		//TODO: send packet, ACK en SEQ goed doen
+		sendPacket(synAck);
 	}
 	
 	private static void sendAckForSynAck(Packet lastPacket) {
@@ -185,7 +189,7 @@ public class TCP {
 		Packet ack = new Packet(myAddress, lastPacket.getSource(), 0, newSeq, newAck, false, true, false, 5, new byte[0]);
 		System.out.println(ack.getDestination() + ", seq: " + ack.getSeq() +", ack: " + ack.getAck());
 		
-		//TODO: send packet, ACK en SEQ goed doen
+		sendPacket(ack);
 
 	}
 	
@@ -194,8 +198,7 @@ public class TCP {
 		int newAck = lastPacket.getSeq()+1;
 		Packet ack = new Packet(myAddress, lastPacket.getSource(), 0, newSeq, newAck, false, true, false, 5, new byte[0]);
 		System.out.println(ack.getDestination() + ", seq: " + ack.getSeq() +", ack: " + ack.getAck());
-		
-		//TODO: send packet, ACK en SEQ goed doen
+		sendPacket(ack);
 	}
 	
 	private static void sendAck(Packet lastPacket) {
@@ -205,7 +208,7 @@ public class TCP {
 		System.out.println(ack.getDestination() + ", seq: " + ack.getSeq() +", ack: " + ack.getAck());
 		//add to info
 		lastInfo.put(lastPacket.getSource(), new int[]{newSeq, newAck});
-		//TODO: send packet, ACK en SEQ goed doen
+		sendPacket(ack);
 	}
 	
 	private static void sendFin(int destination) {
@@ -213,7 +216,7 @@ public class TCP {
 		int newAck = lastInfo.get(destination)[0];
 		Packet fin = new Packet(myAddress, destination, 0, newSeq, newAck, false, false, true, 5, new byte[0]);
 		System.out.println(fin.getDestination() + ", seq: " + fin.getSeq() +", ack: " + fin.getAck());
-		//TODO: send packet, ACK en SEQ goed doen
+		sendPacket(fin);
 	}
 	
 	private static void sendFinAck(Packet lastPacket) {
@@ -221,7 +224,7 @@ public class TCP {
 		int newAck = lastPacket.getSeq()+1;
 		Packet ack = new Packet(myAddress, lastPacket.getSource(), 0, newSeq, newAck, false, true, true, 5, new byte[0]);
 		System.out.println(ack.getDestination() + ", seq: " + ack.getSeq() +", ack: " + ack.getAck());
-		//TODO: send packet, ACK en SEQ goed doen
+		sendPacket(ack);
 	}
 	
 	public static void sendData(int source, int destination, byte[] data) {
@@ -230,7 +233,7 @@ public class TCP {
 			Packet toSend = new Packet(myAddress, destination, 0, lastInfo.get(destination)[0], lastInfo.get(destination)[1], false, true, false, 5, data);
 			lastInfo.put(destination, new int[]{toSend.getSeq()+toSend.getLength(),toSend.getAck()});
 			System.out.println(toSend.getDestination() + ", seq: " + toSend.getSeq() +", ack: " + toSend.getAck());
-			//TODO send packet
+			sendPacket(toSend);
 		} else if(!connections.containsKey(destination) || connections.get(destination).equals(State.CLOSED)){
 			openConnection(destination);
 			ArrayList<byte[]> array = toSend.get(destination);
@@ -244,7 +247,12 @@ public class TCP {
 		}
 	}
 	
-	public static void sendData(InetAddress source, InetAddress destination, byte[] data) {
+	public static void sendData(MulticastInterface mci, InetAddress source, InetAddress destination, byte[] data) {
+		TCP.mci = mci;
 		sendData(inetToInt(source), inetToInt(destination), data);
+	}
+	
+	public static void sendPacket(Packet packet) {
+		mci.send(packet.getBytes());
 	}
 }
