@@ -104,10 +104,10 @@ public class TCP {
 				} else if(connections.containsKey(destAddress) && connections.get(destAddress).equals(State.ESTABLISHED)) {
 					if(packet.getLength() == 0) {
 						//no data, normal ACK
+						ackReceived(packet);
 						//TODO check seqs and acks.
 					} else {
 						sendAck(packet);
-						ackReceived(packet);
 						return packet.getData();
 					}
 				}
@@ -137,7 +137,7 @@ public class TCP {
 	private static void ackReceived(Packet packet) {
 		ArrayList<Packet> buffer = packetsInBuffer.get(packet.getSource());
 		Packet toDelete = null;
-		
+				
 		for(Packet p: buffer) {
 			if(p.getSeq()+p.getLength() == packet.getAck()) {
 				//This is packet to remove
