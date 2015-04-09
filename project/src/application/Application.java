@@ -165,7 +165,7 @@ public class Application implements NetworkCallbacks, MulticastCallbacks, CacheC
 		InetAddress address = packet.getAddress();
 		InetAddress localAddress = localClient.getAddress();
 		
-		System.out.println("Got a packet!");
+		System.out.println("Got a packet! " + type);
 		
 		if(type == Packet.TYPE_ANNOUNCE) {
 			handleAnnouncePacket((AnnouncePacket)packet);

@@ -77,7 +77,7 @@ public final class NetworkInterface {
 			byte[] receivedData = new byte[datagram.getLength()];
 			System.arraycopy(recvBuffer, datagram.getOffset(), receivedData, 0, receivedData.length);
 			InetAddress address = datagram.getAddress();
-			byte[] data = TCP.handlePacket(myAddress, new project.Packet(receivedData));
+			byte[] data = TCP.handlePacket(this, myAddress, new project.Packet(receivedData));
 		
 			if(data != null) {
 				Packet packet = Packet.deserialize(address, data);
