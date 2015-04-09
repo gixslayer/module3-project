@@ -6,23 +6,25 @@ import java.net.InetAddress;
 import java.net.MulticastSocket;
 
 import protocol.Packet;
+import subscription.Subscribable;
+import subscription.SubscriptionCollection;
 
-public class MulticastInterface {
+public class MulticastInterface implements Subscribable<MulticastCallbacks> {
 	public static final int RECV_BUFFER_SIZE = 4096;
 	
 	private final MulticastSocket socket;
 	private final InetAddress group;
 	private final int port;
 	private final byte[] recvBuffer;
-	private final MulticastCallbacks callbacks;
+	private final SubscriptionCollection<MulticastCallbacks> callbacks;
 	
-	public MulticastInterface(String group, int port, MulticastCallbacks callbacks) {
+	public MulticastInterface(String group, int port) {
 		try {
 			this.socket = new MulticastSocket(port);
 			this.group = InetAddress.getByName(group);
 			this.port = port;
 			this.recvBuffer = new byte[RECV_BUFFER_SIZE];
-			this.callbacks = callbacks;
+			this.callbacks = new SubscriptionCollection<MulticastCallbacks>();
 		} catch (IOException e) {
 			throw new RuntimeException(String.format("Failed to create multicast interface: %s", e.getMessage()));
 		}
@@ -86,9 +88,22 @@ public class MulticastInterface {
 				if(packet == null) {
 					break;
 				}
-								
-				callbacks.onMulticastPacketReceived(packet);
+					
+				for(MulticastCallbacks subscriber : callbacks) {
+					subscriber.onMulticastPacketReceived(packet);
+				}
 			}
 		}
+	}
+
+	@Override
+	public void subscribe(MulticastCallbacks subscription) {
+		callbacks.subscribe(subscription);
+	}
+
+	@Override
+	public void unsubscribe(MulticastCallbacks subscription) {
+		callbacks.unsubscribe(subscription);
+		
 	}
 }

@@ -9,23 +9,25 @@ import java.net.SocketException;
 import project.TCP;
 import protocol.Packet;
 import protocol.PacketFactory;
+import subscription.Subscribable;
+import subscription.SubscriptionCollection;
 
-public final class NetworkInterface {
+public final class NetworkInterface implements Subscribable<NetworkCallbacks> {
 	public static final int RECV_BUFFER_SIZE = 4096;
 	
 	private final DatagramSocket socket;
 	private final int port;
 	private final InetAddress myAddress;
 	private final byte[] recvBuffer;
-	private final NetworkCallbacks callbacks;
+	private final SubscriptionCollection<NetworkCallbacks> callbacks;
 	
-	public NetworkInterface(InetAddress myAddress, int port, NetworkCallbacks callbacks) {
+	public NetworkInterface(InetAddress myAddress, int port) {
 		try {
 			this.socket = new DatagramSocket(port);
 			this.myAddress = myAddress;
 			this.port = port;
 			this.recvBuffer = new byte[RECV_BUFFER_SIZE];
-			this.callbacks = callbacks;
+			this.callbacks = new SubscriptionCollection<NetworkCallbacks>();
 		} catch (SocketException e) {
 			throw new RuntimeException(String.format("Failed to create network interface: %s", e.getMessage()));
 		}
@@ -98,8 +100,21 @@ public final class NetworkInterface {
 					break;
 				}
 				
-				callbacks.onPacketReceived(packet);
+				for(NetworkCallbacks subscriber : callbacks) {
+					subscriber.onPacketReceived(packet);
+				}
 			}
 		}
+	}
+
+	@Override
+	public void subscribe(NetworkCallbacks subscription) {
+		callbacks.subscribe(subscription);
+	}
+
+	@Override
+	public void unsubscribe(NetworkCallbacks subscription) {
+		callbacks.unsubscribe(subscription);
+		
 	}
 }

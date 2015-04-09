@@ -7,10 +7,11 @@ import java.util.List;
 import java.util.Map;
 
 import project.TCP;
-
+import subscription.Subscribable;
+import subscription.SubscriptionCollection;
 import utils.DateUtils;
 
-public final class ClientCache {
+public final class ClientCache implements Subscribable<CacheCallbacks>{
 	public static final long TIMEOUT_DURATION = 10000; // Clients time out after not being seen for this many milliseconds.
 	public static final long RECONNECT_DURATION = 2500; // A client from the same IP/name cannot be indirectly added after it manually disconnects before this many milliseconds expire.
 	
@@ -18,14 +19,14 @@ public final class ClientCache {
 	private final Client localClient;
 	private final List<Client> cache;
 	private final Map<Client, Long> recentlyDisconnected;
-	private final CacheCallbacks callbacks;
+	private final SubscriptionCollection<CacheCallbacks> callbacks;
 	
-	public ClientCache(Client localClient, CacheCallbacks callbacks) {
+	public ClientCache(Client localClient) {
 		this.syncRoot = new Object();
 		this.localClient = localClient;
 		this.cache = new ArrayList<Client>();
 		this.recentlyDisconnected = new HashMap<Client, Long>();
-		this.callbacks = callbacks;
+		this.callbacks = new SubscriptionCollection<CacheCallbacks>();
 	}
 	
 	public void updateDirect(Client client) {
@@ -48,9 +49,11 @@ public final class ClientCache {
 			}
 		}
 		
-		// Process callback outside critical section to avoid holding the lock longer than needed.
+		// Process callbacks outside critical section to avoid holding the lock longer than needed.
 		if(clientConnected) {
-			callbacks.onClientConnected(client);
+			for(CacheCallbacks subscriber : callbacks) {
+				subscriber.onClientConnected(client);
+			}
 		}
 	}
 	
@@ -85,9 +88,11 @@ public final class ClientCache {
 			}
 		}
 		
-		// Process callback outside critical section to avoid holding the lock longer than needed.
+		// Process callbacks outside critical section to avoid holding the lock longer than needed.
 		if(clientConnected) {
-			callbacks.onClientConnected(client);
+			for(CacheCallbacks subscriber : callbacks) {
+				subscriber.onClientConnected(client);
+			}
 		}
 	}
 	
@@ -112,11 +117,15 @@ public final class ClientCache {
 		
 		// Process callbacks outside critical section to avoid holding the lock longer than needed.
 		for(Client client : timedOutClients) {
-			callbacks.onClientTimedOut(client);
+			for(CacheCallbacks subscriber : callbacks) {
+				subscriber.onClientTimedOut(client);
+			}
 		}
 		
 		for(Client client : lostRouteClients) {
-			callbacks.onClientLostRoute(client);
+			for(CacheCallbacks subscriber : callbacks) {
+				subscriber.onClientLostRoute(client);
+			}
 		}
 	}
 	
@@ -136,10 +145,14 @@ public final class ClientCache {
 		}
 		
 		// Process callbacks outside critical section to avoid holding the lock longer than needed.
-		callbacks.onClientDisconnected(client);
+		for(CacheCallbacks subscriber : callbacks) {
+			subscriber.onClientDisconnected(client);
+		}
 		
 		for(Client c : lostRouteClients) {
-			callbacks.onClientLostRoute(c);
+			for(CacheCallbacks subscriber : callbacks) {
+				subscriber.onClientLostRoute(c);
+			}
 		}
 	}
 	
@@ -210,5 +223,20 @@ public final class ClientCache {
 		}
 		
 		return lostRouteClients;
+	}
+
+	//-------------------------------------------
+	// Subscribable<CacheCallbacks>.
+	//-------------------------------------------
+	@Override
+	public void subscribe(CacheCallbacks subscription) {
+		callbacks.subscribe(subscription);
+		
+	}
+
+	@Override
+	public void unsubscribe(CacheCallbacks subscription) {
+		callbacks.unsubscribe(subscription);
+		
 	}
 }

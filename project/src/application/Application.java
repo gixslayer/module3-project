@@ -13,6 +13,8 @@ import protocol.ChatPacket;
 import protocol.DisconnectPacket;
 import protocol.Packet;
 import protocol.PrivateChatPacket;
+import subscription.Subscribable;
+import subscription.SubscriptionCollection;
 import utils.NetworkUtils;
 import network.AnnounceThread;
 import network.MulticastCallbacks;
@@ -20,7 +22,7 @@ import network.MulticastInterface;
 import network.NetworkCallbacks;
 import network.NetworkInterface;
 
-public class Application implements NetworkCallbacks, MulticastCallbacks, CacheCallbacks, GUICallbacks {
+public class Application implements NetworkCallbacks, MulticastCallbacks, CacheCallbacks, GUICallbacks, Subscribable<ApplicationCallbacks> {
 	public static final String GROUP = "228.0.0.0";
 	public static final int MC_PORT = 6969;
 	public static final int UDP_PORT = 6970;
@@ -31,17 +33,21 @@ public class Application implements NetworkCallbacks, MulticastCallbacks, CacheC
 	private final Client localClient;
 	private final ClientCache clientCache;
 	private final AnnounceThread announceThread;
-	private final ApplicationCallbacks callbacks;
+	private final SubscriptionCollection<ApplicationCallbacks> callbacks;
 
-	public Application(String username, ApplicationCallbacks callbacks) {
+	public Application(String username) {
 		InetAddress localAddress = NetworkUtils.getLocalAddress();
 
-		this.mci = new MulticastInterface(GROUP, MC_PORT, this);
-		this.ni = new NetworkInterface(localAddress, UDP_PORT, this);
+		this.mci = new MulticastInterface(GROUP, MC_PORT);
+		this.ni = new NetworkInterface(localAddress, UDP_PORT);
 		this.localClient = new Client(username, localAddress);
-		this.clientCache = new ClientCache(localClient, this);
+		this.clientCache = new ClientCache(localClient);
 		this.announceThread = new AnnounceThread(mci, clientCache, ANNOUNCE_INTERVAL);
-		this.callbacks = callbacks;
+		this.callbacks = new SubscriptionCollection<ApplicationCallbacks>();
+		
+		mci.subscribe(this);
+		ni.subscribe(this);
+		clientCache.subscribe(this);
 	}
 	
 	public void start() {
@@ -116,11 +122,15 @@ public class Application implements NetworkCallbacks, MulticastCallbacks, CacheC
 	}
 	
 	private void handleChatPacket(ChatPacket packet) {
-		callbacks.onChatMessageReceived(packet.getClient(), packet.getMessage());
+		for(ApplicationCallbacks subscriber : callbacks) {
+			subscriber.onChatMessageReceived(packet.getClient(), packet.getMessage());
+		}
 	}
 	
 	private void handlePrivateChatPacket(PrivateChatPacket packet) {
-		callbacks.onPrivateChatMessageReceived(packet.getClient(), packet.getMessage());
+		for(ApplicationCallbacks subscriber : callbacks) {
+			subscriber.onChatMessageReceived(packet.getClient(), packet.getMessage());
+		}
 	}
 	
 	//-------------------------------------------
@@ -128,23 +138,33 @@ public class Application implements NetworkCallbacks, MulticastCallbacks, CacheC
 	//-------------------------------------------
 	@Override
 	public void onClientTimedOut(Client client) {
-		callbacks.onClientTimedOut(client);
+		for(ApplicationCallbacks subscriber : callbacks) {
+			subscriber.onClientTimedOut(client);
+		}
+		
+		// TODO: Implement using subscription.
 		TCP.closeConnection(client.getAddress());
 	}
 
 	@Override
 	public void onClientConnected(Client client) {
-		callbacks.onClientConnected(client);
+		for(ApplicationCallbacks subscriber : callbacks) {
+			subscriber.onClientConnected(client);
+		}
 	}
 
 	@Override
 	public void onClientDisconnected(Client client) {
-		callbacks.onClientDisconnected(client);
+		for(ApplicationCallbacks subscriber : callbacks) {
+			subscriber.onClientDisconnected(client);
+		}
 	}
 	
 	@Override
 	public void onClientLostRoute(Client client) {
-		callbacks.onClientLostRoute(client);
+		for(ApplicationCallbacks subscriber : callbacks) {
+			subscriber.onClientLostRoute(client);
+		}
 	}
 	
 	//-------------------------------------------
@@ -183,5 +203,18 @@ public class Application implements NetworkCallbacks, MulticastCallbacks, CacheC
 		} else if(type == Packet.TYPE_EMPTY_PACKET) {
 			return;
 		}
+	}
+
+	//-------------------------------------------
+	// Subscribable<ApplicationCallbacks>.
+	//-------------------------------------------
+	@Override
+	public void subscribe(ApplicationCallbacks subscription) {
+		callbacks.subscribe(subscription);
+	}
+
+	@Override
+	public void unsubscribe(ApplicationCallbacks subscription) {
+		callbacks.unsubscribe(subscription);
 	}
 }
