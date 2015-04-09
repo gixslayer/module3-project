@@ -118,7 +118,7 @@ public class Packet {
 		windowSize = ((getUnsignedInt(packet[8]))<<8) + getUnsignedInt(packet[9]); 
 		checksum = (((int)packet[10])<<8) + packet[11];
 		
-		data = Arrays.copyOfRange(packet, 11, packet.length);
+		data = Arrays.copyOfRange(packet, 12, packet.length);
 	}
 	
 	public int getSource() {

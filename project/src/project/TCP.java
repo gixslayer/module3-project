@@ -62,6 +62,7 @@ public class TCP {
 					sendAckForSynAck(packet);
 					connections.put(destAddress, State.ESTABLISHED);
 					ArrayList<byte[]> array = toSend.get(destAddress);
+					if(array == null) array = new ArrayList<byte[]>();
 					for(byte[] a: array){
 						sendData(inetToInt(myAddr), destAddress, a);
 					}
@@ -87,6 +88,7 @@ public class TCP {
 				if(connections.containsKey(destAddress) && connections.get(destAddress).equals(State.SYN_RECEIVED)) {
 					connections.put(destAddress, State.ESTABLISHED);
 					ArrayList<byte[]> array = toSend.get(destAddress);
+					if(array == null) array = new ArrayList<byte[]>();
 					for(byte[] a: array){
 						sendData(inetToInt(myAddr), destAddress, a);
 					}
@@ -242,6 +244,7 @@ public class TCP {
 			toSend.put(destination, array);
 		} else {
 			ArrayList<byte[]> array = toSend.get(destination);
+			if(array == null) array = new ArrayList<byte[]>();
 			array.add(data);
 			toSend.put(destination, array);
 		}

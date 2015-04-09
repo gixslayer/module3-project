@@ -389,6 +389,7 @@ public class MainGUI extends JFrame implements ActionListener, KeyListener, Mous
 		name = name.replace("*R*", "ℜ");
 		name = name.replace("*N*", "ℵ");
 		if(priv) {
+			System.out.println("DSDS");
 			int index = tabPane.indexOfTab(name);
 			if(index == -1) {
 				addPrivateChat(name, false);

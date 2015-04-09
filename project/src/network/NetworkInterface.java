@@ -58,8 +58,7 @@ public final class NetworkInterface {
 		}
 	}
 	
-	public void send(Client dest, Packet packet) {
-		// TODO: Perhaps specify the remote port explicitly?
+	/*public void send(Client dest, Packet packet) {
 		byte[] data = packet.serialize();
 		DatagramPacket datagram = new DatagramPacket(data,  0, data.length, dest.getAddress(), port);
 		
@@ -68,7 +67,7 @@ public final class NetworkInterface {
 		} catch (IOException e) {
 			System.err.printf("IOException during DatagramSocket.send: %s%n", e.getMessage());
 		}
-	}
+	}*/
 	
 	public Packet recv() {
 		try {
