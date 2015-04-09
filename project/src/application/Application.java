@@ -7,7 +7,6 @@ import java.net.InetAddress;
 import client.CacheCallbacks;
 import client.Client;
 import client.ClientCache;
-import project.TCP;
 import protocol.AnnouncePacket;
 import protocol.ChatPacket;
 import protocol.DisconnectPacket;
@@ -38,7 +37,7 @@ public class Application implements NetworkCallbacks, MulticastCallbacks, CacheC
 	public Application(String username) {
 		InetAddress localAddress = NetworkUtils.getLocalAddress();
 
-		this.mci = new MulticastInterface(GROUP, MC_PORT);
+		this.mci = new MulticastInterface(localAddress, GROUP, MC_PORT);
 		this.ni = new NetworkInterface(localAddress, UDP_PORT);
 		this.localClient = new Client(username, localAddress);
 		this.clientCache = new ClientCache(localClient);
@@ -86,14 +85,7 @@ public class Application implements NetworkCallbacks, MulticastCallbacks, CacheC
 	@Override
 	public void onMulticastPacketReceived(Packet packet) {
 		int type = packet.getType();
-		InetAddress address = packet.getSourceAddress();
-		InetAddress localAddress = localClient.getAddress();
-		
-		if(localAddress.equals(address)) {
-			// Don't do anything if we receive a multicast packet we sent.
-			return;
-		}
-		
+
 		if(type == Packet.TYPE_ANNOUNCE) {
 			handleAnnouncePacket((AnnouncePacket)packet);
 		} else if(type == Packet.TYPE_DISCONNECT) {
@@ -138,12 +130,12 @@ public class Application implements NetworkCallbacks, MulticastCallbacks, CacheC
 	//-------------------------------------------
 	@Override
 	public void onClientTimedOut(Client client) {
+		// TODO: The reliableLayer should be informed of this.
 		for(ApplicationCallbacks subscriber : callbacks) {
 			subscriber.onClientTimedOut(client);
 		}
 		
-		// TODO: Implement using subscription.
-		TCP.closeConnection(client.getAddress());
+		//TCP.closeConnection(client.getAddress());
 	}
 
 	@Override
@@ -155,13 +147,17 @@ public class Application implements NetworkCallbacks, MulticastCallbacks, CacheC
 
 	@Override
 	public void onClientDisconnected(Client client) {
+		// TODO: The reliableLayer should be informed of this.
 		for(ApplicationCallbacks subscriber : callbacks) {
 			subscriber.onClientDisconnected(client);
 		}
+		
+		//TCP.closeConnection(client.getAddress());
 	}
 	
 	@Override
 	public void onClientLostRoute(Client client) {
+		// TODO: The reliableLayer should be informed of this.
 		for(ApplicationCallbacks subscriber : callbacks) {
 			subscriber.onClientLostRoute(client);
 		}
@@ -172,9 +168,15 @@ public class Application implements NetworkCallbacks, MulticastCallbacks, CacheC
 	//-------------------------------------------
 	@Override
 	public void onSendPrivateMessage(Client client, String message, String otherName) {
+		// TODO: client currently is set to our localClient and otherName is the name of the target
+		// client. The client parameter should be the target client and we shoudln't need the otherName
+		// parameter.
 		PrivateChatPacket packet = new PrivateChatPacket(client, message);
 		Client otherClient = clientCache.getClientFromName(otherName);
-		ni.send(packet, client.getAddress(), otherClient.getAddress());
+		
+		// TODO: We might need to route this packet through another client instead of sending it directly to the target client.
+		ni.sendReliable(otherClient, packet);
+		//ni.send(packet, client.getAddress(), otherClient.getAddress());
 	}
 	
 	@Override

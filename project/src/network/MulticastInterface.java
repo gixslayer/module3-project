@@ -13,14 +13,16 @@ public class MulticastInterface implements Subscribable<MulticastCallbacks> {
 	public static final int RECV_BUFFER_SIZE = 4096;
 	
 	private final MulticastSocket socket;
+	private final InetAddress localAddress;
 	private final InetAddress group;
 	private final int port;
 	private final byte[] recvBuffer;
 	private final SubscriptionCollection<MulticastCallbacks> callbacks;
 	
-	public MulticastInterface(String group, int port) {
+	public MulticastInterface(InetAddress localAddress, String group, int port) {
 		try {
 			this.socket = new MulticastSocket(port);
+			this.localAddress = localAddress;
 			this.group = InetAddress.getByName(group);
 			this.port = port;
 			this.recvBuffer = new byte[RECV_BUFFER_SIZE];
@@ -62,15 +64,17 @@ public class MulticastInterface implements Subscribable<MulticastCallbacks> {
 		}
 	}
 	
-	public Packet recv() {
+	private Packet recv() {
 		try {
 			DatagramPacket datagram = new DatagramPacket(recvBuffer, RECV_BUFFER_SIZE);
+			
 			socket.receive(datagram);
+			
 			byte[] receivedData = new byte[datagram.getLength()];
 			System.arraycopy(datagram.getData(), datagram.getOffset(), receivedData, 0, receivedData.length);
-			InetAddress address = datagram.getAddress();
-			//byte[] data = TCP.handlePacket(group, new project.Packet(receivedData));
-			Packet packet = Packet.deserialize(address, receivedData);
+			InetAddress sourceAddress = datagram.getAddress();
+			Packet packet = Packet.deserialize(sourceAddress, receivedData);
+			
 			return packet;
 		} catch(IOException e) {
 			return null;
@@ -87,6 +91,9 @@ public class MulticastInterface implements Subscribable<MulticastCallbacks> {
 				
 				if(packet == null) {
 					break;
+				} else if(packet.getSourceAddress().equals(localAddress)) {
+					// Don't send packets we sent over multicast and then received to the callback subscribers. 
+					continue;
 				}
 					
 				for(MulticastCallbacks subscriber : callbacks) {

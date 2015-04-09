@@ -6,7 +6,6 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 
-import project.TCP;
 import subscription.Subscribable;
 import subscription.SubscriptionCollection;
 import utils.DateUtils;
@@ -130,9 +129,6 @@ public final class ClientCache implements Subscribable<CacheCallbacks>{
 	}
 	
 	public void clientDisconnected(Client client) {
-		// TODO: Is this a proper place to call this?
-		TCP.closeConnection(client.getAddress());
-		
 		List<Client> lostRouteClients;
 		
 		synchronized(syncRoot) {
