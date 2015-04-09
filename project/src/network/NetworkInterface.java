@@ -7,6 +7,7 @@ import java.net.InetAddress;
 import java.net.SocketException;
 
 import client.Client;
+import project.TCP;
 import protocol.Packet;
 
 public final class NetworkInterface {
@@ -14,12 +15,14 @@ public final class NetworkInterface {
 	
 	private final DatagramSocket socket;
 	private final int port;
+	private final InetAddress myAddress;
 	private final byte[] recvBuffer;
 	private final NetworkCallbacks callbacks;
 	
-	public NetworkInterface(int port, NetworkCallbacks callbacks) {
+	public NetworkInterface(InetAddress myAddress, int port, NetworkCallbacks callbacks) {
 		try {
 			this.socket = new DatagramSocket(port);
+			this.myAddress = myAddress;
 			this.port = port;
 			this.recvBuffer = new byte[RECV_BUFFER_SIZE];
 			this.callbacks = callbacks;
@@ -34,6 +37,22 @@ public final class NetworkInterface {
 	
 	public void stop() {
 		socket.close();
+	}
+	
+	public void send(Packet packet, InetAddress source, InetAddress destination) {
+		byte[] data = packet.serialize();
+		System.out.println("Sending packet to: " + destination.getCanonicalHostName());
+		TCP.sendData(this, source, destination, data);
+	}
+	
+	public void send(InetAddress dest, byte[] data) {
+		DatagramPacket datagram = new DatagramPacket(data,  0, data.length, dest, port);
+		
+		try {
+			socket.send(datagram);
+		} catch (IOException e) {
+			System.err.printf("IOException during DatagramSocket.send: %s%n", e.getMessage());
+		}
 	}
 	
 	public void send(Client dest, Packet packet) {
@@ -55,7 +74,10 @@ public final class NetworkInterface {
 			byte[] receivedData = new byte[datagram.getLength()];
 			System.arraycopy(recvBuffer, datagram.getOffset(), receivedData, 0, receivedData.length);
 			InetAddress address = datagram.getAddress();
-			Packet packet = Packet.deserialize(address, receivedData);
+			
+			byte[] data = TCP.handlePacket(myAddress, new project.Packet(receivedData));
+			
+			Packet packet = Packet.deserialize(address, data);
 			
 			return packet;
 		} catch (IOException e) {

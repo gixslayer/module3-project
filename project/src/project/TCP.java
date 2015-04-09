@@ -8,6 +8,7 @@ import java.util.Map;
 import java.util.Timer;
 
 import network.MulticastInterface;
+import network.NetworkInterface;
 
 public class TCP {
 	private static InetAddress myInetAddress;
@@ -17,7 +18,8 @@ public class TCP {
 	private static Map<Integer, int[]> lastInfo;
 	private static Map<Integer, ArrayList<byte[]>> toSend;
 	private static boolean constructed = false;
-	private static MulticastInterface mci;
+	private static NetworkInterface ni;
+	private static InetAddress dest;
 	
 	private static void init(int source) {
 		if(!constructed) {
@@ -247,12 +249,13 @@ public class TCP {
 		}
 	}
 	
-	public static void sendData(MulticastInterface mci, InetAddress source, InetAddress destination, byte[] data) {
-		TCP.mci = mci;
+	public static void sendData(NetworkInterface ni, InetAddress source, InetAddress destination, byte[] data) {
+		TCP.ni = ni;
+		TCP.dest = destination;
 		sendData(inetToInt(source), inetToInt(destination), data);
 	}
 	
 	public static void sendPacket(Packet packet) {
-		mci.send(packet.getBytes());
+		ni.send(dest, packet.getBytes());
 	}
 }

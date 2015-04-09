@@ -47,12 +47,6 @@ public class MulticastInterface {
 		socket.close();
 	}
 	
-	public void send(Packet packet, InetAddress source, InetAddress destination) {
-		byte[] data = packet.serialize();
-		System.out.println("Sending packet to: " + destination.getCanonicalHostName());
-		TCP.sendData(this, source, destination, data);
-	}
-	
 	public void send(Packet packet) {
 		byte[] data = packet.serialize();
 		
