@@ -16,10 +16,10 @@ public class TCP {
 	private static Map<Integer, ArrayList<byte[]>> toSend;
 	private static boolean constructed = false;
 	
-	private static void init() {
+	private static void init(int source) {
 		if(!constructed) {
 			try {
-				myInetAddress = InetAddress.getByName("192.168.5.3"); //TODO: get myAdress from another static function
+				myInetAddress = InetAddress.getByName("192.168.5." + source); //TODO: get myAdress from another static function
 				myAddress = Integer.parseInt(""+myInetAddress.getHostAddress().charAt(10));
 				constructed = true;
 				connections = new HashMap<>();
@@ -36,8 +36,8 @@ public class TCP {
 		CLOSED, SYNSENT, SYN_RECEIVED, ESTABLISHED, FIN_WAIT, LAST_ACK, TIME_WAIT;
 	}
 	
-	public static void handlePacket(Packet packet) {
-		init();
+	public static void handlePacket(InetAddress myAddr, Packet packet) {
+		init(inetToInt(myAddr));
 		if(packet.getDestination() == myAddress && checksumCheck(packet)) {
 			System.out.println("From:" + packet.getSource() + ", seq: " + packet.getSeq() +", ack: " + packet.getAck());
 			//save info
@@ -55,7 +55,7 @@ public class TCP {
 					connections.put(destination, State.ESTABLISHED);
 					ArrayList<byte[]> array = toSend.get(destination);
 					for(byte[] a: array){
-						sendData(destination, a);
+						sendData(inetToInt(myAddr), destination, a);
 					}
 					toSend.remove(destination);
 				}
@@ -80,7 +80,7 @@ public class TCP {
 					connections.put(destination, State.ESTABLISHED);
 					ArrayList<byte[]> array = toSend.get(destination);
 					for(byte[] a: array){
-						sendData(destination, a);
+						sendData(inetToInt(myAddr), destination, a);
 					}
 					toSend.remove(destination);
 				} else if(connections.containsKey(destination) && connections.get(destination).equals(State.LAST_ACK)) {
@@ -115,7 +115,6 @@ public class TCP {
 	}
 	
 	public static boolean openConnection(int destination) {
-		init();
 		if(!connections.containsKey(destination) || connections.get(destination).equals(State.CLOSED)) {
 			connections.put(destination, State.SYNSENT);
 			sendSyn(destination);
@@ -126,7 +125,6 @@ public class TCP {
 	}
 	
 	public static boolean openConnection(InetAddress destination) {
-		init();
 		int dest = Integer.parseInt(""+destination.getHostAddress().charAt(10));
 		if(!connections.containsKey(dest) || connections.get(dest).equals(State.CLOSED)) {
 			connections.put(dest, State.SYNSENT);
@@ -226,7 +224,8 @@ public class TCP {
 		//TODO: send packet, ACK en SEQ goed doen
 	}
 	
-	public static void sendData(int destination, byte[] data) {
+	public static void sendData(int source, int destination, byte[] data) {
+		init(source);
 		if(connections.containsKey(destination) && connections.get(destination).equals(State.ESTABLISHED)) {
 			Packet toSend = new Packet(myAddress, destination, 0, lastInfo.get(destination)[0], lastInfo.get(destination)[1], false, true, false, 5, data);
 			lastInfo.put(destination, new int[]{toSend.getSeq()+toSend.getLength(),toSend.getAck()});
@@ -235,6 +234,7 @@ public class TCP {
 		} else if(!connections.containsKey(destination) || connections.get(destination).equals(State.CLOSED)){
 			openConnection(destination);
 			ArrayList<byte[]> array = toSend.get(destination);
+			if(array == null) array = new ArrayList<byte[]>();
 			array.add(data);
 			toSend.put(destination, array);
 		} else {
@@ -244,7 +244,7 @@ public class TCP {
 		}
 	}
 	
-	public static void sendData(InetAddress destination, byte[] data) {
-		sendData(inetToInt(destination), data);
+	public static void sendData(InetAddress source, InetAddress destination, byte[] data) {
+		sendData(inetToInt(source), inetToInt(destination), data);
 	}
 }

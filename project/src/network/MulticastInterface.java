@@ -47,10 +47,10 @@ public class MulticastInterface {
 		socket.close();
 	}
 	
-	public void send(Packet packet, InetAddress destination) {
+	public void send(Packet packet, InetAddress source, InetAddress destination) {
 		byte[] data = packet.serialize();
 		System.out.println("Sending packet to: " + destination.getCanonicalHostName());
-		TCP.sendData(destination, data);
+		TCP.sendData(source, destination, data);
 	}
 	
 	public void send(Packet packet) {

@@ -155,7 +155,7 @@ public class Application implements MulticastCallbacks, CacheCallbacks, GUICallb
 	public void onSendPrivateMessage(Client client, String message, String otherName) {
 		PrivateChatPacket packet = new PrivateChatPacket(client, message);
 		Client otherClient = clientCache.getClientFromName(otherName);
-		mci.send(packet, otherClient.getAddress());
+		mci.send(packet, client.getAddress(), otherClient.getAddress());
 	}
 	
 	@Override
