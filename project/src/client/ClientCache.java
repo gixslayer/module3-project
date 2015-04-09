@@ -37,7 +37,7 @@ public final class ClientCache implements Subscribable<CacheCallbacks>{
 				cache.add(client);
 				clientConnected = true;
 			} else {
-				Client cachedClient = cache.get(cache.indexOf(client));
+				Client cachedClient = getCachedClient(client);
 				
 				if(client.getLastSeen() > cachedClient.getLastSeen()) {
 					cachedClient.setLastSeen(client.getLastSeen());
@@ -76,7 +76,7 @@ public final class ClientCache implements Subscribable<CacheCallbacks>{
 					clientConnected = true;
 				}
 			} else {
-				Client cachedClient = cache.get(cache.indexOf(client));
+				Client cachedClient = getCachedClient(client);
 			
 				if(cachedClient.isIndirect()) {
 					if(client.getLastSeen() > cachedClient.getLastSeen()) {
@@ -152,6 +152,36 @@ public final class ClientCache implements Subscribable<CacheCallbacks>{
 		}
 	}
 	
+	public void routeLost(Client destination) {
+		boolean wasInCache = false;
+		List<Client> removedClients = null;
+		
+		synchronized(syncRoot) {
+			destination = getCachedClient(destination);
+			
+			if(destination != null) {
+				wasInCache = true;
+				removedClients = removeClient(destination);
+			}
+		}
+		
+		// Don't call the callbacks if the client was no longer in the cache.
+		if(!wasInCache) {
+			return;
+		}
+
+		// Process callbacks outside critical section to avoid holding the lock longer than needed.
+		for(CacheCallbacks subscriber : callbacks) {
+			subscriber.onClientLostRoute(destination);
+		}
+		
+		for(Client client : removedClients) {
+			for(CacheCallbacks subscriber : callbacks) {
+				subscriber.onClientLostRoute(client);
+			}
+		}
+	}
+	
 	public void updateRecentlyDisconnected() {
 		synchronized(syncRoot) {
 			Iterator<Map.Entry<Client, Long> > it = recentlyDisconnected.entrySet().iterator();
@@ -178,6 +208,18 @@ public final class ClientCache implements Subscribable<CacheCallbacks>{
 		for(Client c : cache) {
 			if(c.getName().equals(name)) return c;
 		}
+		return null;
+	}
+	
+	public Client getCachedClient(Client client) {
+		synchronized(syncRoot) {
+			for(Client cachedClient : cache) {
+				if(cachedClient.equals(client)) {
+					return cachedClient;
+				}
+			}
+		}
+		
 		return null;
 	}
 	

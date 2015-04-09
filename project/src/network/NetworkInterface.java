@@ -6,7 +6,6 @@ import java.net.DatagramSocket;
 import java.net.InetAddress;
 import java.net.SocketException;
 
-import client.Client;
 import protocol.Packet;
 import subscription.Subscribable;
 import subscription.SubscriptionCollection;
@@ -41,26 +40,9 @@ public final class NetworkInterface implements Subscribable<NetworkCallbacks> {
 		socket.close();
 	}
 	
-	/*public void send(Packet packet, InetAddress source, InetAddress destination) {
+	public void send(InetAddress dest, Packet packet) {
 		byte[] data = packet.serialize();
-		System.out.println("Sending packet to: " + destination.getCanonicalHostName());
-		TCP.sendData(this, source, destination, data);
-	}
-	
-	public void send(InetAddress dest, byte[] data) {
 		DatagramPacket datagram = new DatagramPacket(data,  0, data.length, dest, port);
-		System.out.println("Sending! " + dest.getCanonicalHostName());
-		
-		try {
-			socket.send(datagram);
-		} catch (IOException e) {
-			System.err.printf("IOException during DatagramSocket.send: %s", e.getMessage());
-		}
-	}*/
-	
-	public void send(Client dest, Packet packet) {
-		byte[] data = packet.serialize();
-		DatagramPacket datagram = new DatagramPacket(data,  0, data.length, dest.getAddress(), port);
 		
 		try {
 			socket.send(datagram);
@@ -69,7 +51,7 @@ public final class NetworkInterface implements Subscribable<NetworkCallbacks> {
 		}
 	}
 	
-	public void sendReliable(Client dest, Packet packet) {
+	public void sendReliable(InetAddress dest, Packet packet) {
 		reliableLayer.send(dest, packet);
 	}
 	
@@ -104,7 +86,7 @@ public final class NetworkInterface implements Subscribable<NetworkCallbacks> {
 				
 				if(packet == null) {
 					break;
-				} else if(packet.getType() == Packet.TYPE_EMPTY_PACKET) {
+				} else if(packet.getType() == Packet.TYPE_EMPTY) {
 					// Don't send empty packets to the callback subscribers (they should only be used by the reliableLayer). 
 					continue;
 				}

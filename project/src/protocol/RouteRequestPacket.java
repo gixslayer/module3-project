@@ -4,54 +4,54 @@ import utils.ByteUtils;
 import client.Client;
 
 public final class RouteRequestPacket extends Packet {
-	private Client target;
+	private Client src;
+	private Client dest;
 	private byte[] data;
 	
 	public RouteRequestPacket() {
-		this(new Client(), null);
+		this(new Client(), new Client(), null);
 	}
 	
-	public RouteRequestPacket(Client target, byte[] data) {
+	public RouteRequestPacket(Client src, Client dest, byte[] data) {
 		super(Packet.TYPE_ROUTE_REQUEST);
-		
-		this.target = target;
+
+		this.src = src;
+		this.dest = dest;
 		this.data = data;
 	}
 
 	@Override
 	protected byte[] serializeContent() {
-		byte[] targetBytes = target.serialize(Client.SERIALIZE_ADDRESS);
-		byte[] buffer = new byte[targetBytes.length + data.length + 8];
+		byte[] srcBytes = src.serialize(Client.SERIALIZE_ADDRESS);
+		byte[] destBytes = dest.serialize(Client.SERIALIZE_ADDRESS);
+		byte[] buffer = new byte[4 + srcBytes.length + destBytes.length + data.length];
 		
-		ByteUtils.getIntBytes(targetBytes.length, buffer, 0);
-		ByteUtils.getIntBytes(buffer.length, buffer, 4);
-		System.arraycopy(targetBytes, 0, buffer, 8, targetBytes.length);
-		System.arraycopy(data, 0, buffer, 8 + targetBytes.length, data.length);
+		ByteUtils.getIntBytes(data.length, buffer, 0);
+		System.arraycopy(srcBytes, 0, buffer, 4, srcBytes.length);
+		System.arraycopy(destBytes, 0, buffer, 4 + srcBytes.length, destBytes.length);
+		System.arraycopy(data, 0, buffer, 4 + srcBytes.length + destBytes.length, data.length);
 		
 		return buffer;
 	}
 
 	@Override
 	protected void deserializeContent(byte[] buffer, int offset, int length) {
-		int targetLength = ByteUtils.getIntFromBytes(buffer, offset);
-		int dataLength = ByteUtils.getIntFromBytes(buffer, offset + 4);
+		int dataLength = ByteUtils.getIntFromBytes(buffer, offset);
 		
-		target.deserialize(buffer, offset + 8);
+		offset += 4;
+		offset += src.deserialize(buffer, offset);
+		offset += dest.deserialize(buffer, offset);
 		data = new byte[dataLength];
 		
-		System.arraycopy(buffer, offset + 8 + targetLength, data, 0, dataLength);
+		System.arraycopy(buffer, offset, data, 0, dataLength);
 	}
 	
-	public void setTarget(Client target) {
-		this.target = target;
+	public Client getSrc() {
+		return src;
 	}
 	
-	public void setData(byte[] data) {
-		this.data = data;
-	}
-	
-	public Client getTarget() {
-		return target;
+	public Client getDest() {
+		return dest;
 	}
 	
 	public byte[] getData() {

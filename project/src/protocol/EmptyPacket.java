@@ -3,7 +3,7 @@ package protocol;
 public class EmptyPacket extends Packet {
 
 	public EmptyPacket() {
-		super(Packet.TYPE_EMPTY_PACKET);
+		super(Packet.TYPE_EMPTY);
 	}
 	
 	public EmptyPacket(int type) {

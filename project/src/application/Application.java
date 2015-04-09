@@ -8,10 +8,12 @@ import client.CacheCallbacks;
 import client.Client;
 import client.ClientCache;
 import protocol.AnnouncePacket;
+import protocol.CannotRoutePacket;
 import protocol.ChatPacket;
 import protocol.DisconnectPacket;
 import protocol.Packet;
 import protocol.PrivateChatPacket;
+import protocol.RouteRequestPacket;
 import subscription.Subscribable;
 import subscription.SubscriptionCollection;
 import utils.NetworkUtils;
@@ -56,6 +58,7 @@ public class Application implements NetworkCallbacks, MulticastCallbacks, CacheC
 	}
 
 	public void stop() {
+		// TODO: Reconsider how we want to handle this (call it here, reliable/unreliable etc).
 		sendToAll(new DisconnectPacket(localClient));
 		
 		announceThread.close();
@@ -63,15 +66,39 @@ public class Application implements NetworkCallbacks, MulticastCallbacks, CacheC
 		ni.stop();
 	}
 	
+	public void sendTo(Client dest, Packet packet) {
+		if(dest.isIndirect()) {
+			Client route = dest.getRoute();
+			RouteRequestPacket routePacket = new RouteRequestPacket(localClient, dest, packet.serialize());
+			ni.sendReliable(route.getAddress(), routePacket);
+		} else {
+			ni.send(dest.getAddress(), packet);
+		}
+	}
+	
+	public void sendReliableTo(Client dest, Packet packet) {
+		if(dest.isIndirect()) {
+			Client route = dest.getRoute();
+			RouteRequestPacket routePacket = new RouteRequestPacket(localClient, dest, packet.serialize());
+			ni.sendReliable(route.getAddress(), routePacket);
+		} else {
+			ni.sendReliable(dest.getAddress(), packet);
+		}
+	}
+	
 	public void sendToAll(Packet packet) {
-		mci.send(packet);
-		
 		Client[] clients = clientCache.getClients();
 		
 		for(Client client : clients) {
-			if(!client.isIndirect()) {
-				continue;
-			}
+			sendTo(client, packet);
+		}
+	}
+	
+	public void sendReliableToAll(Packet packet) {
+		Client[] clients = clientCache.getClients();
+		
+		for(Client client : clients) {
+			sendReliableTo(client, packet);
 		}
 	}
 	
@@ -86,16 +113,9 @@ public class Application implements NetworkCallbacks, MulticastCallbacks, CacheC
 	public void onMulticastPacketReceived(Packet packet) {
 		int type = packet.getType();
 
+		// Currently only announcement packets should be sent/received using multicast.
 		if(type == Packet.TYPE_ANNOUNCE) {
 			handleAnnouncePacket((AnnouncePacket)packet);
-		} else if(type == Packet.TYPE_DISCONNECT) {
-			handleDisconnectPacket((DisconnectPacket)packet);
-		} else if(type == Packet.TYPE_CHAT) {
-			handleChatPacket((ChatPacket)packet);
-		} else if(type == Packet.TYPE_PRIVATE_CHAT) {
-			handlePrivateChatPacket((PrivateChatPacket)packet);
-		} else if(type == Packet.TYPE_EMPTY_PACKET) {
-			return;
 		}
 	}
 	
@@ -109,22 +129,6 @@ public class Application implements NetworkCallbacks, MulticastCallbacks, CacheC
 		}
 	}
 	
-	private void handleDisconnectPacket(DisconnectPacket packet) {
-		clientCache.clientDisconnected(packet.getClient());
-	}
-	
-	private void handleChatPacket(ChatPacket packet) {
-		for(ApplicationCallbacks subscriber : callbacks) {
-			subscriber.onChatMessageReceived(packet.getClient(), packet.getMessage());
-		}
-	}
-	
-	private void handlePrivateChatPacket(PrivateChatPacket packet) {
-		for(ApplicationCallbacks subscriber : callbacks) {
-			subscriber.onChatMessageReceived(packet.getClient(), packet.getMessage());
-		}
-	}
-	
 	//-------------------------------------------
 	// CacheCallbacks.
 	//-------------------------------------------
@@ -134,12 +138,11 @@ public class Application implements NetworkCallbacks, MulticastCallbacks, CacheC
 		for(ApplicationCallbacks subscriber : callbacks) {
 			subscriber.onClientTimedOut(client);
 		}
-		
-		//TCP.closeConnection(client.getAddress());
 	}
 
 	@Override
 	public void onClientConnected(Client client) {
+		// TODO: Perhaps the reliableLayer should be informed of this?
 		for(ApplicationCallbacks subscriber : callbacks) {
 			subscriber.onClientConnected(client);
 		}
@@ -151,8 +154,6 @@ public class Application implements NetworkCallbacks, MulticastCallbacks, CacheC
 		for(ApplicationCallbacks subscriber : callbacks) {
 			subscriber.onClientDisconnected(client);
 		}
-		
-		//TCP.closeConnection(client.getAddress());
 	}
 	
 	@Override
@@ -174,15 +175,14 @@ public class Application implements NetworkCallbacks, MulticastCallbacks, CacheC
 		PrivateChatPacket packet = new PrivateChatPacket(client, message);
 		Client otherClient = clientCache.getClientFromName(otherName);
 		
-		// TODO: We might need to route this packet through another client instead of sending it directly to the target client.
-		ni.sendReliable(otherClient, packet);
-		//ni.send(packet, client.getAddress(), otherClient.getAddress());
+		sendReliableTo(otherClient, packet);
 	}
 	
 	@Override
 	public void onSendMessage(String message) {
 		ChatPacket packet = new ChatPacket(localClient, message);
-		sendToAll(packet);
+		
+		sendReliableToAll(packet);
 	}
 
 	//-------------------------------------------
@@ -192,18 +192,85 @@ public class Application implements NetworkCallbacks, MulticastCallbacks, CacheC
 	public void onPacketReceived(Packet packet) {
 		int type = packet.getType();
 		
-		System.out.println("Got a packet! " + type);
-		
-		if(type == Packet.TYPE_ANNOUNCE) {
-			handleAnnouncePacket((AnnouncePacket)packet);
-		} else if(type == Packet.TYPE_DISCONNECT) {
+		if(type == Packet.TYPE_DISCONNECT) {
 			handleDisconnectPacket((DisconnectPacket)packet);
 		} else if(type == Packet.TYPE_CHAT) {
 			handleChatPacket((ChatPacket)packet);
 		} else if(type == Packet.TYPE_PRIVATE_CHAT) {
 			handlePrivateChatPacket((PrivateChatPacket)packet);
-		} else if(type == Packet.TYPE_EMPTY_PACKET) {
-			return;
+		} else if(type == Packet.TYPE_ROUTE_REQUEST) {
+			handleRouteRequestPacket((RouteRequestPacket)packet);
+		} else if(type == Packet.TYPE_CANNOT_ROUTE) {
+			handleCannotRoutePacket((CannotRoutePacket)packet);
+		}
+	}
+	
+	private void handleDisconnectPacket(DisconnectPacket packet) {
+		clientCache.clientDisconnected(packet.getClient());
+	}
+	
+	private void handleChatPacket(ChatPacket packet) {
+		for(ApplicationCallbacks subscriber : callbacks) {
+			subscriber.onChatMessageReceived(packet.getClient(), packet.getMessage());
+		}
+	}
+	
+	private void handlePrivateChatPacket(PrivateChatPacket packet) {
+		for(ApplicationCallbacks subscriber : callbacks) {
+			subscriber.onPrivateChatMessageReceived(packet.getClient(), packet.getMessage());
+		}
+	}
+	
+	private void handleRouteRequestPacket(RouteRequestPacket packet) {
+		Client dest = packet.getDest();
+		
+		if(dest.equals(localClient)) {
+			// We received a packet that was indirectly send to us.
+			InetAddress originalAddress = packet.getSrc().getAddress();
+			Packet originalPacket = Packet.deserialize(originalAddress, packet.getData());
+			
+			onPacketReceived(originalPacket);
+		} else {
+			// We're requested to route this packet to the next hop.
+			Client cachedDest = clientCache.getCachedClient(dest);
+		
+			if(cachedDest == null) {
+				// TODO: If this happens we should probable send a reply to our source (which should 'walk back' the route chain to the
+				// original sender) indicating we can no longer route to this client.
+				CannotRoutePacket cannotRoutePacket = new CannotRoutePacket(packet.getSrc(), localClient, packet.getDest());
+				ni.sendReliable(packet.getSourceAddress(), cannotRoutePacket);
+			}
+
+			if(cachedDest.isIndirect()) {
+				Client route = cachedDest.getRoute();
+				ni.sendReliable(route.getAddress(), packet);
+			} else {
+				ni.sendReliable(cachedDest.getAddress(), packet);
+			}
+		}
+	}
+	
+	private void handleCannotRoutePacket(CannotRoutePacket packet) {
+		// The route of destination through hop is no longer valid.
+		clientCache.routeLost(packet.getDestination());
+		
+		// If we are not the original sender of the route request, pass this packet to the next hop (direction = to source).
+		if(!packet.getSource().equals(localClient)) {
+			packet.setHop(localClient);
+			
+			Client cachedTarget = clientCache.getCachedClient(packet.getSource());
+			
+			if(cachedTarget == null) {
+				// We can no longer route back.
+				return;
+			}
+			
+			if(cachedTarget.isIndirect()) {
+				Client route = cachedTarget.getRoute();
+				ni.send(route.getAddress(), packet);
+			} else {
+				ni.send(cachedTarget.getAddress(), packet);
+			}
 		}
 	}
 

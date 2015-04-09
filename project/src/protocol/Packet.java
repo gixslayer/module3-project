@@ -6,11 +6,12 @@ import utils.ByteUtils;
 
 public abstract class Packet {
 	public static final int TYPE_ANNOUNCE = 0;
-	public static final int TYPE_CHAT = 1;
-	public static final int TYPE_DISCONNECT = 2;
-	public static final int TYPE_ROUTE_REQUEST = 3;
-	public static final int TYPE_PRIVATE_CHAT = 4;
-	public static final int TYPE_EMPTY_PACKET = 5;
+	public static final int TYPE_DISCONNECT = 1;
+	public static final int TYPE_CHAT = 2;
+	public static final int TYPE_PRIVATE_CHAT = 3;
+	public static final int TYPE_ROUTE_REQUEST = 4;
+	public static final int TYPE_CANNOT_ROUTE = 5;
+	public static final int TYPE_EMPTY = 6;
 	
 	private final int type;
 	private InetAddress sourceAddress;
@@ -72,6 +73,11 @@ public abstract class Packet {
 	
 	protected abstract byte[] serializeContent();
 	protected abstract void deserializeContent(byte[] buffer, int offset, int length);
+	
+	public void clearHeader() {
+		this.hasHeader = false;
+		this.header = null;
+	}
 	
 	public void setHeader(PacketHeader header) {
 		this.hasHeader = true;
