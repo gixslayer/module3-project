@@ -44,7 +44,7 @@ public class TCP {
 		init(inetToInt(myAddr), packet.getSource());
 		int destAddress = packet.getSource();
 		TCP.ni = ni;
-		if(packet.getDestination() == myAddress && checksumCheck(packet)) {
+		if(packet.getDestination() == myAddress /*&& checksumCheck(packet)*/) {
 			System.out.println("From:" + packet.getSource() + ", seq: " + packet.getSeq() +", ack: " + packet.getAck());
 			//save info
 			lastInfo.put(packet.getSource(), new int[]{packet.getSeq(), packet.getAck()});
