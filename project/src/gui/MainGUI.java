@@ -167,6 +167,7 @@ public class MainGUI extends JFrame implements ActionListener, KeyListener, Mous
 		
 		tabPane.addTab("Main Room", mainChat);
 		chatMap.put(0, null);
+		groupMap.put(new Group("t"), 0);
 		tabMap.put(botClient, 0);
 		tabPane.addMouseListener(this);
 
@@ -357,7 +358,7 @@ public class MainGUI extends JFrame implements ActionListener, KeyListener, Mous
 	 */
 	public void sendText() {
 		String txt = typeField.getText();
-		if(txt.toLowerCase().length() == 0 || txt.toLowerCase().matches("\\s*") || txt.toLowerCase().matches(".*<.*>.*") || txt.toLowerCase().matches(".*<script.*") || txt.length() > 3000) return;
+		if(IllegalCharCheck(txt)) return;
 		typeField.setText("");
 		addToHistory(txt);
 		receiveText(txt, localClient, false, false, null);
@@ -643,6 +644,14 @@ public class MainGUI extends JFrame implements ActionListener, KeyListener, Mous
 		}
 	}
 	
+	public boolean IllegalCharCheck(String txt) {
+		if(txt.toLowerCase().length() == 0 || txt.toLowerCase().matches("\\s*") || txt.toLowerCase().matches(".*<.*>.*") || 
+			txt.toLowerCase().matches(".*<script.*") || txt.length() > 3000) {
+			return true;
+		}
+		return false;
+	}
+	
 //=============================================================================
 //============================= EVENT HANDLERS ================================
 //=============================================================================
@@ -675,7 +684,7 @@ public class MainGUI extends JFrame implements ActionListener, KeyListener, Mous
 		
 		if(e.getSource().equals(nameChangeItem)) {
 			String name = JOptionPane.showInputDialog("Please input your new name.", localClient.getName());
-			if(name != null) {
+			if(name != null && !IllegalCharCheck(name)) {
 				addToScreen(botClient, "HAH! Like hell you'll be named: " + name + "!");
 				localClient.setName(name);
 			}
@@ -683,9 +692,11 @@ public class MainGUI extends JFrame implements ActionListener, KeyListener, Mous
 		
 		if(e.getSource().equals(createGroupItem)) {
 			String name = JOptionPane.showInputDialog("Please input the group's name.", "Group Name");
-			Group g = new Group(name);
-			groupList.add(g);
-			addGroupChat(g);
+			if(name != null && !IllegalCharCheck(name)) {
+				Group g = new Group(name);
+				groupList.add(g);
+				addGroupChat(g);
+			}
 		}
 		
 		if(e.getSource().equals(fileItem)) {

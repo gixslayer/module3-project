@@ -79,7 +79,7 @@ public class GroupChat extends JPanel implements ActionListener, KeyListener, Ch
 	
 	public void sendText() {
 		String txt = typeField.getText();
-		if(txt.length() == 0 || txt.matches("\\s*") || txt.length() > 3000) return;
+		if(main.IllegalCharCheck(txt)) return;
 		addToScreen(localClient, txt);
 		typeField.setText("");
 		
