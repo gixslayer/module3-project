@@ -7,6 +7,7 @@ import java.net.InetAddress;
 import client.CacheCallbacks;
 import client.Client;
 import client.ClientCache;
+import project.TCP;
 import protocol.AnnouncePacket;
 import protocol.CannotRoutePacket;
 import protocol.ChatPacket;
@@ -202,6 +203,7 @@ public class Application implements NetworkCallbacks, MulticastCallbacks, CacheC
 	
 	private void handleDisconnectPacket(DisconnectPacket packet) {
 		clientCache.clientDisconnected(packet.getClient());
+		TCP.closeConnection(packet.getSourceAddress());
 	}
 	
 	private void handleChatPacket(ChatPacket packet) {
