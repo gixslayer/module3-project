@@ -6,9 +6,7 @@ import java.net.DatagramSocket;
 import java.net.InetAddress;
 import java.net.SocketException;
 
-import project.TCP;
 import protocol.Packet;
-import protocol.PacketFactory;
 import subscription.Subscribable;
 import subscription.SubscriptionCollection;
 
@@ -20,11 +18,9 @@ public final class NetworkInterface implements Subscribable<NetworkCallbacks> {
 	private final byte[] recvBuffer;
 	private final SubscriptionCollection<NetworkCallbacks> callbacks;
 	private final ReliableLayer reliableLayer;
-	private final InetAddress localAddress;
 	
 	public NetworkInterface(InetAddress localAddress, int port) {
 		try {
-			this.localAddress = localAddress;
 			this.socket = new DatagramSocket(port);
 			this.port = port;
 			this.recvBuffer = new byte[RECV_BUFFER_SIZE];
@@ -54,16 +50,6 @@ public final class NetworkInterface implements Subscribable<NetworkCallbacks> {
 			System.err.printf("IOException during DatagramSocket.send: %s%n", e.getMessage());
 		}
 	}
-	
-	/*public void send(InetAddress dest, byte[] data) {
-		DatagramPacket datagram = new DatagramPacket(data,  0, data.length, dest, port);
-		
-		try {
-			socket.send(datagram);
-		} catch (IOException e) {
-			System.err.printf("IOException during DatagramSocket.send: %s%n", e.getMessage());
-		}
-	}*/
 	
 	public void sendReliable(InetAddress dest, Packet packet) {
 		reliableLayer.send(dest, packet);

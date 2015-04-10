@@ -7,7 +7,6 @@ import java.net.InetAddress;
 import client.CacheCallbacks;
 import client.Client;
 import client.ClientCache;
-import project.TCP;
 import protocol.AnnouncePacket;
 import protocol.CannotRoutePacket;
 import protocol.ChatPacket;

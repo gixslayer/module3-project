@@ -17,15 +17,17 @@ public abstract class Packet {
 	private InetAddress sourceAddress;
 	private boolean hasHeader;
 	private PacketHeader header;
+	private byte[] serializedContent;
 	
 	public Packet(int type) {
 		this.type = type;
 		this.hasHeader = false;
 		this.header = null;
+		this.serializedContent = null;
 	}
 	
 	public byte[] serialize() {
-		byte[] content = serializeContent();
+		byte[] content = getContent();
 		byte[] headerData = hasHeader ? header.serialize() : null;
 		int contentLength = content.length;
 		int headerLength = hasHeader ? headerData.length : 0;
@@ -99,5 +101,17 @@ public abstract class Packet {
 	
 	public PacketHeader getHeader() {
 		return header;
+	}
+	
+	public byte[] getContent() {
+		if(serializedContent == null) {
+			serializedContent = serializeContent();
+		}
+		
+		return serializedContent;
+	}
+	
+	public int getContentLength() {
+		return getContent().length;
 	}
 }

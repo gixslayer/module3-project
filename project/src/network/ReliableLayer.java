@@ -19,7 +19,7 @@ public final class ReliableLayer {
 	}
 	
 	public void send(InetAddress dest, Packet packet) {
-		TCP.sendData(ni, localAddress, dest, packet.serialize());
+		TCP.sendData(ni, localAddress, dest, packet);
 	}
 	
 	public void onPacketReceived(Packet packet) {
