@@ -225,6 +225,12 @@ public class MainGUI extends JFrame implements ActionListener, KeyListener, Mous
 	 * @param name the name of the User.
 	 */
 	public void removeUser(Client client) {
+		for(Group group : groupList) {
+			if(group.isPartOfGroup(client)) 
+				group.leaveGroup(client);
+		}
+		if(tabMap.containsKey(client))
+			((PrivateChat)chatMap.get(tabMap.get(client))).receiveText(client.getName() + " has disconnected. He/She will not receive any messages", botClient); 
 		peopleList.removeElement(client);
 		addToScreen(botClient, "User " + client.getName() + " has left the chat room.");
 	}
@@ -235,6 +241,8 @@ public class MainGUI extends JFrame implements ActionListener, KeyListener, Mous
 	 */
 	public void addUser(Client client) {
 		peopleList.addElement(client);
+		if(tabMap.containsKey(client))
+			((PrivateChat)chatMap.get(tabMap.get(client))).receiveText(client.getName() + " has reconnected. He/She will now receive messages", botClient); 
 		peopleArea.addMouseListener(this);
 		peopleArea.ensureIndexIsVisible(peopleList.getSize()-1);
 		setUserColor(client, colors[(int)(Math.random()*7)]);
