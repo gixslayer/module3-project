@@ -364,7 +364,12 @@ public class TCP {
 		init(source, destination);
 		if(connections.containsKey(destination) && connections.get(destination).equals(State.ESTABLISHED)) {
 			PacketHeader toSend = new PacketHeader(myAddress, destination, 0, lastInfo.get(destination)[0], lastInfo.get(destination)[1], false, true, false, 5, packet.getContentLength());
-			lastInfo.put(destination, new int[]{toSend.getSeq()+toSend.getLength(),toSend.getAck()});
+			if(toSend.getSeq()+toSend.getLength()>20000){
+				lastInfo.put(destination, new int[]{0+toSend.getLength(),toSend.getAck()});
+			} else {
+				lastInfo.put(destination, new int[]{toSend.getSeq()+toSend.getLength(),toSend.getAck()});
+			}
+			
 			System.out.println(toSend.getDestination() + ", seq: " + toSend.getSeq() +", ack: " + toSend.getAck());
 			ArrayList<Packet> temp = packetsInBuffer.get(destination);
 			if(temp == null) {
