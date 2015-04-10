@@ -13,6 +13,9 @@ public abstract class Packet {
 	public static final int TYPE_CANNOT_ROUTE = 5;
 	public static final int TYPE_EMPTY = 6;
 	public static final int TYPE_GROUP_CHAT = 7;
+	public static final int TYPE_FT_REQUEST = 8;
+	public static final int TYPE_FT_REPLY = 9;
+	public static final int TYPE_FT_DATA = 10;
 	
 	private final int type;
 	private InetAddress sourceAddress;

@@ -19,6 +19,12 @@ public final class PacketFactory {
 			return new CannotRoutePacket();
 		case Packet.TYPE_GROUP_CHAT:
 			return new GroupChatPacket();
+		case Packet.TYPE_FT_DATA:
+			return new FTDataPacket();
+		case Packet.TYPE_FT_REPLY:
+			return new FTReplyPacket();
+		case Packet.TYPE_FT_REQUEST:
+			return new FTRequestPacket();
 		}
 		
 		throw new IllegalArgumentException("Invalid type");
