@@ -82,6 +82,7 @@ public class TCP {
 					Timer timer = new Timer();
 					if(timers.containsKey(destAddress)) {
 						timers.get(destAddress).cancel();
+						timers.get(destAddress).purge();
 					}
 					timers.put(destAddress, timer);
 					timer.schedule(new TimeOutTask(destAddress), 10000);
@@ -132,6 +133,7 @@ public class TCP {
 		
 		if(toDelete != null) {
 			timerOfPacket.get(toDelete).cancel();
+			timerOfPacket.get(toDelete).purge();
 			timerOfPacket.remove(toDelete);
 			buffer.remove(toDelete);
 			packetsInBuffer.put(packet.getSource(), buffer);
@@ -155,6 +157,7 @@ public class TCP {
 		if(toDelete != null) {
 			if(timerOfPacket.get(toDelete) != null) {
 				timerOfPacket.get(toDelete).cancel();
+				timerOfPacket.get(toDelete).purge();
 				timerOfPacket.put(toDelete, null);
 			}
 			timerOfPacket.remove(toDelete);
@@ -207,6 +210,7 @@ public class TCP {
 		connections.put(destination, State.CLOSED);
 		for(Timer i: timers.values()){
 			i.cancel();
+			i.purge();
 		}
 		timers.remove(destination);
 		lastInfo.remove(destination);
@@ -224,6 +228,7 @@ public class TCP {
 			connections.clear();
 			for(Timer i: timers.values()){
 				i.cancel();
+				i.purge();
 			}
 			timers.clear();
 			lastInfo.clear();
