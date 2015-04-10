@@ -316,10 +316,13 @@ public class MainGUI extends JFrame implements ActionListener, KeyListener, Mous
 		
 		if(priv) {
 			int index = tabPane.indexOfTab(name);
+			if(index == -1) index = tabPane.indexOfTab(name + " [!]");
+			System.out.println(index);
 			if(index == -1) {
 				addPrivateChat(name, false);
 				index = tabPane.indexOfTab(name);
 			}
+			System.out.println(index);
 			PrivateChat pChat = chatMap.get(index);
 			pChat.receiveText(str, name);
 			if(tabPane.getSelectedIndex() != index) {

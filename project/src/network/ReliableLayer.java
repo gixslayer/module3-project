@@ -2,6 +2,7 @@ package network;
 
 import java.net.InetAddress;
 
+import project.TCP;
 import protocol.Packet;
 
 public final class ReliableLayer {
@@ -19,8 +20,7 @@ public final class ReliableLayer {
 	}
 	
 	public void send(InetAddress dest, Packet packet) {
-		// TODO: Needed processing and set a correct header in the packet.
-		
+		TCP.sendData(ni, localAddress, dest, packet.serialize());
 		ni.send(dest, packet);
 	}
 	

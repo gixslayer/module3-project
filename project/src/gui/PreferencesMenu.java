@@ -107,10 +107,13 @@ public class PreferencesMenu extends JFrame implements ActionListener, ChangeLis
 @SuppressWarnings("serial")
 class MyChooserPanel extends AbstractColorChooserPanel {
 	public void buildChooser() {
-		setLayout(new GridLayout(0, 3));
-	    makeAddButton("Red", Color.red);
-	    makeAddButton("Green", Color.green);
-	    makeAddButton("Blue", Color.blue);
+		setLayout(new GridLayout(2, 3));
+	    makeAddButton("Light Gray", Color.LIGHT_GRAY);
+	    makeAddButton("Light Green", Color.getColor("0x69CE50"));
+	    makeAddButton("Light Blue", Color.getHSBColor(168, 56, 56));
+	    makeAddButton("Light Red", Color.getHSBColor(0, 56, 56));
+	    makeAddButton("Light Yellow", Color.getHSBColor(51, 56, 56));
+	    makeAddButton("Light Purple", Color.getHSBColor(296, 56, 56));
 	}
 
 	public void updateChooser() { }

@@ -51,6 +51,16 @@ public final class NetworkInterface implements Subscribable<NetworkCallbacks> {
 		}
 	}
 	
+	public void send(InetAddress dest, byte[] data) {
+		DatagramPacket datagram = new DatagramPacket(data,  0, data.length, dest, port);
+		
+		try {
+			socket.send(datagram);
+		} catch (IOException e) {
+			System.err.printf("IOException during DatagramSocket.send: %s%n", e.getMessage());
+		}
+	}
+	
 	public void sendReliable(InetAddress dest, Packet packet) {
 		reliableLayer.send(dest, packet);
 	}

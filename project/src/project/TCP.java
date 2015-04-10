@@ -360,6 +360,6 @@ public class TCP {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
 		}
-		//ni.send(destAddress, packet.getBytes());
+		ni.send(destAddress, packet.getBytes());
 	}
 }
