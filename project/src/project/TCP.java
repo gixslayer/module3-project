@@ -17,7 +17,7 @@ public class TCP {
 	private static Map<Integer, TCP.State> connections;
 	private static Map<Integer, Timer> timers;
 	private static Map<Integer, int[]> lastInfo;
-	private static Map<Integer, ArrayList<byte[]>> toSend;
+	private static Map<Integer, ArrayList<Packet>> toSend;
 	private static Map<Integer, ArrayList<PacketHeader>> packetsInBuffer;
 	private static Map<PacketHeader, Timer> timerOfPacket;
 	private static boolean constructed = false;
@@ -60,9 +60,9 @@ public class TCP {
 				if(connections.containsKey(destAddress) && connections.get(destAddress).equals(State.SYNSENT)) {
 					sendAckForSynAck(packet);
 					connections.put(destAddress, State.ESTABLISHED);
-					ArrayList<byte[]> array = toSend.get(destAddress);
-					if(array == null) array = new ArrayList<byte[]>();
-					for(byte[] a: array){
+					ArrayList<Packet> array = toSend.get(destAddress);
+					if(array == null) array = new ArrayList<Packet>();
+					for(Packet a: array){
 						sendData(inetToInt(myAddr), destAddress, a);
 					}
 					toSend.remove(destAddress);
@@ -89,9 +89,9 @@ public class TCP {
 			} else if(!packet.getSynFlag() && packet.getAckFlag() && !packet.getFinFlag()) {
 				if(connections.containsKey(destAddress) && connections.get(destAddress).equals(State.SYN_RECEIVED)) {
 					connections.put(destAddress, State.ESTABLISHED);
-					ArrayList<byte[]> array = toSend.get(destAddress);
-					if(array == null) array = new ArrayList<byte[]>();
-					for(byte[] a: array){
+					ArrayList<Packet> array = toSend.get(destAddress);
+					if(array == null) array = new ArrayList<Packet>();
+					for(Packet a: array){
 						sendData(inetToInt(myAddr), destAddress, a);
 					}
 					toSend.remove(destAddress);
@@ -327,10 +327,10 @@ public class TCP {
 		sendPacket(ack, ack.getDestination());
 	}
 	
-	public static void sendData(int source, int destination, byte[] data) {
+	public static void sendData(int source, int destination, Packet packet) {
 		init(source, destination);
 		if(connections.containsKey(destination) && connections.get(destination).equals(State.ESTABLISHED)) {
-			PacketHeader toSend = new PacketHeader(myAddress, destination, 0, lastInfo.get(destination)[0], lastInfo.get(destination)[1], false, true, false, 5, data.length);
+			PacketHeader toSend = new PacketHeader(myAddress, destination, 0, lastInfo.get(destination)[0], lastInfo.get(destination)[1], false, true, false, 5, packet.g);
 			lastInfo.put(destination, new int[]{toSend.getSeq()+toSend.getLength(),toSend.getAck()});
 			System.out.println(toSend.getDestination() + ", seq: " + toSend.getSeq() +", ack: " + toSend.getAck());
 			ArrayList<PacketHeader> temp = packetsInBuffer.get(destination);
@@ -346,21 +346,21 @@ public class TCP {
 			sendPacket(toSend, destination);
 		} else if(!connections.containsKey(destination) || connections.get(destination).equals(State.CLOSED)){
 			openConnection(destination);
-			ArrayList<byte[]> array = toSend.get(destination);
-			if(array == null) array = new ArrayList<byte[]>();
-			array.add(data);
+			ArrayList<Packet> array = toSend.get(destination);
+			if(array == null) array = new ArrayList<Packet>();
+			array.add(packet);
 			toSend.put(destination, array);
 		} else {
-			ArrayList<byte[]> array = toSend.get(destination);
-			if(array == null) array = new ArrayList<byte[]>();
-			array.add(data);
+			ArrayList<Packet> array = toSend.get(destination);
+			if(array == null) array = new ArrayList<Packet>();
+			array.add(packet);
 			toSend.put(destination, array);
 		}
 	}
 	
-	public static void sendData(NetworkInterface ni, InetAddress source, InetAddress destination, byte[] data) {
+	public static void sendData(NetworkInterface ni, InetAddress source, InetAddress destination, Packet packet) {
 		TCP.ni = ni;
-		sendData(inetToInt(source), inetToInt(destination), data);
+		sendData(inetToInt(source), inetToInt(destination), packet);
 	}
 	
 	public static void sendPacket(PacketHeader packet, int destination) {
@@ -377,7 +377,7 @@ public class TCP {
 		ni.send(destAddress, newPacket);
 	}
 	
-	public static void sendEmptyPacket(PacketHeader packet, int destination) {
+	public static void sendEmptyPacket(PacketHeader packetHeader, int destination) {
 		InetAddress destAddress = null;
 		try {
 			destAddress = InetAddress.getByName("192.168.5."+destination);
@@ -385,6 +385,8 @@ public class TCP {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
 		}
-		ni.send(destAddress, packet.getBytes());
+		Packet toSend = new EmptyPacket();
+		toSend.setHeader(packetHeader);
+		ni.send(destAddress, toSend);
 	}
 }
