@@ -109,7 +109,7 @@ public final class ClientCache implements Subscribable<CacheCallbacks>{
 			}
 		
 			for(Client client : timedOutClients) {
-				timedOutClients.add(client);
+				//timedOutClients.add(client);
 				lostRouteClients.addAll(removeClient(client));
 			}
 		}
