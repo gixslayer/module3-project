@@ -91,8 +91,7 @@ public class MainGUI extends JFrame implements ActionListener, KeyListener, Mous
 	 */
 	public MainGUI(String name) {
 		super("Chat");
-		app = new Application(name);
-		app.subscribe(this);
+		app = new Application(name, this);
 		localClient = app.getLocalClient();
 		init();
 		app.start();

@@ -6,14 +6,14 @@ import client.Client;
 import client.ClientCache;
 
 public final class AnnounceThread extends Thread {
-	private final MulticastInterface mci;
+	private final MulticastInterface multicastInterface;
 	private final Client localClient;
 	private final ClientCache clientCache;
 	private final int interval;
 	private volatile boolean keepRunning;
 	
-	public AnnounceThread(MulticastInterface mci, ClientCache clientCache, int interval) {
-		this.mci = mci;
+	public AnnounceThread(MulticastInterface multicastInterface, ClientCache clientCache, int interval) {
+		this.multicastInterface = multicastInterface;
 		this.localClient = clientCache.getLocalClient();
 		this.clientCache = clientCache;
 		this.interval = interval;
@@ -22,6 +22,7 @@ public final class AnnounceThread extends Thread {
 	@Override
 	public void run() {
 		keepRunning = true;
+		setName("Announce");
 		
 		while(keepRunning) {
 			// Update the last seen time-stamp of the local client to the current epoch time.
@@ -31,7 +32,7 @@ public final class AnnounceThread extends Thread {
 			AnnouncePacket packet = new AnnouncePacket(localClient, clientCache.getClients());
 
 			// Broadcast the announcement to all clients within range.
-			mci.send(packet);
+			multicastInterface.send(packet);
 			
 			// Check if any clients timed out.
 			clientCache.checkForTimeouts();
@@ -46,14 +47,15 @@ public final class AnnounceThread extends Thread {
 	
 	public void close() {
 		keepRunning = false;
+		try {
+			// Block until the thread actually closes. Note that this could take up to 'interval' amount of milliseconds.
+			join();
+		} catch (InterruptedException e) { }
 	}
 	
 	private void sleep(int millis) {
 		try {
 			Thread.sleep(millis);
-		} catch (InterruptedException e) {
-			// I don't expect this to ever fail, but just in case it does happen dump the exception to stderr.
-			System.err.printf("AnnouceThread.sleep failed: %s%n", e.getMessage());
-		}
+		} catch (InterruptedException e) { }
 	}
 }

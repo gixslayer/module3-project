@@ -6,10 +6,8 @@ import java.net.InetAddress;
 import java.net.MulticastSocket;
 
 import protocol.Packet;
-import subscription.Subscribable;
-import subscription.SubscriptionCollection;
 
-public class MulticastInterface implements Subscribable<MulticastCallbacks> {
+public class MulticastInterface {
 	public static final int RECV_BUFFER_SIZE = 4096;
 	
 	private final MulticastSocket socket;
@@ -17,16 +15,16 @@ public class MulticastInterface implements Subscribable<MulticastCallbacks> {
 	private final InetAddress group;
 	private final int port;
 	private final byte[] recvBuffer;
-	private final SubscriptionCollection<MulticastCallbacks> callbacks;
+	private final MulticastCallbacks callbacks;
 	
-	public MulticastInterface(InetAddress localAddress, String group, int port) {
+	public MulticastInterface(InetAddress localAddress, String group, int port, MulticastCallbacks callbacks) {
 		try {
 			this.socket = new MulticastSocket(port);
 			this.localAddress = localAddress;
 			this.group = InetAddress.getByName(group);
 			this.port = port;
 			this.recvBuffer = new byte[RECV_BUFFER_SIZE];
-			this.callbacks = new SubscriptionCollection<MulticastCallbacks>();
+			this.callbacks = callbacks;
 		} catch (IOException e) {
 			throw new RuntimeException(String.format("Failed to create multicast interface: %s", e.getMessage()));
 		}
@@ -92,25 +90,12 @@ public class MulticastInterface implements Subscribable<MulticastCallbacks> {
 				if(packet == null) {
 					break;
 				} else if(packet.getSourceAddress().equals(localAddress)) {
-					// Don't send packets we sent over multicast and then received to the callback subscribers. 
+					// Don't invoke the callback if we received our own multicast packet. 
 					continue;
 				}
 					
-				for(MulticastCallbacks subscriber : callbacks) {
-					subscriber.onMulticastPacketReceived(packet);
-				}
+				callbacks.onMulticastPacketReceived(packet);
 			}
 		}
-	}
-
-	@Override
-	public void subscribe(MulticastCallbacks subscription) {
-		callbacks.subscribe(subscription);
-	}
-
-	@Override
-	public void unsubscribe(MulticastCallbacks subscription) {
-		callbacks.unsubscribe(subscription);
-		
 	}
 }

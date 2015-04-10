@@ -7,9 +7,9 @@ import protocol.Packet;
 
 public final class ReliableLayer {
 	private final InetAddress localAddress;
-	private final NetworkInterface ni;
+	private final UnicastInterface ni;
 	
-	public ReliableLayer(InetAddress localAddress, NetworkInterface ni) {
+	public ReliableLayer(InetAddress localAddress, UnicastInterface ni) {
 		this.localAddress = localAddress;
 		this.ni = ni;
 	}

@@ -12,8 +12,16 @@ public final class FTHandle {
 	private Client receiver;
 	private String savePath;
 	
-	public FTHandle() {
+	public FTHandle(int requestId, Client sender, Client receiver, String fileName, long fileSize) {
+		this.requestId = requestId;
+		this.sender = sender;
+		this.receiver = receiver;
+		this.fileName = fileName;
+		this.fileSize = fileSize;
+		this.hasStarted = false;
 		
+		this.transferId = -1;
+		this.savePath = null;
 	}
 	
 	public int getTransferId() {

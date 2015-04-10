@@ -10,7 +10,7 @@ import java.util.Timer;
 import protocol.EmptyPacket;
 import protocol.Packet;
 import protocol.PacketHeader;
-import network.NetworkInterface;
+import network.UnicastInterface;
 
 public class TCP {
 	private static int myAddress;
@@ -21,7 +21,7 @@ public class TCP {
 	private static Map<Integer, ArrayList<Packet>> packetsInBuffer;
 	private static Map<Packet, Timer> timerOfPacket;
 	private static boolean constructed = false;
-	private static NetworkInterface ni;
+	private static UnicastInterface ni;
 	
 	private static void init(int source, int dest) {
 		if(!constructed) {
@@ -40,7 +40,7 @@ public class TCP {
 		CLOSED, SYNSENT, SYN_RECEIVED, ESTABLISHED, FIN_WAIT, LAST_ACK, TIME_WAIT;
 	}
 	
-	public static boolean handlePacket(NetworkInterface ni, InetAddress myAddr, PacketHeader packet) {
+	public static boolean handlePacket(UnicastInterface ni, InetAddress myAddr, PacketHeader packet) {
 		init(inetToInt(myAddr), packet.getSource());
 		int destAddress = packet.getSource();
 		TCP.ni = ni;
@@ -397,7 +397,7 @@ public class TCP {
 		}
 	}
 	
-	public static void sendData(NetworkInterface ni, InetAddress source, InetAddress destination, Packet packet) {
+	public static void sendData(UnicastInterface ni, InetAddress source, InetAddress destination, Packet packet) {
 		TCP.ni = ni;
 		sendData(inetToInt(source), inetToInt(destination), packet);
 	}

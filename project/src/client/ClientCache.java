@@ -6,11 +6,9 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 
-import subscription.Subscribable;
-import subscription.SubscriptionCollection;
 import utils.DateUtils;
 
-public final class ClientCache implements Subscribable<CacheCallbacks>{
+public final class ClientCache {
 	public static final long TIMEOUT_DURATION = 10000; // Clients time out after not being seen for this many milliseconds.
 	public static final long RECONNECT_DURATION = 2500; // A client from the same IP/name cannot be indirectly added after it manually disconnects before this many milliseconds expire.
 	
@@ -18,14 +16,14 @@ public final class ClientCache implements Subscribable<CacheCallbacks>{
 	private final Client localClient;
 	private final List<Client> cache;
 	private final Map<Client, Long> recentlyDisconnected;
-	private final SubscriptionCollection<CacheCallbacks> callbacks;
+	private final CacheCallbacks callbacks;
 	
-	public ClientCache(Client localClient) {
+	public ClientCache(Client localClient, CacheCallbacks callbacks) {
 		this.syncRoot = new Object();
 		this.localClient = localClient;
 		this.cache = new ArrayList<Client>();
 		this.recentlyDisconnected = new HashMap<Client, Long>();
-		this.callbacks = new SubscriptionCollection<CacheCallbacks>();
+		this.callbacks = callbacks;
 	}
 	
 	public void updateDirect(Client client) {
@@ -48,11 +46,9 @@ public final class ClientCache implements Subscribable<CacheCallbacks>{
 			}
 		}
 		
-		// Process callbacks outside critical section to avoid holding the lock longer than needed.
+		// Process callback outside critical section to avoid holding the lock longer than needed.
 		if(clientConnected) {
-			for(CacheCallbacks subscriber : callbacks) {
-				subscriber.onClientConnected(client);
-			}
+			callbacks.onClientConnected(client);
 		}
 	}
 	
@@ -87,11 +83,9 @@ public final class ClientCache implements Subscribable<CacheCallbacks>{
 			}
 		}
 		
-		// Process callbacks outside critical section to avoid holding the lock longer than needed.
+		// Process callback outside critical section to avoid holding the lock longer than needed.
 		if(clientConnected) {
-			for(CacheCallbacks subscriber : callbacks) {
-				subscriber.onClientConnected(client);
-			}
+			callbacks.onClientConnected(client);
 		}
 	}
 	
@@ -109,22 +103,17 @@ public final class ClientCache implements Subscribable<CacheCallbacks>{
 			}
 		
 			for(Client client : timedOutClients) {
-				//timedOutClients.add(client);
 				lostRouteClients.addAll(removeClient(client));
 			}
 		}
 		
 		// Process callbacks outside critical section to avoid holding the lock longer than needed.
 		for(Client client : timedOutClients) {
-			for(CacheCallbacks subscriber : callbacks) {
-				subscriber.onClientTimedOut(client);
-			}
+			callbacks.onClientTimedOut(client);
 		}
 		
 		for(Client client : lostRouteClients) {
-			for(CacheCallbacks subscriber : callbacks) {
-				subscriber.onClientLostRoute(client);
-			}
+			callbacks.onClientLostRoute(client);
 		}
 	}
 	
@@ -140,14 +129,10 @@ public final class ClientCache implements Subscribable<CacheCallbacks>{
 		}
 		
 		// Process callbacks outside critical section to avoid holding the lock longer than needed.
-		for(CacheCallbacks subscriber : callbacks) {
-			subscriber.onClientDisconnected(client);
-		}
+		callbacks.onClientDisconnected(client);
 		
 		for(Client c : lostRouteClients) {
-			for(CacheCallbacks subscriber : callbacks) {
-				subscriber.onClientLostRoute(c);
-			}
+			callbacks.onClientLostRoute(c);
 		}
 	}
 	
@@ -170,14 +155,10 @@ public final class ClientCache implements Subscribable<CacheCallbacks>{
 		}
 
 		// Process callbacks outside critical section to avoid holding the lock longer than needed.
-		for(CacheCallbacks subscriber : callbacks) {
-			subscriber.onClientLostRoute(destination);
-		}
+		callbacks.onClientLostRoute(destination);
 		
 		for(Client client : removedClients) {
-			for(CacheCallbacks subscriber : callbacks) {
-				subscriber.onClientLostRoute(client);
-			}
+			callbacks.onClientLostRoute(client);
 		}
 	}
 	
@@ -260,20 +241,5 @@ public final class ClientCache implements Subscribable<CacheCallbacks>{
 		}
 		
 		return lostRouteClients;
-	}
-
-	//-------------------------------------------
-	// Subscribable<CacheCallbacks>.
-	//-------------------------------------------
-	@Override
-	public void subscribe(CacheCallbacks subscription) {
-		callbacks.subscribe(subscription);
-		
-	}
-
-	@Override
-	public void unsubscribe(CacheCallbacks subscription) {
-		callbacks.unsubscribe(subscription);
-		
 	}
 }

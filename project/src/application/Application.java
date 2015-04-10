@@ -1,6 +1,7 @@
 package application;
 
 import filetransfer.FTHandle;
+import filetransfer.FileTransfer;
 import gui.GUICallbacks;
 
 import java.net.InetAddress;
@@ -10,46 +11,43 @@ import client.Client;
 import client.ClientCache;
 import project.TCP;
 import protocol.*;
-import subscription.Subscribable;
-import subscription.SubscriptionCollection;
 import utils.NetworkUtils;
 import network.AnnounceThread;
 import network.MulticastCallbacks;
 import network.MulticastInterface;
-import network.NetworkCallbacks;
 import network.NetworkInterface;
+import network.UnicastCallbacks;
+import network.UnicastInterface;
 
-public class Application implements NetworkCallbacks, MulticastCallbacks, CacheCallbacks, GUICallbacks, Subscribable<ApplicationCallbacks> {
+public class Application implements UnicastCallbacks, MulticastCallbacks, CacheCallbacks, GUICallbacks, NetworkInterface {
 	public static final String GROUP = "228.0.0.0";
 	public static final int MC_PORT = 6969;
 	public static final int UDP_PORT = 6970;
 	public static final int ANNOUNCE_INTERVAL = 1000;
 	
-	private final MulticastInterface mci;
-	private final NetworkInterface ni;
 	private final Client localClient;
 	private final ClientCache clientCache;
+	private final FileTransfer fileTransfer;
+	private final MulticastInterface multicastInterface;
+	private final UnicastInterface unicastInterface;
 	private final AnnounceThread announceThread;
-	private final SubscriptionCollection<ApplicationCallbacks> callbacks;
+	private final ApplicationCallbacks callbacks;
 
-	public Application(String username) {
+	public Application(String username, ApplicationCallbacks callbacks) {
 		InetAddress localAddress = NetworkUtils.getLocalAddress();
 
-		this.mci = new MulticastInterface(localAddress, GROUP, MC_PORT);
-		this.ni = new NetworkInterface(localAddress, UDP_PORT);
 		this.localClient = new Client(username, localAddress);
-		this.clientCache = new ClientCache(localClient);
-		this.announceThread = new AnnounceThread(mci, clientCache, ANNOUNCE_INTERVAL);
-		this.callbacks = new SubscriptionCollection<ApplicationCallbacks>();
-		
-		mci.subscribe(this);
-		ni.subscribe(this);
-		clientCache.subscribe(this);
+		this.clientCache = new ClientCache(localClient, this);
+		this.fileTransfer = new FileTransfer(callbacks, this);
+		this.multicastInterface = new MulticastInterface(localAddress, GROUP, MC_PORT, this);
+		this.unicastInterface = new UnicastInterface(localAddress, UDP_PORT, this);
+		this.announceThread = new AnnounceThread(multicastInterface, clientCache, ANNOUNCE_INTERVAL);
+		this.callbacks = callbacks;
 	}
 	
 	public void start() {
-		mci.start();
-		ni.start();
+		multicastInterface.start();
+		unicastInterface.start();
 		announceThread.start();
 	}
 
@@ -58,27 +56,30 @@ public class Application implements NetworkCallbacks, MulticastCallbacks, CacheC
 		sendToAll(new DisconnectPacket(localClient));
 		
 		announceThread.close();
-		mci.close();
-		ni.stop();
+		multicastInterface.close();
+		unicastInterface.close();
 	}
 	
-	public void sendTo(Client dest, Packet packet) {
-		if(dest.isIndirect()) {
-			Client route = dest.getRoute();
-			RouteRequestPacket routePacket = new RouteRequestPacket(localClient, dest, packet.serialize());
-			ni.sendReliable(route.getAddress(), routePacket);
+	//-------------------------------------------
+	// NetworkInterface.
+	//-------------------------------------------
+	public void sendTo(Client client, Packet packet) {
+		if(client.isIndirect()) {
+			Client route = client.getRoute();
+			RouteRequestPacket routePacket = new RouteRequestPacket(localClient, client, packet.serialize());
+			unicastInterface.sendReliable(route.getAddress(), routePacket);
 		} else {
-			ni.send(dest.getAddress(), packet);
+			unicastInterface.send(client.getAddress(), packet);
 		}
 	}
 	
-	public void sendReliableTo(Client dest, Packet packet) {
-		if(dest.isIndirect()) {
-			Client route = dest.getRoute();
-			RouteRequestPacket routePacket = new RouteRequestPacket(localClient, dest, packet.serialize());
-			ni.sendReliable(route.getAddress(), routePacket);
+	public void sendReliableTo(Client client, Packet packet) {
+		if(client.isIndirect()) {
+			Client route = client.getRoute();
+			RouteRequestPacket routePacket = new RouteRequestPacket(localClient, client, packet.serialize());
+			unicastInterface.sendReliable(route.getAddress(), routePacket);
 		} else {
-			ni.sendReliable(dest.getAddress(), packet);
+			unicastInterface.sendReliable(client.getAddress(), packet);
 		}
 	}
 	
@@ -131,43 +132,35 @@ public class Application implements NetworkCallbacks, MulticastCallbacks, CacheC
 	@Override
 	public void onClientTimedOut(Client client) {
 		// TODO: The reliableLayer should be informed of this.
-		for(ApplicationCallbacks subscriber : callbacks) {
-			subscriber.onClientTimedOut(client);
-		}
+		callbacks.onClientTimedOut(client);
 	}
 
 	@Override
 	public void onClientConnected(Client client) {
 		// TODO: Perhaps the reliableLayer should be informed of this?
-		for(ApplicationCallbacks subscriber : callbacks) {
-			subscriber.onClientConnected(client);
-		}
+		callbacks.onClientConnected(client);
 	}
 
 	@Override
 	public void onClientDisconnected(Client client) {
 		// TODO: The reliableLayer should be informed of this.
-		for(ApplicationCallbacks subscriber : callbacks) {
-			subscriber.onClientDisconnected(client);
-		}
+		callbacks.onClientDisconnected(client);
 	}
 	
 	@Override
 	public void onClientLostRoute(Client client) {
 		// TODO: The reliableLayer should be informed of this.
-		for(ApplicationCallbacks subscriber : callbacks) {
-			subscriber.onClientLostRoute(client);
-		}
+		callbacks.onClientLostRoute(client);
 	}
 	
 	//-------------------------------------------
 	// GUICallbacks.
 	//-------------------------------------------
 	@Override
-	public void onSendPrivateMessage(Client otherClient, String message) {
+	public void onSendPrivateMessage(Client client, String message) {
 		PrivateChatPacket packet = new PrivateChatPacket(localClient, message);
 		
-		sendReliableTo(otherClient, packet);
+		sendReliableTo(client, packet);
 	}
 	
 	@Override
@@ -185,35 +178,32 @@ public class Application implements NetworkCallbacks, MulticastCallbacks, CacheC
 	}
 	
 	@Override
-	public FTHandle onRequestFileTransfer(Client dest, String filePath) {
-		// TODO Auto-generated method stub
-		return null;
-	}
-
-	@Override
-	public void onReplyToFileTransfer(FTHandle handle, boolean response, String savePath) {
-		// TODO Auto-generated method stub
-		
-	}
-
-	@Override
-	public void onCancelFileTransfer(FTHandle handle) {
-		// TODO Auto-generated method stub
-		
-	}
-
-	@Override
 	public void onSendPoke(Client client) {
 		PokePacket packet = new PokePacket(localClient);
 
 		sendReliableTo(client, packet);
 	}
+	
+	@Override
+	public FTHandle onRequestFileTransfer(Client dest, String filePath) {
+		return fileTransfer.createRequest(dest, filePath);
+	}
+
+	@Override
+	public void onReplyToFileTransfer(FTHandle handle, boolean response, String savePath) {
+		fileTransfer.sendReply(handle, response, savePath);
+	}
+
+	@Override
+	public void onCancelFileTransfer(FTHandle handle) {
+		fileTransfer.cancel(handle);
+	}
 
 	//-------------------------------------------
-	// NetworkCallbacks.
+	// UnicastCallbacks.
 	//-------------------------------------------
 	@Override
-	public void onPacketReceived(Packet packet) {
+	public void onUnicastPacketReceived(Packet packet) {
 		int type = packet.getType();
 		
 		if(type == Packet.TYPE_DISCONNECT) {
@@ -239,15 +229,11 @@ public class Application implements NetworkCallbacks, MulticastCallbacks, CacheC
 	}
 	
 	private void handleChatPacket(ChatPacket packet) {
-		for(ApplicationCallbacks subscriber : callbacks) {
-			subscriber.onChatMessageReceived(packet.getClient(), packet.getMessage());
-		}
+		callbacks.onChatMessageReceived(packet.getClient(), packet.getMessage());
 	}
 	
 	private void handlePrivateChatPacket(PrivateChatPacket packet) {
-		for(ApplicationCallbacks subscriber : callbacks) {
-			subscriber.onPrivateChatMessageReceived(packet.getClient(), packet.getMessage());
-		}
+		callbacks.onPrivateChatMessageReceived(packet.getClient(), packet.getMessage());
 	}
 	
 	private void handleRouteRequestPacket(RouteRequestPacket packet) {
@@ -258,7 +244,7 @@ public class Application implements NetworkCallbacks, MulticastCallbacks, CacheC
 			InetAddress originalAddress = packet.getSrc().getAddress();
 			Packet originalPacket = Packet.deserialize(originalAddress, packet.getData());
 			
-			onPacketReceived(originalPacket);
+			onUnicastPacketReceived(originalPacket);
 		} else {
 			// We're requested to route this packet to the next hop.
 			Client cachedDest = clientCache.getCachedClient(dest);
@@ -267,14 +253,14 @@ public class Application implements NetworkCallbacks, MulticastCallbacks, CacheC
 				// The client that sent this route request thinks it can reach the destination through us, but that is no longer
 				// the case. Inform him of this.
 				CannotRoutePacket cannotRoutePacket = new CannotRoutePacket(packet.getSrc(), localClient, packet.getDest());
-				ni.sendReliable(packet.getSourceAddress(), cannotRoutePacket);
+				unicastInterface.sendReliable(packet.getSourceAddress(), cannotRoutePacket);
 			}
 
 			if(cachedDest.isIndirect()) {
 				Client route = cachedDest.getRoute();
-				ni.sendReliable(route.getAddress(), packet);
+				unicastInterface.sendReliable(route.getAddress(), packet);
 			} else {
-				ni.sendReliable(cachedDest.getAddress(), packet);
+				unicastInterface.sendReliable(cachedDest.getAddress(), packet);
 			}
 		}
 	}
@@ -296,35 +282,18 @@ public class Application implements NetworkCallbacks, MulticastCallbacks, CacheC
 			
 			if(cachedTarget.isIndirect()) {
 				Client route = cachedTarget.getRoute();
-				ni.send(route.getAddress(), packet);
+				unicastInterface.send(route.getAddress(), packet);
 			} else {
-				ni.send(cachedTarget.getAddress(), packet);
+				unicastInterface.send(cachedTarget.getAddress(), packet);
 			}
 		}
 	}
 	
 	private void handleGroupChatPacket(GroupChatPacket packet) {
-		for(ApplicationCallbacks subscriber : callbacks) {
-			subscriber.onGroupChatMessageReceived(packet.getSender(), packet.getGroup(), packet.getMessage());
-		}
+		callbacks.onGroupChatMessageReceived(packet.getSender(), packet.getGroup(), packet.getMessage());
 	}
 
 	private void handlePokePacket(PokePacket packet) {
-		for(ApplicationCallbacks subscriber : callbacks) {
-			subscriber.onPokePacketReceived(packet.getClient());
-		}
-	}
-
-	//-------------------------------------------
-	// Subscribable<ApplicationCallbacks>.
-	//-------------------------------------------
-	@Override
-	public void subscribe(ApplicationCallbacks subscription) {
-		callbacks.subscribe(subscription);
-	}
-
-	@Override
-	public void unsubscribe(ApplicationCallbacks subscription) {
-		callbacks.unsubscribe(subscription);
+		callbacks.onPokePacketReceived(packet.getClient());
 	}
 }
