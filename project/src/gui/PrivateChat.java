@@ -23,19 +23,18 @@ public class PrivateChat extends JPanel implements ActionListener, KeyListener {
 	
 	private JButton sendButton;
 	
-	private Client client;
-	private String otherName;
+	private Client localClient;
+	private Client otherClient;
 	private MainGUI main;
 	private Application app;
 	private Alice alice;
 	private AnimationThread animation;
 	
-	public PrivateChat(Client client, String otherName, MainGUI main, Application app, Alice alice, AnimationThread animation) {
-		this.client = client;
-		this.otherName = otherName;
+	public PrivateChat(Client localClient, Client otherClient, MainGUI main, Application app, AnimationThread animation) {
+		this.localClient = localClient;
+		this.otherClient = otherClient;
 		this.main = main;
 		this.app = app;
-		this.alice = alice;
 		this.animation = animation;
 		init();
 	}
@@ -82,22 +81,18 @@ public class PrivateChat extends JPanel implements ActionListener, KeyListener {
 	public void sendText() {
 		String txt = typeField.getText();
 		if(txt.length() == 0 || txt.matches("\\s*") || txt.length() > 3000) return;
-		addToScreen(client.getName() + ": " + txt);
+		addToScreen(localClient.getName() + ": " + txt);
 		typeField.setText("");
-		if(otherName.equals("Alice")) {
-			receiveText(alice.getResponse(txt), "Alice");
-			return;
-		}
 		
-		app.onSendPrivateMessage(client, txt, otherName);
+		app.onSendPrivateMessage(otherClient, txt);
 	}
 	
-	public void receiveText(String str, String name) {
-		addToScreen(name + ": " + str);
+	public void receiveText(String str, Client client) {
+		addToScreen(client.getName() + ": " + str);
 	}
 	
-	public String getOtherName() {
-		return otherName;
+	public Client getOtherClient() {
+		return otherClient;
 	}
 
 	@Override

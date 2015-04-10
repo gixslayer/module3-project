@@ -168,13 +168,8 @@ public class Application implements NetworkCallbacks, MulticastCallbacks, CacheC
 	// GUICallbacks.
 	//-------------------------------------------
 	@Override
-	public void onSendPrivateMessage(Client client, String message, String otherName) {
-		// TODO: client currently is set to our localClient and otherName is the name of the target
-		// client. The client parameter should be the target client and we shoudln't need the otherName
-		// parameter.
-		PrivateChatPacket packet = new PrivateChatPacket(client, message);
-		Client otherClient = clientCache.getClientFromName(otherName);
-		
+	public void onSendPrivateMessage(Client otherClient, String message) {
+		PrivateChatPacket packet = new PrivateChatPacket(localClient, message);
 		sendReliableTo(otherClient, packet);
 	}
 	

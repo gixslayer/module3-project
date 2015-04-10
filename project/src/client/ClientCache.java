@@ -201,7 +201,7 @@ public final class ClientCache implements Subscribable<CacheCallbacks>{
 		return localClient;
 	}
 	
-	public Client getClientFromName(String name) {
+	/*public Client getClientFromName(String name) {
 		// TODO: This should be synchronized on syncRoot to avoid concurrent modification exceptions, but ideally
 		// this method shouldn't even exists and clients are identified by the combination of their name and
 		// address instead of just their name.
@@ -209,7 +209,7 @@ public final class ClientCache implements Subscribable<CacheCallbacks>{
 			if(c.getName().equals(name)) return c;
 		}
 		return null;
-	}
+	}*/
 	
 	public Client getCachedClient(Client client) {
 		synchronized(syncRoot) {

@@ -16,13 +16,15 @@ public class UserMenu extends JPopupMenu implements ActionListener {
     private JMenuItem lastSeen;
     private JMenu chooseColor;
     private JMenuItem[] color = new JMenuItem[7];
-    private String name;
+    private Client otherClient;
+    private Client localClient;
     private MainGUI main;
     
-    public UserMenu(String name, Client client, MainGUI main){
-        this.name = name;
+    public UserMenu(Client otherClient, Client localClient, MainGUI main){
+        this.otherClient = otherClient;
+        this.localClient = localClient;
         this.main = main;
-        if(name.equals(client.getName())) {
+        if(otherClient.equals(localClient)) {
         	chooseColor = new JMenu("Choose Color");
         	for(int i=0; i<color.length; i++) {
         		color[i] = new JMenuItem(main.getColor(i));
@@ -49,18 +51,18 @@ public class UserMenu extends JPopupMenu implements ActionListener {
 	@Override
 	public void actionPerformed(ActionEvent arg0) {
 		if(arg0.getSource().equals(privChatItem)) {
-			main.addPrivateChat(name, true);
+			main.addPrivateChat(otherClient, true);
 		}
 		else if(arg0.getSource().equals(pokeItem)) {
-			main.receiveText("Hey! Don't poke me! :(", name, true);
+			main.receiveText("Hey! Don't poke me! :(", otherClient, true);
 		}
 		else if(arg0.getSource().equals(lastSeen)) {
-			main.addToScreen(name + " was last seen at: " + main.getLastSeen(name));
+			main.addToScreen(otherClient + " was last seen at: " + main.getLastSeen(otherClient));
 		}
 		else {
 			for(int i=0; i<color.length; i++) {
 				if(arg0.getSource().equals(color[i])) {
-					main.setUserColor(name, main.getColor(i));
+					main.setUserColor(localClient, main.getColor(i));
 				}
 			}
 		}

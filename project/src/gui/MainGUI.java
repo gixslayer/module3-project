@@ -28,7 +28,7 @@ public class MainGUI extends JFrame implements ActionListener, KeyListener, Mous
 	
 	private static final String[] colors = {"Red", "Blue", "Green", "Yellow", "Purple", "Orange", "Black"};
 	
-	private HashMap<String, String> colorMap = new HashMap<String, String>();
+	private HashMap<Client, String> colorMap = new HashMap<Client, String>();
 	private ColoringColors coloring = ColoringColors.NORMAL;
 	
 	private String[] history = new String[0];
@@ -38,6 +38,7 @@ public class MainGUI extends JFrame implements ActionListener, KeyListener, Mous
 	private boolean altRBMode = false;
 	
 	private HashMap<Integer, PrivateChat> chatMap = new HashMap<Integer, PrivateChat>();
+	private HashMap<Client, Integer> tabMap = new HashMap<Client, Integer>();
 	
 	private JMenuBar menu;
 	private JMenu optionMenu;
@@ -49,8 +50,8 @@ public class MainGUI extends JFrame implements ActionListener, KeyListener, Mous
 	private JTabbedPane tabPane;
 	private JTextField typeField;
 	
-	private DefaultListModel<String> peopleList;
-	private JList<String> peopleArea;
+	private DefaultListModel<Client> peopleList;
+	private JList<Client> peopleArea;
 	private JScrollPane peopleScrollPane;
 	
 	private DefaultListModel<String> list;
@@ -59,7 +60,7 @@ public class MainGUI extends JFrame implements ActionListener, KeyListener, Mous
 	
 	private JButton sendButton;
 	
-	private Client client;
+	private Client localClient;
 	private Icon closeIcon;
 	
 	private Application app;
@@ -77,7 +78,7 @@ public class MainGUI extends JFrame implements ActionListener, KeyListener, Mous
 		app = new Application(name);
 		app.subscribe(this);
 		app.start();
-		client = app.getLocalClient();
+		localClient = app.getLocalClient();
 		init();
 	}
 	
@@ -97,7 +98,7 @@ public class MainGUI extends JFrame implements ActionListener, KeyListener, Mous
 		c = getContentPane();
 		c.setLayout(new BorderLayout());
 		
-		peopleList = new DefaultListModel<String>();
+		peopleList = new DefaultListModel<Client>();
 		list = new DefaultListModel<String>();
 		
 		tabPane = new JTabbedPane();
@@ -105,7 +106,7 @@ public class MainGUI extends JFrame implements ActionListener, KeyListener, Mous
 		typeField = new JTextField();
 		typeField.addKeyListener(this);
 		
-		peopleArea = new JList<String>(peopleList);
+		peopleArea = new JList<Client>(peopleList);
 		peopleArea.setForeground(Color.BLACK);
 		peopleScrollPane = new JScrollPane(peopleArea);
 		
@@ -155,9 +156,9 @@ public class MainGUI extends JFrame implements ActionListener, KeyListener, Mous
 		c.add(tabPane, BorderLayout.CENTER);
 		c.add(sideBar, BorderLayout.WEST);
 		
-		addUser(client.getName());
-		addUser("Alice");
-		alice = new Alice(this, "Alice");
+		addUser(localClient);
+		//addUser(new Client("Alice"));
+		//alice = new Alice(this, "Alice");
 		
 		menu = new JMenuBar();
 		
@@ -196,21 +197,21 @@ public class MainGUI extends JFrame implements ActionListener, KeyListener, Mous
 	 * Removes a User from the Chat Room.
 	 * @param name the name of the User.
 	 */
-	public void removeUser(String name) {
-		peopleList.removeElement(name);
-		addToScreen("[LEAVE]: User " + name + " has left the chat room.");
+	public void removeUser(Client client) {
+		peopleList.removeElement(client);
+		addToScreen("[LEAVE]: User " + client.getName() + " has left the chat room.");
 	}
 	
 	/**
 	 * Adds a User to the Chat Room.
 	 * @param name the name of the User.
 	 */
-	public void addUser(String name) {
-		peopleList.addElement(name);
+	public void addUser(Client client) {
+		peopleList.addElement(client);
 		peopleArea.addMouseListener(this);
 		peopleArea.ensureIndexIsVisible(peopleList.getSize()-1);
-		setUserColor(name, colors[(int)(Math.random()*7)]);
-		addToScreen("[JOIN]: User <font color=" + getUserColor(name) + ">" + name + "</font> entered the chat room.");
+		setUserColor(client, colors[(int)(Math.random()*7)]);
+		addToScreen("[JOIN]: User <font color=" + getUserColor(client) + ">" + client.getName() + "</font> entered the chat room.");
 	}
 	
 	/**
@@ -224,23 +225,25 @@ public class MainGUI extends JFrame implements ActionListener, KeyListener, Mous
 	 * Opens a new Private Chat to the specified User.
 	 * @param name the name of the User to chat with.
 	 */
-	public void addPrivateChat(String name, boolean self) {
-		if(tabPane.indexOfTab(name) != -1) {
-			tabPane.setSelectedIndex(tabPane.indexOfTab(name));
+	public void addPrivateChat(Client client, boolean self) {
+		if(tabMap.containsKey(client)) {
+			tabPane.setSelectedIndex(tabMap.get(client));
 			return;
 		}
-		if(name.equals(client.getName())) return;
+		if(client.equals(localClient)) return;
+		
 		JPanel privChat = new JPanel();
 		privChat.setLayout(new BorderLayout());
-		PrivateChat pChat = new PrivateChat(client, name, this, app, alice, animation);
+		PrivateChat pChat = new PrivateChat(localClient, client, this, app, animation);
 		privChat.add(pChat, BorderLayout.CENTER);
 		
-		tabPane.addTab(name, privChat);
-		int i = tabPane.indexOfTab(name);
+		tabPane.addTab("t", privChat);
+		int i = tabPane.indexOfTab("t");
 		
+		tabMap.put(client, i);		
 		chatMap.put(i, pChat);
 		
-		addTabName(i, name);
+		addTabName(i, client.getName());
 		
 		if(self) tabPane.setSelectedIndex(i);
 	}
@@ -288,11 +291,11 @@ public class MainGUI extends JFrame implements ActionListener, KeyListener, Mous
 		if(txt.toLowerCase().length() == 0 || txt.toLowerCase().matches("\\s*") || txt.toLowerCase().matches(".*<.*>.*") || txt.toLowerCase().matches(".*<script.*") || txt.length() > 3000) return;
 		typeField.setText("");
 		addToHistory(txt);
-		receiveText(txt, client.getName(), false);
-		if(txt.contains("Alice") || txt.contains("alice")) {
-			receiveText(alice.getResponse(txt), "Alice", false);
+		receiveText(txt, localClient, false);
+		/*if(txt.contains("Alice") || txt.contains("alice")) {
+			receiveText(alice.getResponse(txt), , false);
 			return;
-		}
+		}*/
 		app.onSendMessage(txt);
 	}
 	
@@ -309,31 +312,27 @@ public class MainGUI extends JFrame implements ActionListener, KeyListener, Mous
 	 * @param name the name of the Sender.
 	 * @param priv true if it is part of the private chat between the two Users | false if it is part of the global chat.
 	 */
-	public void receiveText(String str, String name, boolean priv) {
+	public void receiveText(String str, Client client, boolean priv) {
 		str = changeText(str);
-		if(checkMultiple(str, name)) return;
-		name = changeName(name);
+		if(checkMultiple(str, client)) return;
 		
 		if(priv) {
-			int index = tabPane.indexOfTab(name);
-			if(index == -1) index = tabPane.indexOfTab(name + " [!]");
-			System.out.println(index);
-			if(index == -1) {
-				addPrivateChat(name, false);
-				index = tabPane.indexOfTab(name);
+			int index = 0;
+			if(!tabMap.containsKey(client)) {
+				addPrivateChat(client, false);
+				index = tabMap.get(client);
 			}
-			System.out.println(index);
 			PrivateChat pChat = chatMap.get(index);
-			pChat.receiveText(str, name);
+			pChat.receiveText(str, client);
 			if(tabPane.getSelectedIndex() != index) {
 				tabPane.remove(index);
 				tabPane.add(pChat, index);
 				tabPane.setBackgroundAt(index, Color.YELLOW);
-				addTabName(index, name + " [!]");
+				addTabName(index, client.getName() + " [!]");
 			}
 		}
 		else {
-			addToScreen(name + ": " + str);
+			addToScreen(client.getName() + ": " + str);
 			if(tabPane.getSelectedIndex() != 0) {
 				JPanel mainChat = (JPanel)tabPane.getComponentAt(0);
 				tabPane.remove(0);
@@ -432,23 +431,23 @@ public class MainGUI extends JFrame implements ActionListener, KeyListener, Mous
 		return name;
 	}
 	
-	private boolean checkMultiple(String str, String name) {
+	private boolean checkMultiple(String str, Client client) {
 		if(str.equals("*music*")) {
-			if(name.equals(client.getName())) {
+			if(client.equals(localClient)) {
 				String[] tmp = {"╔══╗ ♫", "║██║ ♪♪", "║██║♫♪", "║ ◎♫♪♫", "╚══╝"};
 				sendMultiple(tmp);
 			}
 			return true;
 		}
 		if(str.equals("*fatbunny*")) {
-			if(name.equals(client.getName())) {
+			if(client.equals(localClient)) {
 				String[] tmp = {"(\\____/)", "(='.'=)", "(\")__(\")"};
 				sendMultiple(tmp);
 			}
 			return true;
 		}
 		if(str.startsWith("*wavename*")) {
-			if(name.equals(client.getName())) {
+			if(client.equals(localClient)) {
 				String[] split = str.split("\\*");
 				String[] tmp = {"¯¨'*·~-.¸¸,.-~*' " + split[2] + " ¯¨'*·~-.¸¸,.-~*'"};
 				sendMultiple(tmp);
@@ -483,9 +482,9 @@ public class MainGUI extends JFrame implements ActionListener, KeyListener, Mous
 	 * @param name the name of the User.
 	 * @return the color of the specified User.
 	 */
-	public String getUserColor(String name) {
-		if(colorMap.containsKey(name)) {
-			return colorMap.get(name);
+	public String getUserColor(Client client) {
+		if(colorMap.containsKey(client)) {
+			return colorMap.get(client);
 		}
 		return "Black";
 	}
@@ -495,8 +494,8 @@ public class MainGUI extends JFrame implements ActionListener, KeyListener, Mous
 	 * @param name the name of the User.
 	 * @param color The color to set the User to.
 	 */
-	public void setUserColor(String name, String color) {
-		colorMap.put(name, color);
+	public void setUserColor(Client client, String color) {
+		colorMap.put(client, color);
 		receiveArea.repaint();
 	}
 	
@@ -574,7 +573,7 @@ public class MainGUI extends JFrame implements ActionListener, KeyListener, Mous
 		peopleArea.setBackground(color);
 	}
 	
-	public String getLastSeen(String name) {
+	public String getLastSeen(Client client) {
 		return "NOPE!";
 	}
 	
@@ -668,10 +667,10 @@ public class MainGUI extends JFrame implements ActionListener, KeyListener, Mous
 	 */
 	public void mouseClicked(MouseEvent arg0) { 
 		if(arg0.getSource().equals(peopleArea) && arg0.getButton() == MouseEvent.BUTTON3) {
-			String name = peopleArea.getSelectedValue();
-			if(name == null) return;
+			Client client = peopleArea.getSelectedValue();
+			if(client == null) return;
 			
-			UserMenu menu = new UserMenu(name, client, this);
+			UserMenu menu = new UserMenu(client, localClient, this);
 		    menu.show(arg0.getComponent(), arg0.getX(), arg0.getY());
 		}
 		
@@ -684,14 +683,12 @@ public class MainGUI extends JFrame implements ActionListener, KeyListener, Mous
 				tabPane.setSelectedIndex(index);
 			}
 			else {
-				String otherName = chatMap.get(index).getOtherName();
-				if(!tabPane.getTitleAt(index).equals(otherName)) {
-					PrivateChat pChat = chatMap.get(index);
-					tabPane.remove(index);
-					tabPane.add(pChat, index);
-					addTabName(index, otherName);
-					tabPane.setSelectedIndex(index);
-				}
+				Client otherClient = chatMap.get(index).getOtherClient();
+				PrivateChat pChat = chatMap.get(index);
+				tabPane.remove(index);
+				tabPane.add(pChat, index);
+				addTabName(index, otherClient.getName());
+				tabPane.setSelectedIndex(index);
 			}
 		}
 	}
@@ -777,40 +774,35 @@ public class MainGUI extends JFrame implements ActionListener, KeyListener, Mous
 
 	@Override
 	public void onClientConnected(Client client) {
-		addUser(client.getName());
+		addUser(client);
 	}
 
 	@Override
 	public void onClientDisconnected(Client client) {
 		System.out.println("Disconnected!");
-		removeUser(client.getName());
+		removeUser(client);
 	}
 
 	@Override
 	public void onClientTimedOut(Client client) {
 		System.out.println("Time Out!");
-		removeUser(client.getName());
+		removeUser(client);
 	}
 
 	@Override
 	public void onClientLostRoute(Client client) {
 		System.out.println("Lost Route!");
-		removeUser(client.getName());
+		removeUser(client);
 	}
 
 	@Override
 	public void onChatMessageReceived(Client client, String message) {
-		String user = client.getName();
-		
-		receiveText(message, user, false);
+		receiveText(message, client, false);
 	}
 
 	@Override
 	public void onPrivateChatMessageReceived(Client client, String message) {
-		String user = client.getName();
-		
-		System.out.println("RECV: " + user + " " + message);
-		receiveText(message, user, true);
+		receiveText(message, client, true);
 	}
 	
 	public class RainBowMode extends Thread {

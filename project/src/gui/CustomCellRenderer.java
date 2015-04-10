@@ -62,7 +62,8 @@ public class CustomCellRenderer extends JLabel implements ListCellRenderer<Objec
         else if(value.toString().startsWith("[LEAVE]:")) 
        	 	setText("<html><font color=red>" + value.toString().split(":")[0] + "</font>:" + value.toString().split(":")[1] + "</html>");
         else {
-       	 	setText("<html><font color="+ main.getUserColor(value.toString().split(":")[0]) +">" + value.toString().split(":")[0] + "</font>:" + value.toString().split(":")[1] + "</html>");
+        	//TODO: COLORS
+       	 	setText((String)value);
         }
        	 
         setBackground(background);
