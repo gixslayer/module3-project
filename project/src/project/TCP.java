@@ -147,7 +147,9 @@ public class TCP {
 		
 		
 		if(toDelete != null) {
-			timerOfPacket.get(toDelete).cancel();
+			if(timerOfPacket.get(toDelete) != null) {
+				timerOfPacket.get(toDelete).cancel();
+			}
 			timerOfPacket.remove(toDelete);
 			System.out.println("DELETING PACKET");
 			buffer.remove(toDelete);
