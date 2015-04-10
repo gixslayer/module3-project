@@ -47,7 +47,8 @@ public final class NetworkInterface implements Subscribable<NetworkCallbacks> {
 		try {
 			socket.send(datagram);
 		} catch (IOException e) {
-			System.err.printf("IOException during DatagramSocket.send: %s%n", e.getMessage());
+			//System.err.printf("IOException during DatagramSocket.send: %s%n", e.getMessage());
+			throw new RuntimeException(e);
 		}
 	}
 	

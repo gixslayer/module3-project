@@ -176,6 +176,8 @@ public class TCP {
 	
 	public static void ackTimeOut(Packet packet) {
 		Timer timer = new Timer();
+		timerOfPacket.get(packet).cancel();
+		timerOfPacket.get(packet).purge();
 		timer.schedule(new AckTimeOut(packet), 100);
 		timerOfPacket.put(packet, timer);
 		sendPacket(packet, packet.getHeader().getDestination());
