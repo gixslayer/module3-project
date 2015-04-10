@@ -653,8 +653,8 @@ public class MainGUI extends JFrame implements ActionListener, KeyListener, Mous
 	}
 	
 	public boolean IllegalCharCheck(String txt) {
-		if(txt.toLowerCase().length() == 0 || txt.toLowerCase().matches("\\s*") || txt.toLowerCase().matches(".*<.*>.*") || 
-			txt.toLowerCase().matches(".*<script.*") || txt.length() > 3000) {
+		if(txt.toLowerCase().length() == 0 || txt.toLowerCase().matches("\\s*") || txt.toLowerCase().matches(".*<.*") || 
+			txt.toLowerCase().matches(".*<script.*") || txt.length() > 3000 || txt.toLowerCase().matches(".*>.*")) {
 			return true;
 		}
 		return false;
