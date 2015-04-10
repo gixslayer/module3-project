@@ -57,6 +57,8 @@ public class MainGUI extends JFrame implements ActionListener, KeyListener, Mous
 	private JList<Client> peopleArea;
 	private JScrollPane peopleScrollPane;
 	
+	private JFrame prefMenu;
+	
 	private DefaultListModel<ChatLine> list;
 	private JList<ChatLine> receiveArea;
 	private JScrollPane scrollPane;
@@ -412,33 +414,6 @@ public class MainGUI extends JFrame implements ActionListener, KeyListener, Mous
 		return str;
 	}
 	
-	private String changeName(String name) {
-		name = name.replace(":)", "☺");
-		name = name.replace(":(", "☹");
-		name = name.replace("*check*", "✔");
-		name = name.replace("*yinyang*", "☯");
-		name = name.replace("*down*", "↓");
-		name = name.replace("*left*", "←");
-		name = name.replace("*right*", "→");
-		name = name.replace("*up*", "↑");
-		name = name.replace("*phone*", "☎");
-		name = name.replace("*skull*", "☠");
-		name = name.replace("*radio*", "☢");
-		name = name.replace("*bio*", "☣");
-		name = name.replace("*peace*", "☮");
-		name = name.replace("*spade*", "♠");
-		name = name.replace("*heart*", "♥");
-		name = name.replace("*diamond*", "♦");
-		name = name.replace("*club*", "♣");
-		name = name.replace("*plane*", "✈");
-		name = name.replace("*x*", "✖");
-		name = name.replace("1/2", "½");
-		name = name.replace("1/4", "¼");
-		name = name.replace("*R*", "ℜ");
-		name = name.replace("*N*", "ℵ");
-		return name;
-	}
-	
 	private boolean checkMultiple(String str, Client client) {
 		if(str.equals("*music*")) {
 			if(client.equals(localClient)) {
@@ -623,9 +598,9 @@ public class MainGUI extends JFrame implements ActionListener, KeyListener, Mous
 		}
 		
 		if(e.getSource().equals(preferencesItem)) {
-			PreferencesMenu menu = new PreferencesMenu(this);
-			menu.pack();
-			menu.setVisible(true);
+			prefMenu = new PreferencesMenu(this);
+			prefMenu.pack();
+			prefMenu.setVisible(true);
 		}
 		
 		if(e.getSource().equals(rainbowModeItem)) {
@@ -772,6 +747,7 @@ public class MainGUI extends JFrame implements ActionListener, KeyListener, Mous
 			app.stop();
 			animation.setCont(false);
 			rainbowMode = false;
+			prefMenu.dispose();
 	        this.dispose();
 	    }
 	}

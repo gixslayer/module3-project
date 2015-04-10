@@ -2,6 +2,7 @@ package gui;
 
 import java.awt.BorderLayout;
 import java.awt.Color;
+import java.awt.Dimension;
 import java.awt.GridLayout;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
@@ -37,14 +38,18 @@ public class PreferencesMenu extends JFrame implements ActionListener, ChangeLis
     private MainGUI main;
     
     public PreferencesMenu(MainGUI main){
+    	super("Preferences");
     	this.main = main;
         setDefaultCloseOperation(DISPOSE_ON_CLOSE);
         setLayout(new BorderLayout());
         
         JPanel panel = new JPanel();
-        panel.setLayout(new GridLayout(3,3));
+        GridLayout lo = new GridLayout(3,3);
+        lo.setVgap(10);
+        lo.setHgap(10);
+        panel.setLayout(lo);
         
-        labels[0] = new JLabel("Text Area Coloring: ");
+        labels[0] = new JLabel("Text Area Coloring:");
         panel.add(labels[0]);
         
         areaStrings = new String[main.getNumberofColoringArrays()];
@@ -56,8 +61,7 @@ public class PreferencesMenu extends JFrame implements ActionListener, ChangeLis
         areaColor.addActionListener(this);
         panel.add(areaColor);
         
-        labels[2] = new JLabel("Alternative Rainbow Mode:");
-        panel.add(labels[2]);
+        panel.add(new JPanel());
         
         labels[3] = new JLabel("Text Coloring: ");
         panel.add(labels[3]);
@@ -69,12 +73,19 @@ public class PreferencesMenu extends JFrame implements ActionListener, ChangeLis
         textColor.setPreviewPanel(new JPanel());
         panel.add(textColor, BorderLayout.CENTER);
         
+        JPanel panel2 = new JPanel();
+        panel2.setLayout(new GridLayout(2,1));
+        
+        labels[2] = new JLabel("Alternative Rainbow Mode: ");
+        panel2.add(labels[2]);
+        
         rainbowMode = new JCheckBox();
         rainbowMode.addChangeListener(this);
         rainbowMode.setSelected(main.getAltRBMode());
-        panel.add(rainbowMode);
+        panel2.add(rainbowMode);
+        panel.add(panel2);
         
-        labels[1] = new JLabel("Background Color: ");
+        labels[1] = new JLabel("Background Color:");
         panel.add(labels[1]);
         
         bgColor = new JColorChooser(Color.GRAY);
@@ -165,6 +176,7 @@ class MyChooserPanel extends AbstractColorChooserPanel {
 	
 	private void makeAddButton(String name, Color color) {
 	    JButton button = new JButton(name);
+	    button.setPreferredSize(new Dimension(20, 20));
 	    button.setBackground(color);
 	    button.setAction(setColorAction);
 	    add(button);
