@@ -27,7 +27,7 @@ public class CustomCellRenderer extends JLabel implements ListCellRenderer<Objec
         String line = cLine.getLine();
         
         Color background = Color.WHITE;
-        Color foreground = Color.BLACK;
+        Color foreground = main.getChatFGColor();
         
         if(main.getColoring() == ColoringColors.RAINBOW) {
         	background = Color.getHSBColor((float)(index*0.01), 1, 1);	

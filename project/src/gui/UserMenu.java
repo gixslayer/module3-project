@@ -24,16 +24,14 @@ public class UserMenu extends JPopupMenu implements ActionListener {
         this.otherClient = otherClient;
         this.localClient = localClient;
         this.main = main;
-        if(otherClient.equals(localClient)) {
-        	chooseColor = new JMenu("Choose Color");
-        	for(int i=0; i<color.length; i++) {
-        		color[i] = new JMenuItem(main.getColor(i));
-        		color[i].addActionListener(this);
-        		chooseColor.add(color[i]);
-        	}
-        	add(chooseColor);
+        chooseColor = new JMenu("Choose Color");
+        for(int i=0; i<color.length; i++) {
+        	color[i] = new JMenuItem(main.getColor(i));
+        	color[i].addActionListener(this);
+        	chooseColor.add(color[i]);
         }
-        else {
+        add(chooseColor);
+        if(!otherClient.equals(localClient)) {
         	privChatItem = new JMenuItem("Private Chat");
 	        privChatItem.addActionListener(this);
 	        add(privChatItem);
@@ -62,7 +60,7 @@ public class UserMenu extends JPopupMenu implements ActionListener {
 		else {
 			for(int i=0; i<color.length; i++) {
 				if(arg0.getSource().equals(color[i])) {
-					main.setUserColor(localClient, main.getColor(i));
+					main.setUserColor(otherClient, main.getColor(i));
 				}
 			}
 		}

@@ -22,12 +22,14 @@ import javax.swing.event.ChangeListener;
 
 @SuppressWarnings("serial")
 public class PreferencesMenu extends JFrame implements ActionListener, ChangeListener {
-	private JLabel[] labels = new JLabel[3];
+	private JLabel[] labels = new JLabel[4];
 	private JButton doneButton;
 	
     private JComboBox<String> areaColor;
     private String[] areaStrings;
-    		
+    
+    private JColorChooser textColor;
+    
     private JCheckBox rainbowMode;
     
     private JColorChooser bgColor;
@@ -40,7 +42,7 @@ public class PreferencesMenu extends JFrame implements ActionListener, ChangeLis
         setLayout(new BorderLayout());
         
         JPanel panel = new JPanel();
-        panel.setLayout(new GridLayout(2,3));
+        panel.setLayout(new GridLayout(3,3));
         
         labels[0] = new JLabel("Text Area Coloring: ");
         panel.add(labels[0]);
@@ -57,20 +59,30 @@ public class PreferencesMenu extends JFrame implements ActionListener, ChangeLis
         labels[2] = new JLabel("Alternative Rainbow Mode:");
         panel.add(labels[2]);
         
-        labels[1] = new JLabel("Background Color: ");
-        panel.add(labels[1]);
+        labels[3] = new JLabel("Text Coloring: ");
+        panel.add(labels[3]);
         
-        bgColor = new JColorChooser(Color.GRAY);
-        bgColor.getSelectionModel().addChangeListener(this);
-        AbstractColorChooserPanel[] panels = { new MyChooserPanel() }; 
-        bgColor.setChooserPanels(panels);
-        bgColor.setPreviewPanel(new JPanel());
-        panel.add(bgColor, BorderLayout.CENTER);
+        textColor = new JColorChooser(Color.GRAY);
+        textColor.getSelectionModel().addChangeListener(this);
+        AbstractColorChooserPanel[] panels = { new MyChooserPanel(2) }; 
+        textColor.setChooserPanels(panels);
+        textColor.setPreviewPanel(new JPanel());
+        panel.add(textColor, BorderLayout.CENTER);
         
         rainbowMode = new JCheckBox();
         rainbowMode.addChangeListener(this);
         rainbowMode.setSelected(main.getAltRBMode());
         panel.add(rainbowMode);
+        
+        labels[1] = new JLabel("Background Color: ");
+        panel.add(labels[1]);
+        
+        bgColor = new JColorChooser(Color.GRAY);
+        bgColor.getSelectionModel().addChangeListener(this);
+        AbstractColorChooserPanel[] panels2 = { new MyChooserPanel(1) }; 
+        bgColor.setChooserPanels(panels2);
+        bgColor.setPreviewPanel(new JPanel());
+        panel.add(bgColor, BorderLayout.CENTER);
         
         add(panel, BorderLayout.CENTER);
         
@@ -100,20 +112,41 @@ public class PreferencesMenu extends JFrame implements ActionListener, ChangeLis
 		if(arg0.getSource().equals(rainbowMode)) {
 			main.setAltRainBowMode(rainbowMode.isSelected());
 		}
-		main.setBGColor(bgColor.getColor());
+		if(arg0.getSource().equals(bgColor.getSelectionModel())) {
+			main.setBGColor(bgColor.getColor());
+		}
+		if(arg0.getSource().equals(textColor.getSelectionModel())) {
+			main.setChatFGColor(textColor.getColor());
+		}
 	}
 }
 
 @SuppressWarnings("serial")
 class MyChooserPanel extends AbstractColorChooserPanel {
+	private int panel;
+	
+	public MyChooserPanel(int panel) {
+		this.panel = panel;
+	}
+	
 	public void buildChooser() {
-		setLayout(new GridLayout(2, 3));
-	    makeAddButton("Light Gray", Color.LIGHT_GRAY);
-	    makeAddButton("Light Green", Color.getColor("0x69CE50"));
-	    makeAddButton("Light Blue", Color.getHSBColor(168, 56, 56));
-	    makeAddButton("Light Red", Color.getHSBColor(0, 56, 56));
-	    makeAddButton("Light Yellow", Color.getHSBColor(51, 56, 56));
-	    makeAddButton("Light Purple", Color.getHSBColor(296, 56, 56));
+		if(panel == 1) {
+			setLayout(new GridLayout(2, 3));
+			makeAddButton("Light Gray", Color.LIGHT_GRAY);
+			makeAddButton("Light Green", Color.getColor("0x69CE50"));
+			makeAddButton("Light Blue", Color.getHSBColor(168, 56, 56));
+			makeAddButton("Light Red", Color.getHSBColor(0, 56, 56));
+			makeAddButton("Light Yellow", Color.getHSBColor(51, 56, 56));
+			makeAddButton("Light Purple", Color.getHSBColor(296, 56, 56));
+		}
+		if(panel == 2) {
+			setLayout(new GridLayout(2, 3));
+			makeAddButton("Black", Color.BLACK);
+			makeAddButton("White", Color.WHITE);
+			makeAddButton("Red", Color.RED);
+			makeAddButton("Green", Color.GREEN);
+			makeAddButton("Blue", Color.BLUE);
+		}
 	}
 
 	public void updateChooser() { }

@@ -37,6 +37,8 @@ public class MainGUI extends JFrame implements ActionListener, KeyListener, Mous
 	private volatile boolean rainbowMode = false;
 	private boolean altRBMode = false;
 	
+	private Color chatFG;
+	
 	private HashMap<Integer, PrivateChat> chatMap = new HashMap<Integer, PrivateChat>();
 	private HashMap<Client, Integer> tabMap = new HashMap<Client, Integer>();
 	
@@ -553,6 +555,7 @@ public class MainGUI extends JFrame implements ActionListener, KeyListener, Mous
 			case G2B: return ColorArrays.gray2blue[index];
 			case R2B: return ColorArrays.red2blue[index];
 			case LB2G: return ColorArrays.lblue2green[index];
+			case G2BL: return ColorArrays.gray2black[index];
 			default: return "000000";
 		}
 	}
@@ -566,12 +569,21 @@ public class MainGUI extends JFrame implements ActionListener, KeyListener, Mous
 			case G2B: return ColorArrays.gray2blue.length;
 			case R2B: return ColorArrays.red2blue.length;
 			case LB2G: return ColorArrays.lblue2green.length;
+			case G2BL: return ColorArrays.gray2black.length;
 			default: return 0;
 		}
 	}
 	
 	public int getNumberofColoringArrays() {
 		return ColorArrays.COLORING_ARRAYS;
+	}
+	
+	public void setChatFGColor(Color color) {
+		chatFG = color;
+	}
+	
+	public Color getChatFGColor() {
+		return chatFG;
 	}
 	
 	public void setBGColor(Color color) {
