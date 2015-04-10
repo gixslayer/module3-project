@@ -136,7 +136,6 @@ public final class ClientCache implements Subscribable<CacheCallbacks>{
 				return;
 			}
 			
-			recentlyDisconnected.put(client, DateUtils.getEpochTime());
 			lostRouteClients = removeClient(client);
 		}
 		
@@ -248,6 +247,7 @@ public final class ClientCache implements Subscribable<CacheCallbacks>{
 		List<Client> lostRouteClients = new ArrayList<Client>();
 		
 		cache.remove(client);
+		recentlyDisconnected.put(client, DateUtils.getEpochTime());
 		
 		for(Client c : cache) {
 			if(c.isIndirect() && c.getRoute().equals(client)) {
