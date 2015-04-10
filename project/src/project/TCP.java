@@ -376,4 +376,15 @@ public class TCP {
 		newPacket.setHeader(packet);
 		ni.send(destAddress, newPacket);
 	}
+	
+	public static void sendEmptyPacket(PacketHeader packet, int destination) {
+		InetAddress destAddress = null;
+		try {
+			destAddress = InetAddress.getByName("192.168.5."+destination);
+		} catch (UnknownHostException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+		ni.send(destAddress, packet.getBytes());
+	}
 }
