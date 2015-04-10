@@ -133,11 +133,11 @@ class MyChooserPanel extends AbstractColorChooserPanel {
 		if(panel == 1) {
 			setLayout(new GridLayout(2, 3));
 			makeAddButton("Light Gray", Color.LIGHT_GRAY);
-			makeAddButton("Light Green", Color.getColor("0x69CE50"));
-			makeAddButton("Light Blue", Color.getHSBColor(168, 56, 56));
-			makeAddButton("Light Red", Color.getHSBColor(0, 56, 56));
-			makeAddButton("Light Yellow", Color.getHSBColor(51, 56, 56));
-			makeAddButton("Light Purple", Color.getHSBColor(296, 56, 56));
+			makeAddButton("Light Green", Color.getHSBColor(0.108f, 0.56f, 0.56f));
+			makeAddButton("Light Blue", Color.getHSBColor(0.168f, 0.56f, 0.56f));
+			makeAddButton("Light Red", Color.getHSBColor(0f, 0.56f, 0.56f));
+			makeAddButton("Light Yellow", Color.getHSBColor(0.51f, 0.56f, 0.56f));
+			makeAddButton("Light Purple", Color.getHSBColor(0.296f, 0.56f, 0.56f));
 		}
 		if(panel == 2) {
 			setLayout(new GridLayout(2, 3));
