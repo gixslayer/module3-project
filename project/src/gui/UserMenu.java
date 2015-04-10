@@ -17,12 +17,10 @@ public class UserMenu extends JPopupMenu implements ActionListener {
     private JMenu chooseColor;
     private JMenuItem[] color = new JMenuItem[7];
     private Client otherClient;
-    private Client localClient;
     private MainGUI main;
     
     public UserMenu(Client otherClient, Client localClient, MainGUI main){
         this.otherClient = otherClient;
-        this.localClient = localClient;
         this.main = main;
         chooseColor = new JMenu("Choose Color");
         for(int i=0; i<color.length; i++) {

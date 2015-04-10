@@ -82,15 +82,16 @@ public class MainGUI extends JFrame implements ActionListener, KeyListener, Mous
 		super("Chat");
 		app = new Application(name);
 		app.subscribe(this);
-		app.start();
 		localClient = app.getLocalClient();
 		init();
+		app.start();
 	}
 	
 	/**
 	 * Inits the GUI and sets everything up. Creates the window and connects the User.
 	 */
 	public void init() {
+		peopleList = new DefaultListModel<Client>();
 		loadResources();
 		
 		animation = new AnimationThread();
@@ -103,7 +104,6 @@ public class MainGUI extends JFrame implements ActionListener, KeyListener, Mous
 		c = getContentPane();
 		c.setLayout(new BorderLayout());
 		
-		peopleList = new DefaultListModel<Client>();
 		list = new DefaultListModel<ChatLine>();
 		
 		tabPane = new JTabbedPane();

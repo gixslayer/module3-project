@@ -58,6 +58,7 @@ public class PreferencesMenu extends JFrame implements ActionListener, ChangeLis
         }
         
         areaColor = new JComboBox<String>(areaStrings);
+        areaColor.setPreferredSize(new Dimension(30, 10));
         areaColor.addActionListener(this);
         panel.add(areaColor);
         
