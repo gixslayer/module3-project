@@ -44,6 +44,7 @@ public class MainGUI extends JFrame implements ActionListener, KeyListener, Mous
 	private JMenu optionMenu;
 	private JMenuItem preferencesItem;
 	private JMenuItem rainbowModeItem;
+	private JMenuItem nameChangeItem;
 	private JMenu otherMenu;
 	private JMenuItem fileItem;
 	
@@ -54,9 +55,10 @@ public class MainGUI extends JFrame implements ActionListener, KeyListener, Mous
 	private JList<Client> peopleArea;
 	private JScrollPane peopleScrollPane;
 	
-	private DefaultListModel<String> list;
-	private JList<String> receiveArea;
+	private DefaultListModel<ChatLine> list;
+	private JList<ChatLine> receiveArea;
 	private JScrollPane scrollPane;
+	private Client botClient;
 	
 	private JButton sendButton;
 	
@@ -64,7 +66,6 @@ public class MainGUI extends JFrame implements ActionListener, KeyListener, Mous
 	private Icon closeIcon;
 	
 	private Application app;
-	private Alice alice;
 	
 	private Thread rbThread;
 	private AnimationThread animation;
@@ -99,7 +100,7 @@ public class MainGUI extends JFrame implements ActionListener, KeyListener, Mous
 		c.setLayout(new BorderLayout());
 		
 		peopleList = new DefaultListModel<Client>();
-		list = new DefaultListModel<String>();
+		list = new DefaultListModel<ChatLine>();
 		
 		tabPane = new JTabbedPane();
 		
@@ -110,7 +111,7 @@ public class MainGUI extends JFrame implements ActionListener, KeyListener, Mous
 		peopleArea.setForeground(Color.BLACK);
 		peopleScrollPane = new JScrollPane(peopleArea);
 		
-		receiveArea = new JList<String>(list);
+		receiveArea = new JList<ChatLine>(list);
 		receiveArea.setCellRenderer(new CustomCellRenderer(this, animation));
 		scrollPane = new JScrollPane(receiveArea);
 	
@@ -156,9 +157,10 @@ public class MainGUI extends JFrame implements ActionListener, KeyListener, Mous
 		c.add(tabPane, BorderLayout.CENTER);
 		c.add(sideBar, BorderLayout.WEST);
 		
+		botClient = new Client("[BOT]", localClient.getAddress());
+		setUserColor(botClient, "Red");
+		
 		addUser(localClient);
-		//addUser(new Client("Alice"));
-		//alice = new Alice(this, "Alice");
 		
 		menu = new JMenuBar();
 		
@@ -170,6 +172,9 @@ public class MainGUI extends JFrame implements ActionListener, KeyListener, Mous
 		rainbowModeItem = new JMenuItem("Rainbow Mode");
 		rainbowModeItem.addActionListener(this);
 		
+		nameChangeItem = new JMenuItem("Change Name");
+		nameChangeItem.addActionListener(this);
+		
 		otherMenu = new JMenu("Other");
 		
 		fileItem = new JMenuItem("Open file...");
@@ -177,6 +182,7 @@ public class MainGUI extends JFrame implements ActionListener, KeyListener, Mous
 		
 		optionMenu.add(preferencesItem);
 		optionMenu.add(rainbowModeItem);
+		optionMenu.add(nameChangeItem);
 		menu.add(optionMenu);
 		otherMenu.add(fileItem);
 		menu.add(otherMenu);
@@ -199,7 +205,7 @@ public class MainGUI extends JFrame implements ActionListener, KeyListener, Mous
 	 */
 	public void removeUser(Client client) {
 		peopleList.removeElement(client);
-		addToScreen("[LEAVE]: User " + client.getName() + " has left the chat room.");
+		addToScreen(botClient, "User " + client.getName() + " has left the chat room.");
 	}
 	
 	/**
@@ -211,7 +217,7 @@ public class MainGUI extends JFrame implements ActionListener, KeyListener, Mous
 		peopleArea.addMouseListener(this);
 		peopleArea.ensureIndexIsVisible(peopleList.getSize()-1);
 		setUserColor(client, colors[(int)(Math.random()*7)]);
-		addToScreen("[JOIN]: User <font color=" + getUserColor(client) + ">" + client.getName() + "</font> entered the chat room.");
+		addToScreen(botClient, "User <font color=" + getUserColor(client) + ">" + client.getName() + "</font> entered the chat room.");
 	}
 	
 	/**
@@ -275,8 +281,8 @@ public class MainGUI extends JFrame implements ActionListener, KeyListener, Mous
 	 * Adds a line of text to the text area.
 	 * @param str the line of text to add.
 	 */
-	public void addToScreen(String str) {
-		list.addElement(str);
+	public void addToScreen(Client client, String str) {
+		list.addElement(new ChatLine(client, str));
 		receiveArea.ensureIndexIsVisible(list.getSize() -1);
 		if(list.getSize() > LIST_MAX_SIZE) {
 			list.removeElement(list.firstElement());
@@ -332,7 +338,7 @@ public class MainGUI extends JFrame implements ActionListener, KeyListener, Mous
 			}
 		}
 		else {
-			addToScreen(client.getName() + ": " + str);
+			addToScreen(client, str);
 			if(tabPane.getSelectedIndex() != 0) {
 				JPanel mainChat = (JPanel)tabPane.getComponentAt(0);
 				tabPane.remove(0);
@@ -577,6 +583,10 @@ public class MainGUI extends JFrame implements ActionListener, KeyListener, Mous
 		return "NOPE!";
 	}
 	
+	public Client getBot() {
+		return botClient;
+	}
+	
 	/**
 	 * Repaints all text areas.
 	 */
@@ -617,11 +627,17 @@ public class MainGUI extends JFrame implements ActionListener, KeyListener, Mous
 			}
 		}
 		
+		if(e.getSource().equals(nameChangeItem)) {
+			String name = JOptionPane.showInputDialog("Please input your new name.", localClient.getName());
+			addToScreen(botClient, "HAH! Like hell you'll be named: " + name + "!");
+			localClient.setName(name);
+		}
+		
 		if(e.getSource().equals(fileItem)) {
 			JFileChooser chooser = new JFileChooser();
 		    int returnVal = chooser.showOpenDialog(this);
 		    if(returnVal == JFileChooser.APPROVE_OPTION) {
-		       addToScreen("You chose to open this file: " + chooser.getSelectedFile().getName());
+		       addToScreen(botClient, "You chose to open this file: " + chooser.getSelectedFile().getName());
 		    }
 		}
 	}

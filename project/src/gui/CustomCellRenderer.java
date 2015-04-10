@@ -7,6 +7,8 @@ import javax.swing.JLabel;
 import javax.swing.JList;
 import javax.swing.ListCellRenderer;
 
+import client.Client;
+
 @SuppressWarnings("serial")
 public class CustomCellRenderer extends JLabel implements ListCellRenderer<Object> {
 	private MainGUI main;
@@ -20,7 +22,10 @@ public class CustomCellRenderer extends JLabel implements ListCellRenderer<Objec
     }
 
     public Component getListCellRendererComponent(JList<?> list, Object value, int index, boolean isSelected, boolean cellHasFocus) {
-        setText(value.toString());
+        ChatLine cLine = (ChatLine)value;
+        Client client = cLine.getClient();
+        String line = cLine.getLine();
+        
         Color background = Color.WHITE;
         Color foreground = Color.BLACK;
         
@@ -55,16 +60,8 @@ public class CustomCellRenderer extends JLabel implements ListCellRenderer<Objec
        	 	else
        	 		background = Color.decode("0xADADAD");
         }
-        
-        if(value.toString().startsWith("[JOIN]:")) 
-       	 	setText("<html><font color=blue>[JOIN]:</font>" + value.toString().split(":")[1] + "</html>");
-        
-        else if(value.toString().startsWith("[LEAVE]:")) 
-       	 	setText("<html><font color=red>" + value.toString().split(":")[0] + "</font>:" + value.toString().split(":")[1] + "</html>");
-        else {
-        	//TODO: COLORS
-       	 	setText((String)value);
-        }
+       
+        setText("<html><font color=" + main.getUserColor(client) + ">"+ client.getName() + "</font>: " + line);
        	 
         setBackground(background);
         setForeground(foreground);
