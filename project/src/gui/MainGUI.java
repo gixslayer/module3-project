@@ -3,6 +3,7 @@ package gui;
 import javax.swing.*;
 
 import client.Client;
+import filetransfer.FTHandle;
 import application.Application;
 import application.ApplicationCallbacks;
 
@@ -57,8 +58,6 @@ public class MainGUI extends JFrame implements ActionListener, KeyListener, Mous
 	private JMenuItem rainbowModeItem;
 	private JMenuItem nameChangeItem;
 	private JMenuItem createGroupItem;
-	private JMenu otherMenu;
-	private JMenuItem fileItem;
 	
 	private JTabbedPane tabPane;
 	private JTextField typeField;
@@ -80,6 +79,8 @@ public class MainGUI extends JFrame implements ActionListener, KeyListener, Mous
 	private Icon closeIcon;
 	
 	private Application app;
+	
+	private ArrayList<FTHandle> fileHandles = new ArrayList<FTHandle>();
 	
 	private Thread rbThread;
 	private AnimationThread animation;
@@ -195,18 +196,11 @@ public class MainGUI extends JFrame implements ActionListener, KeyListener, Mous
 		createGroupItem = new JMenuItem("Create/Join Group");
 		createGroupItem.addActionListener(this);
 		
-		otherMenu = new JMenu("Other");
-		
-		fileItem = new JMenuItem("Open file...");
-		fileItem.addActionListener(this);
-		
 		optionMenu.add(preferencesItem);
 		optionMenu.add(rainbowModeItem);
 		optionMenu.add(nameChangeItem);
 		optionMenu.add(createGroupItem);
 		menu.add(optionMenu);
-		otherMenu.add(fileItem);
-		menu.add(otherMenu);
 		
 		setJMenuBar(menu);
 		
@@ -355,7 +349,18 @@ public class MainGUI extends JFrame implements ActionListener, KeyListener, Mous
 	 * @param str the line of text to add.
 	 */
 	public void addToScreen(Client client, String str) {
-		list.addElement(new ChatLine(client, str));
+		list.addElement(new TextLine(client, str));
+		receiveArea.ensureIndexIsVisible(list.getSize() -1);
+		if(list.getSize() > LIST_MAX_SIZE) {
+			list.removeElement(list.firstElement());
+		}
+	}
+	
+	//TODO: Make progress go from 0 to 100.
+	public void addToScreen(Client sender, Client receiver, FTHandle handle, float progress) {
+		FileLine f = new FileLine(sender, receiver, handle.getFileName(), progress);
+		f.setLine(changeText(f.getLine()));
+		list.addElement(f);
 		receiveArea.ensureIndexIsVisible(list.getSize() -1);
 		if(list.getSize() > LIST_MAX_SIZE) {
 			list.removeElement(list.firstElement());
@@ -643,6 +648,10 @@ public class MainGUI extends JFrame implements ActionListener, KeyListener, Mous
 		return null;
 	}
 	
+	public void sendFile(File file, Client client) {
+		app.onRequestFileTransfer(client, file.getName());
+	}
+	
 	/**
 	 * Repaints all text areas.
 	 */
@@ -712,14 +721,6 @@ public class MainGUI extends JFrame implements ActionListener, KeyListener, Mous
 				groupList.add(g);
 				addGroupChat(g);
 			}
-		}
-		
-		if(e.getSource().equals(fileItem)) {
-			JFileChooser chooser = new JFileChooser();
-		    int returnVal = chooser.showOpenDialog(this);
-		    if(returnVal == JFileChooser.APPROVE_OPTION) {
-		       addToScreen(botClient, "You chose to open this file: " + chooser.getSelectedFile().getName());
-		    }
 		}
 	}
 
@@ -935,5 +936,63 @@ public class MainGUI extends JFrame implements ActionListener, KeyListener, Mous
 				catch (InterruptedException e) { }
 			}
 		}
+	}
+
+	@Override
+	public void onFileTransferRequest(FTHandle handle) {
+		if (JOptionPane.showConfirmDialog(this, handle.getSender().getName() + " would like to send you " + handle.getFileName() + "."
+				+ System.lineSeparator() + "This file is " + handle.getFileSize() + " bytes long."
+				+ System.lineSeparator() + "Do you accept?", "File Transfer", 
+				JOptionPane.YES_NO_OPTION, JOptionPane.QUESTION_MESSAGE) == JOptionPane.YES_OPTION) {
+			JFileChooser chooser = new JFileChooser();
+		    int returnVal = chooser.showOpenDialog(this);
+		    if(returnVal == JFileChooser.APPROVE_OPTION) {
+		    	app.onReplyToFileTransfer(handle, true, chooser.getSelectedFile().getName());
+		    }
+		    else
+		    	app.onReplyToFileTransfer(handle, false, null);
+		}
+		else 
+			app.onReplyToFileTransfer(handle, false, null);
+	}
+
+	@Override
+	public void onFileTransferStarted(FTHandle handle) {
+		fileHandles.add(handle);
+		addToScreen(handle.getSender(), handle.getReceiver(), handle, 0);
+	}
+
+	@Override
+	public void onFileTransferRejected(FTHandle handle) {
+		
+	}
+
+	@Override
+	public void onFileTransferCompleted(FTHandle handle) {
+		if(handle.getReceiver().equals(localClient)) {
+			if(JOptionPane.showConfirmDialog(this, "The transfer of " + handle.getFileName() + " from " + handle.getSender().getName() + " has succeeded." + System.lineSeparator() + "Do you want to open it?") == JOptionPane.YES_OPTION) {
+				File file = new File(handle.getSavePath());
+				try {
+					Desktop.getDesktop().browse(file.toURI());
+				} catch (IOException e) { }
+			}
+		}
+		if(handle.getSender().equals(localClient)) JOptionPane.showMessageDialog(this, "The transfer of " + handle.getFileName() + " to " + handle.getReceiver().getName() + " has succeeded.");
+	}
+
+	@Override
+	public void onFileTransferFailed(FTHandle handle) {
+		if(handle.getReceiver().equals(localClient)) JOptionPane.showMessageDialog(this, "The transfer of " + handle.getFileName() + " from " + handle.getSender().getName() + " has failed. Please try again.");
+		if(handle.getSender().equals(localClient)) JOptionPane.showMessageDialog(this, "The transfer of " + handle.getFileName() + " to " + handle.getReceiver().getName() + " has failed. Please try again.");
+	}
+
+	@Override
+	public void onFileTransferProgress(FTHandle handle, float progress) {
+		addToScreen(handle.getSender(), handle.getReceiver(), handle, progress);
+	}
+
+	@Override
+	public void onFileTransferCancelled(FTHandle handle) {
+		
 	}
 }

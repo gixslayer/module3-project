@@ -72,7 +72,7 @@ public class PrivateChat extends JPanel implements ActionListener, KeyListener, 
 	}
 	
 	public void addToScreen(Client client, String str) {
-		list.addElement(new ChatLine(client, str));
+		list.addElement(new TextLine(client, str));
 		receiveArea.ensureIndexIsVisible(list.getSize() -1);
 		if(list.getSize() > MainGUI.LIST_MAX_SIZE) {
 			list.removeElement(list.firstElement());

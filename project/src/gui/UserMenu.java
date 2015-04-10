@@ -3,6 +3,7 @@ package gui;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 
+import javax.swing.JFileChooser;
 import javax.swing.JMenu;
 import javax.swing.JMenuItem;
 import javax.swing.JPopupMenu;
@@ -14,6 +15,7 @@ public class UserMenu extends JPopupMenu implements ActionListener {
 	private JMenuItem privChatItem;
     private JMenuItem pokeItem;
     private JMenuItem lastSeen;
+    private JMenuItem fileItem;
     private JMenu chooseColor;
     private JMenuItem[] color = new JMenuItem[7];
     private Client otherClient;
@@ -41,6 +43,10 @@ public class UserMenu extends JPopupMenu implements ActionListener {
 	        lastSeen = new JMenuItem("Last Seen");
 	        lastSeen.addActionListener(this);
 	        add(lastSeen);
+	        
+	        fileItem = new JMenuItem("Send File");
+	        fileItem.addActionListener(this);
+	        add(fileItem);
         }
     }
     
@@ -54,6 +60,13 @@ public class UserMenu extends JPopupMenu implements ActionListener {
 		}
 		else if(arg0.getSource().equals(lastSeen)) {
 			main.addToScreen(main.getBot(), otherClient + " was last seen at: " + main.getLastSeen(otherClient));
+		}
+		else if(arg0.getSource().equals(fileItem)) {
+			JFileChooser chooser = new JFileChooser();
+		    int returnVal = chooser.showOpenDialog(this);
+		    if(returnVal == JFileChooser.APPROVE_OPTION) {
+		    	main.sendFile(chooser.getSelectedFile(), otherClient);
+		    }
 		}
 		else {
 			for(int i=0; i<color.length; i++) {
