@@ -2,20 +2,30 @@ package project;
 
 import java.util.TimerTask;
 
+import protocol.Packet;
 import protocol.PacketHeader;
 
 public class AckTimeOut extends TimerTask {
 
-	private PacketHeader packet;
+	private Packet packet;
+	private PacketHeader header;
 	
-	public AckTimeOut(PacketHeader packet) {
+	public AckTimeOut(Packet packet) {
 		this.packet = packet;
+	}
+	
+	public AckTimeOut(PacketHeader header) {
+		this.header = header;
 	}
 	
 	@Override
 	public void run() {
 		// TODO Auto-generated method stub
-		TCP.ackTimeOut(packet);
+		if(packet != null) {
+			TCP.ackTimeOut(packet);
+		} else if(header != null) {
+			TCP.ackTimeOut(header);
+		}
 		
 		this.cancel();
 	}
