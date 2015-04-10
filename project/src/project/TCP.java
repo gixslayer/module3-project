@@ -140,13 +140,14 @@ public class TCP {
 			if(p.getSeq()+p.getLength() == packet.getAck()) {
 				//This is packet to remove
 				toDelete = p;
-				System.out.println("IFFFFFFFFFFFFFFFf");
 				break;
 			}
 		}
 		
 		
 		if(toDelete != null) {
+			timerOfPacket.get(toDelete).cancel();
+			timerOfPacket.remove(toDelete);
 			System.out.println("DELETING PACKET");
 			buffer.remove(toDelete);
 			packetsInBuffer.put(packet.getSource(), buffer);
