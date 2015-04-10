@@ -14,6 +14,7 @@ public class TabActionListener implements ActionListener {
 	
 	@Override
 	public void actionPerformed(ActionEvent e) {
+		main.removeTab(index);
 		main.getTabPane().remove(index);
 	}
 }

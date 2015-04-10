@@ -261,6 +261,7 @@ public class MainGUI extends JFrame implements ActionListener, KeyListener, Mous
 			return;
 		}
 		JPanel groupChat = new JPanel();
+		group.joinGroup(localClient);
 		groupChat.setLayout(new BorderLayout());
 		GroupChat gChat = new GroupChat(localClient, group, this, app, animation);
 		groupChat.add(gChat, BorderLayout.CENTER);
@@ -323,6 +324,21 @@ public class MainGUI extends JFrame implements ActionListener, KeyListener, Mous
 
 		tabPane.setTabComponentAt(i, tabPanel);
 		tabClose.addActionListener(new TabActionListener(i, this));
+	}
+	
+	@SuppressWarnings("unused")
+	private void removeTab(int index) {
+		if(!chatMap.get(index).isPrivate()) {
+			Group group = ((GroupChat)chatMap.get(index)).getGroup();
+			group.leaveGroup(localClient);
+			groupList.remove(group);
+			groupMap.remove(group);
+		}
+		else {
+			PrivateChat priv = ((PrivateChat)chatMap.get(index));
+			tabMap.remove(priv);
+		}
+		chatMap.remove(index);
 	}
 	
 	/**
