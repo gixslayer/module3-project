@@ -40,10 +40,11 @@ public class TCP {
 		CLOSED, SYNSENT, SYN_RECEIVED, ESTABLISHED, FIN_WAIT, LAST_ACK, TIME_WAIT;
 	}
 	
-	public static void handlePacket(NetworkInterface ni, InetAddress myAddr, PacketHeader packet) {
+	public static boolean handlePacket(NetworkInterface ni, InetAddress myAddr, PacketHeader packet) {
 		init(inetToInt(myAddr), packet.getSource());
 		int destAddress = packet.getSource();
 		TCP.ni = ni;
+		boolean answer = true;
 		if(packet.getDestination() == myAddress) {
 			System.out.println("From:" + packet.getSource() + ", seq: " + packet.getSeq() +", ack: " + packet.getAck());
 			if(packetsInBuffer.get(destAddress) != null) {
@@ -108,8 +109,13 @@ public class TCP {
 						sendAck(packet);
 					}
 				}
+			} else {
+				answer = false;
 			}
+			
+			
 		}
+		return answer;
 	}
 	
 	private static void ackReceivedDuringHandshake(PacketHeader packet) {
