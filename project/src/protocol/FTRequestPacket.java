@@ -1,9 +1,9 @@
 package protocol;
 
 public final class FTRequestPacket extends Packet {
-	private String name; // File name (no extra path, just name.ext)
-	private long size; // File size in bytes
-	private int id; // Unique id used to reply to this request
+	private String fileName; // File name (no extra path, just name.ext)
+	private long fileSize; // File size in bytes
+	private int requestId; // Unique id used to reply to this request
 	
 	public FTRequestPacket() {
 		super(Packet.TYPE_FT_REQUEST);

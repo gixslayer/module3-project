@@ -1,13 +1,10 @@
 package protocol;
 
-public final class FTDataPacket extends Packet {
+public final class FTCancelPacket extends Packet {
 	private int transferId;
-	private long offset;
-	private int length;
-	private byte[] data;
-	
-	public FTDataPacket() {
-		super(Packet.TYPE_FT_DATA);
+
+	public FTCancelPacket() {
+		super(Packet.TYPE_FT_CANCEL);
 	}
 
 	@Override

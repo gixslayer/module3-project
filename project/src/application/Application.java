@@ -1,5 +1,6 @@
 package application;
 
+import filetransfer.FTHandle;
 import gui.GUICallbacks;
 
 import java.net.InetAddress;
@@ -188,6 +189,24 @@ public class Application implements NetworkCallbacks, MulticastCallbacks, CacheC
 		GroupChatPacket packet = new GroupChatPacket(localClient, groupName, message);
 		
 		sendReliableToAll(packet);
+	}
+	
+	@Override
+	public FTHandle onRequestFileTransfer(Client dest, String filePath) {
+		// TODO Auto-generated method stub
+		return null;
+	}
+
+	@Override
+	public void onReplyToFileTransfer(FTHandle handle, boolean response) {
+		// TODO Auto-generated method stub
+		
+	}
+
+	@Override
+	public void onCancelFileTransfer(FTHandle handle) {
+		// TODO Auto-generated method stub
+		
 	}
 
 	//-------------------------------------------

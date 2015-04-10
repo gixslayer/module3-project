@@ -16,6 +16,7 @@ public abstract class Packet {
 	public static final int TYPE_FT_REQUEST = 8;
 	public static final int TYPE_FT_REPLY = 9;
 	public static final int TYPE_FT_DATA = 10;
+	public static final int TYPE_FT_CANCEL = 11;
 	
 	private final int type;
 	private InetAddress sourceAddress;
