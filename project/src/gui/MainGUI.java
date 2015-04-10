@@ -202,6 +202,7 @@ public class MainGUI extends JFrame implements ActionListener, KeyListener, Mous
 		optionMenu.add(preferencesItem);
 		optionMenu.add(rainbowModeItem);
 		optionMenu.add(nameChangeItem);
+		optionMenu.add(createGroupItem);
 		menu.add(optionMenu);
 		otherMenu.add(fileItem);
 		menu.add(otherMenu);
