@@ -7,6 +7,7 @@ import java.net.InetAddress;
 import client.CacheCallbacks;
 import client.Client;
 import client.ClientCache;
+import project.TCP;
 import protocol.AnnouncePacket;
 import protocol.CannotRoutePacket;
 import protocol.ChatPacket;
@@ -61,6 +62,7 @@ public class Application implements NetworkCallbacks, MulticastCallbacks, CacheC
 		// TODO: Reconsider how we want to handle this (call it here, reliable/unreliable etc).
 		sendToAll(new DisconnectPacket(localClient));
 		
+		TCP.stopConnections();
 		announceThread.close();
 		mci.close();
 		ni.stop();
