@@ -30,7 +30,7 @@ public class MainGUI extends JFrame implements ActionListener, KeyListener, Mous
 	private static final Color BGCOLOR = Color.LIGHT_GRAY;
 	
 	public static final int LIST_MAX_SIZE = 300;
-	private static final int HISTORY_MAX_SIZE = 20;
+	public static final int HISTORY_MAX_SIZE = 20;
 	
 	private static final String[] colors = {"Red", "Blue", "Green", "Yellow", "Purple", "Orange", "Black"};
 	

@@ -13,7 +13,6 @@ import java.awt.event.KeyListener;
 
 @SuppressWarnings("serial")
 public class PrivateChat extends JPanel implements ActionListener, KeyListener, Chat {
-	//private Container c;
 
 	private JTextField typeField;
 	
@@ -22,6 +21,9 @@ public class PrivateChat extends JPanel implements ActionListener, KeyListener, 
 	private JScrollPane scrollPane;
 	
 	private JButton sendButton;
+	
+	private String[] history = new String[0];
+	private int currentHistory;
 	
 	private Client localClient;
 	private Client otherClient;
@@ -81,6 +83,7 @@ public class PrivateChat extends JPanel implements ActionListener, KeyListener, 
 		String txt = typeField.getText();
 		if(main.IllegalCharCheck(txt)) return;
 		addToScreen(localClient, txt);
+		addToHistory(txt);
 		typeField.setText("");
 		
 		app.onSendPrivateMessage(otherClient, txt);
@@ -97,6 +100,32 @@ public class PrivateChat extends JPanel implements ActionListener, KeyListener, 
 	public Client getOtherClient() {
 		return otherClient;
 	}
+	
+	private void addToHistory(String str) {
+		String[] tmp = new String[0];
+		if(history.length+1 <= main.HISTORY_MAX_SIZE) {
+			tmp = new String[history.length+1];
+		}
+		else {
+			tmp = new String[history.length];
+		}
+		tmp[0] = str;
+		if(history.length+1 <= main.HISTORY_MAX_SIZE) System.arraycopy(history, 0, tmp, 1, history.length);
+		else System.arraycopy(history, 0, tmp, 1, history.length-1);
+		history = tmp;
+	}
+	
+	private String getFromHistory(int index) {
+		if(index >= history.length) {
+			currentHistory = history.length-1;
+			return history[history.length-1];
+		}
+		if(index < 0) {
+			currentHistory = 0;
+			return history[0];
+		}
+		else return history[index];
+	}
 
 	@Override
 	public void actionPerformed(ActionEvent e) {
@@ -108,8 +137,18 @@ public class PrivateChat extends JPanel implements ActionListener, KeyListener, 
 	@Override
 	public void keyPressed(KeyEvent arg0) {
 		if(arg0.getSource().equals(typeField)) {
-			if(arg0.getKeyCode() == KeyEvent.VK_ENTER) 
+			if(arg0.getKeyCode() == KeyEvent.VK_ENTER) {
 				sendText();
+				currentHistory = 0;
+			}
+			if(arg0.getKeyCode() == KeyEvent.VK_UP) {
+				typeField.setText(getFromHistory(currentHistory));
+				currentHistory++;
+			}
+			if(arg0.getKeyCode() == KeyEvent.VK_DOWN) {
+				currentHistory--;
+				typeField.setText(getFromHistory(currentHistory));
+			}
 		}
 	}
 
