@@ -59,32 +59,32 @@ x.x,(✖╭╮✖)
 *cj*,🃛
 *cq*,🃝
 *ck*,🃞
-*ha*,🂱
-*h2*,🂲
-*h3*,🂳
-*h4*,🂴
-*h5*,🂴
-*h6*,🂶
-*h7*,🂷
-*h8*,🂸
-*h9*,🂹
-*h10*,🂺
-*hj*,🂻
-*hq*,🂽
-*hk*,🂾
-*da*,🃁
-*d2*,🃂
-*d3*,🃃
-*d4*,🃄
-*d5*,🃅
-*d6*,🃆
-*d7*,🃇
-*d8*,🃈
-*d9*,🃉
-*d10*,🃊
-*dj*,🃋
-*dq*,🃍
-*dk*,🃎
+*ha*,<font size=20 color=red>🂱</font>
+*h2*,<font size=20 color=red>🂲</font>
+*h3*,<font size=20 color=red>🂳</font>
+*h4*,<font size=20 color=red>🂴</font>
+*h5*,<font size=20 color=red>🂴</font>
+*h6*,<font size=20 color=red>🂶</font>
+*h7*,<font size=20 color=red>🂷</font>
+*h8*,<font size=20 color=red>🂸</font>
+*h9*,<font size=20 color=red>🂹</font>
+*h10*,<font size=20 color=red>🂺</font>
+*hj*,<font size=20 color=red>🂻</font>
+*hq*,<font size=20 color=red>🂽</font>
+*hk*,<font size=20 color=red>🂾</font>
+*da*,<font size=20 color=red>🃁</font>
+*d2*,<font size=20 color=red>🃂</font>
+*d3*,<font size=20 color=red>🃃</font>
+*d4*,<font size=20 color=red>🃄</font>
+*d5*,<font size=20 color=red>🃅</font>
+*d6*,<font size=20 color=red>🃆</font>
+*d7*,<font size=20 color=red>🃇</font>
+*d8*,<font size=20 color=red>🃈</font>
+*d9*,<font size=20 color=red>🃉</font>
+*d10*,<font size=20 color=red>🃊</font>
+*dj*,<font size=20 color=red>🃋</font>
+*dq*,<font size=20 color=red>🃍</font>
+*dk*,<font size=20 color=red>🃎</font>
 *cardback*,🂠
 *bjoker*,🃏
-*rjoker*,🃟
+*rjoker*,<font size=20 color=red>🃟</font>

@@ -1,7 +1,7 @@
 package gui;
 
 public class ColorArrays {
-	public static final int COLORING_ARRAYS = 10;
+	public static final int COLORING_ARRAYS = 11;
 	
 	public static final String[] fiftyShades = {"E0E0E0", "DEDEDE", "DBDBDB", "D9D9D9", "D6D6D6", "D4D4D4", "D1D1D1", "CFCFCF",
 		"CCCCCC", "C9C9C9", "C7C7C7", "C4C4C4", "C2C2C2", "BFBFBF", "BDBDBD", "BABABA", "B8B8B8", "B5B5B5", "B3B3B3", "B0B0B0",
@@ -47,4 +47,6 @@ public class ColorArrays {
 		"272727","252525","242424","222222","212121","1F1F1F","1E1E1E","1C1C1C","1B1B1B","1A1A1A","181818","171717","151515",
 		"141414","121212","111111","0F0F0F","0E0E0E","0D0D0D","0B0B0B","0A0A0A","080808","070707","050505","040404","020202",
 		"010101","000000"};
+	
+	public static final String[] black = {"000000"};
 }

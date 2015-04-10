@@ -240,7 +240,6 @@ public class MainGUI extends JFrame implements ActionListener, KeyListener, Mous
 			BufferedReader in = new BufferedReader(new InputStreamReader(new FileInputStream(new File("res/smileys.txt")), "UTF-8"));
 			String check = "";
 			while((check = in.readLine()) != null) {
-				System.out.println(check);
 				checkTextStrings.add(check);
 			}
 			in.close();
@@ -516,6 +515,7 @@ public class MainGUI extends JFrame implements ActionListener, KeyListener, Mous
 			case R2B: return ColorArrays.red2blue[index];
 			case LB2G: return ColorArrays.lblue2green[index];
 			case G2BL: return ColorArrays.gray2black[index];
+			case BLACK: return ColorArrays.black[index];
 			default: return "000000";
 		}
 	}
@@ -530,6 +530,7 @@ public class MainGUI extends JFrame implements ActionListener, KeyListener, Mous
 			case R2B: return ColorArrays.red2blue.length;
 			case LB2G: return ColorArrays.lblue2green.length;
 			case G2BL: return ColorArrays.gray2black.length;
+			case BLACK: return ColorArrays.black.length;
 			default: return 0;
 		}
 	}
@@ -625,12 +626,10 @@ public class MainGUI extends JFrame implements ActionListener, KeyListener, Mous
 				currentHistory = 0;
 			}
 			if(arg0.getKeyCode() == KeyEvent.VK_UP) {
-				System.out.println(currentHistory);
 				typeField.setText(getFromHistory(currentHistory));
 				currentHistory++;
 			}
 			if(arg0.getKeyCode() == KeyEvent.VK_DOWN) {
-				System.out.println(currentHistory);
 				currentHistory--;
 				typeField.setText(getFromHistory(currentHistory));
 			}
