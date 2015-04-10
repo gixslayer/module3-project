@@ -103,7 +103,7 @@ public class MainGUI extends JFrame implements ActionListener, KeyListener, Mous
 	 */
 	public void init() {
 		peopleList = new DefaultListModel<Client>();
-		loadResources();
+		//loadResources();
 		
 		animation = new AnimationThread();
 		animation.setCont(true);
@@ -220,7 +220,7 @@ public class MainGUI extends JFrame implements ActionListener, KeyListener, Mous
 	 */
 	public void removeUser(Client client) {
 		for(Group group : groupList) {
-			if(group.isPartOfGroup(client)) 
+			if(group.isPartOfGroup(client))
 				group.leaveGroup(client);
 		}
 		if(tabMap.containsKey(client))
@@ -964,11 +964,14 @@ public class MainGUI extends JFrame implements ActionListener, KeyListener, Mous
 
 	@Override
 	public void onFileTransferRejected(FTHandle handle) {
-		
+		fileHandles.remove(handle);
+		if(handle.getReceiver().equals(localClient)) JOptionPane.showMessageDialog(this, "You've successfully rejected the transfer of " + handle.getFileName() + " from " + handle.getSender().getName() + ".");
+		if(handle.getSender().equals(localClient)) JOptionPane.showMessageDialog(this, "The transfer of " + handle.getFileName() + " to " + handle.getReceiver().getName() + " has been rejected.");
 	}
 
 	@Override
 	public void onFileTransferCompleted(FTHandle handle) {
+		fileHandles.remove(handle);
 		if(handle.getReceiver().equals(localClient)) {
 			if(JOptionPane.showConfirmDialog(this, "The transfer of " + handle.getFileName() + " from " + handle.getSender().getName() + " has succeeded." + System.lineSeparator() + "Do you want to open it?") == JOptionPane.YES_OPTION) {
 				File file = new File(handle.getSavePath());
@@ -982,6 +985,7 @@ public class MainGUI extends JFrame implements ActionListener, KeyListener, Mous
 
 	@Override
 	public void onFileTransferFailed(FTHandle handle) {
+		fileHandles.remove(handle);
 		if(handle.getReceiver().equals(localClient)) JOptionPane.showMessageDialog(this, "The transfer of " + handle.getFileName() + " from " + handle.getSender().getName() + " has failed. Please try again.");
 		if(handle.getSender().equals(localClient)) JOptionPane.showMessageDialog(this, "The transfer of " + handle.getFileName() + " to " + handle.getReceiver().getName() + " has failed. Please try again.");
 	}
@@ -993,6 +997,8 @@ public class MainGUI extends JFrame implements ActionListener, KeyListener, Mous
 
 	@Override
 	public void onFileTransferCancelled(FTHandle handle) {
-		
+		fileHandles.remove(handle);
+		if(handle.getReceiver().equals(localClient)) JOptionPane.showMessageDialog(this, "The transfer of " + handle.getFileName() + " from " + handle.getSender().getName() + " has been cancelled.");
+		if(handle.getSender().equals(localClient)) JOptionPane.showMessageDialog(this, "The transfer of " + handle.getFileName() + " to " + handle.getReceiver().getName() + " has cancelled. Please try again.");
 	}
 }
