@@ -163,6 +163,8 @@ public class MainGUI extends JFrame implements ActionListener, KeyListener, Mous
 		mainChat.add(sendBar, BorderLayout.SOUTH);
 		
 		tabPane.addTab("Main Room", mainChat);
+		chatMap.put(0, null);
+		tabMap.put(botClient, 0);
 		tabPane.addMouseListener(this);
 
 		c.add(tabPane, BorderLayout.CENTER);
@@ -339,10 +341,9 @@ public class MainGUI extends JFrame implements ActionListener, KeyListener, Mous
 		
 		if(priv) {
 			int index = 0;
-			if(!tabMap.containsKey(client)) {
+			if(!tabMap.containsKey(client)) 
 				addPrivateChat(client, false);
-				index = tabMap.get(client);
-			}
+			index = tabMap.get(client);
 			PrivateChat pChat = chatMap.get(index);
 			pChat.receiveText(str, client);
 			if(tabPane.getSelectedIndex() != index) {
@@ -390,7 +391,6 @@ public class MainGUI extends JFrame implements ActionListener, KeyListener, Mous
 	}
 	
 	public String changeText(String txt) {
-		System.out.println(txt);
 		for(String check : checkTextStrings) {
 			String[] split = check.split(",");
 			txt = txt.replace(split[0], split[1]);
