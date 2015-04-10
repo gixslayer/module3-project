@@ -12,6 +12,7 @@ import protocol.AnnouncePacket;
 import protocol.CannotRoutePacket;
 import protocol.ChatPacket;
 import protocol.DisconnectPacket;
+import protocol.GroupChatPacket;
 import protocol.Packet;
 import protocol.PrivateChatPacket;
 import protocol.RouteRequestPacket;
@@ -171,12 +172,20 @@ public class Application implements NetworkCallbacks, MulticastCallbacks, CacheC
 	@Override
 	public void onSendPrivateMessage(Client otherClient, String message) {
 		PrivateChatPacket packet = new PrivateChatPacket(localClient, message);
+		
 		sendReliableTo(otherClient, packet);
 	}
 	
 	@Override
 	public void onSendMessage(String message) {
 		ChatPacket packet = new ChatPacket(localClient, message);
+		
+		sendReliableToAll(packet);
+	}
+	
+	@Override
+	public void onSendGroupMessage(String groupName, String message) {
+		GroupChatPacket packet = new GroupChatPacket(localClient, groupName, message);
 		
 		sendReliableToAll(packet);
 	}
@@ -198,6 +207,8 @@ public class Application implements NetworkCallbacks, MulticastCallbacks, CacheC
 			handleRouteRequestPacket((RouteRequestPacket)packet);
 		} else if(type == Packet.TYPE_CANNOT_ROUTE) {
 			handleCannotRoutePacket((CannotRoutePacket)packet);
+		} else if(type == Packet.TYPE_GROUP_CHAT) {
+			handleGroupChatPacket((GroupChatPacket)packet);
 		}
 	}
 	
@@ -268,6 +279,12 @@ public class Application implements NetworkCallbacks, MulticastCallbacks, CacheC
 			} else {
 				ni.send(cachedTarget.getAddress(), packet);
 			}
+		}
+	}
+	
+	private void handleGroupChatPacket(GroupChatPacket packet) {
+		for(ApplicationCallbacks subscriber : callbacks) {
+			subscriber.onGroupChatMessageReceived(packet.getSender(), packet.getGroup(), packet.getMessage());
 		}
 	}
 

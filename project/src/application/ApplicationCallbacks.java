@@ -10,4 +10,5 @@ public interface ApplicationCallbacks {
 	
 	void onChatMessageReceived(Client client, String message);
 	void onPrivateChatMessageReceived(Client client, String message);
+	void onGroupChatMessageReceived(Client client, String groupName, String message);
 }
