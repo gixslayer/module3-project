@@ -421,6 +421,13 @@ public class MainGUI extends JFrame implements ActionListener, KeyListener, Mous
 			}
 			return true;
 		}
+		if(str.startsWith("*owls*")) {
+			if(client.equals(localClient)) {
+				String[] tmp = {"☆.´ `. ☽¸.☆","(͡๏̯͡๏)(͡๏̯͡๏)","( , ,)( , ,).","¯**´¯**´¯`\""};
+				sendMultiple(tmp);
+			}
+			return true;
+		}
 		return false;
 	}
 	
