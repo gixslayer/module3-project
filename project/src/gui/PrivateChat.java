@@ -17,8 +17,8 @@ public class PrivateChat extends JPanel implements ActionListener, KeyListener {
 
 	private JTextField typeField;
 	
-	private DefaultListModel<String> list;
-	private JList<String> receiveArea;
+	private DefaultListModel<ChatLine> list;
+	private JList<ChatLine> receiveArea;
 	private JScrollPane scrollPane;
 	
 	private JButton sendButton;
@@ -27,7 +27,6 @@ public class PrivateChat extends JPanel implements ActionListener, KeyListener {
 	private Client otherClient;
 	private MainGUI main;
 	private Application app;
-	private Alice alice;
 	private AnimationThread animation;
 	
 	public PrivateChat(Client localClient, Client otherClient, MainGUI main, Application app, AnimationThread animation) {
@@ -42,12 +41,12 @@ public class PrivateChat extends JPanel implements ActionListener, KeyListener {
 	public void init() {
 		setLayout(new BorderLayout());
 		
-		list = new DefaultListModel<String>();
+		list = new DefaultListModel<ChatLine>();
 		
 		typeField = new JTextField();
 		typeField.addKeyListener(this);
 		
-		receiveArea = new JList<String>(list);
+		receiveArea = new JList<ChatLine>(list);
 		receiveArea.setCellRenderer(new CustomCellRenderer(main, animation));
 		scrollPane = new JScrollPane(receiveArea);
 	
@@ -70,8 +69,8 @@ public class PrivateChat extends JPanel implements ActionListener, KeyListener {
 		add(sendBar, BorderLayout.SOUTH);
 	}
 	
-	public void addToScreen(String str) {
-		list.addElement(str);
+	public void addToScreen(Client client, String str) {
+		list.addElement(new ChatLine(client, str));
 		receiveArea.ensureIndexIsVisible(list.getSize() -1);
 		if(list.getSize() > MainGUI.LIST_MAX_SIZE) {
 			list.removeElement(list.firstElement());
@@ -81,14 +80,14 @@ public class PrivateChat extends JPanel implements ActionListener, KeyListener {
 	public void sendText() {
 		String txt = typeField.getText();
 		if(txt.length() == 0 || txt.matches("\\s*") || txt.length() > 3000) return;
-		addToScreen(localClient.getName() + ": " + txt);
+		addToScreen(localClient, txt);
 		typeField.setText("");
 		
 		app.onSendPrivateMessage(otherClient, txt);
 	}
 	
 	public void receiveText(String str, Client client) {
-		addToScreen(client.getName() + ": " + str);
+		addToScreen(client, str);
 	}
 	
 	public Client getOtherClient() {

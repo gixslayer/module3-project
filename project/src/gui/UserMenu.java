@@ -57,7 +57,7 @@ public class UserMenu extends JPopupMenu implements ActionListener {
 			main.receiveText("Hey! Don't poke me! :(", otherClient, true);
 		}
 		else if(arg0.getSource().equals(lastSeen)) {
-			main.addToScreen(otherClient + " was last seen at: " + main.getLastSeen(otherClient));
+			main.addToScreen(main.getBot(), otherClient + " was last seen at: " + main.getLastSeen(otherClient));
 		}
 		else {
 			for(int i=0; i<color.length; i++) {
