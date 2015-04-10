@@ -8,6 +8,7 @@ import java.net.SocketException;
 
 import project.TCP;
 import protocol.Packet;
+import protocol.PacketFactory;
 import subscription.Subscribable;
 import subscription.SubscriptionCollection;
 
@@ -78,7 +79,12 @@ public final class NetworkInterface implements Subscribable<NetworkCallbacks> {
 			System.arraycopy(recvBuffer, datagram.getOffset(), receivedData, 0, receivedData.length);
 			InetAddress sourceAddress = datagram.getAddress();
 			byte[] data = TCP.handlePacket(this, localAddress, new project.Packet(receivedData));
-			Packet packet = Packet.deserialize(sourceAddress, data);
+			
+			Packet packet = null;
+			if(data == null) {
+				packet = PacketFactory.fromType(Packet.TYPE_EMPTY);
+			}
+			else packet = Packet.deserialize(sourceAddress, data);
 			
 			if(packet.hasHeader()) {
 				reliableLayer.onPacketReceived(packet);
