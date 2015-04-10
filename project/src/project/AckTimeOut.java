@@ -2,13 +2,14 @@ package project;
 
 import java.util.TimerTask;
 
+import protocol.Packet;
 import protocol.PacketHeader;
 
 public class AckTimeOut extends TimerTask {
 
-	private PacketHeader packet;
+	private Packet packet;
 	
-	public AckTimeOut(PacketHeader packet) {
+	public AckTimeOut(Packet packet) {
 		this.packet = packet;
 	}
 	
