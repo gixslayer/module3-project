@@ -211,14 +211,16 @@ public class TCP {
 	}
 	
 	public static boolean closeConnection(int destination) {
-		connections.put(destination, State.CLOSED);
-		for(Timer i: timers.values()){
-			i.cancel();
-			i.purge();
+		if(connections != null) {
+			connections.put(destination, State.CLOSED);
+			for(Timer i: timers.values()){
+				i.cancel();
+				i.purge();
+			}
+			timers.remove(destination);
+			lastInfo.remove(destination);
+			toSend.remove(destination);
 		}
-		timers.remove(destination);
-		lastInfo.remove(destination);
-		toSend.remove(destination);
 		return true;
 	}
 	
