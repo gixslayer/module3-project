@@ -15,6 +15,12 @@ import java.awt.event.MouseEvent;
 import java.awt.event.MouseListener;
 import java.awt.event.WindowEvent;
 import java.awt.event.WindowListener;
+import java.io.BufferedReader;
+import java.io.File;
+import java.io.FileInputStream;
+import java.io.IOException;
+import java.io.InputStreamReader;
+import java.util.ArrayList;
 import java.util.HashMap;
 
 @SuppressWarnings("serial")
@@ -37,6 +43,7 @@ public class MainGUI extends JFrame implements ActionListener, KeyListener, Mous
 	private volatile boolean rainbowMode = false;
 	private boolean altRBMode = false;
 	
+	private ArrayList<String> checkTextStrings = new ArrayList<String>();
 	private Color chatFG;
 	
 	private HashMap<Integer, PrivateChat> chatMap = new HashMap<Integer, PrivateChat>();
@@ -229,6 +236,15 @@ public class MainGUI extends JFrame implements ActionListener, KeyListener, Mous
 	 */
 	public void loadResources() {
 		closeIcon = new ImageIcon("res/close.png");
+		try {
+			BufferedReader in = new BufferedReader(new InputStreamReader(new FileInputStream(new File("res/smileys.txt")), "UTF-8"));
+			String check = "";
+			while((check = in.readLine()) != null) {
+				System.out.println(check);
+				checkTextStrings.add(check);
+			}
+			in.close();
+		} catch (IOException e) { e.printStackTrace(); }
 	}
 	
 	/**
@@ -302,10 +318,6 @@ public class MainGUI extends JFrame implements ActionListener, KeyListener, Mous
 		typeField.setText("");
 		addToHistory(txt);
 		receiveText(txt, localClient, false);
-		/*if(txt.contains("Alice") || txt.contains("alice")) {
-			receiveText(alice.getResponse(txt), , false);
-			return;
-		}*/
 		app.onSendMessage(txt);
 	}
 	
@@ -378,40 +390,13 @@ public class MainGUI extends JFrame implements ActionListener, KeyListener, Mous
 		else return history[index];
 	}
 	
-	public String changeText(String str) {
-		str = str.replace(":)", "☺");
-		str = str.replace(":(", "☹");
-		str = str.replace("*check*", "✔");
-		str = str.replace("*yinyang*", "☯");
-		str = str.replace("*down*", "↓");
-		str = str.replace("*left*", "←");
-		str = str.replace("*right*", "→");
-		str = str.replace("*up*", "↑");
-		str = str.replace("*phone*", "☎");
-		str = str.replace("*skull*", "☠");
-		str = str.replace("*radio*", "☢");
-		str = str.replace("*bio*", "☣");
-		str = str.replace("*peace*", "☮");
-		str = str.replace("*spade*", "♠");
-		str = str.replace("*heart*", "♥");
-		str = str.replace("*diamond*", "♦");
-		str = str.replace("*club*", "♣");
-		str = str.replace("*plane*", "✈");
-		str = str.replace("*x*", "✖");
-		str = str.replace("1/2", "½");
-		str = str.replace("1/4", "¼");
-		str = str.replace("*R*", "ℜ");
-		str = str.replace("*N*", "ℵ");
-		str = str.replace("*tflip*", " 	(╯°□°）╯︵ ┻━┻");
-		str = str.replace("*money*", "[̲̅$̲̅(̲̅ιοο̲̅)̲̅$̲̅]");
-		str = str.replace("*big*", "<font size=30>");
-		str = str.replace("*B*", "ℬ");
-		str = str.replace("*P*", "℘");
-		str = str.replace("*sniper*", "︻デ┳═ー ");
-		str = str.replace("o_o", " 	◕_◕ ");
-		str = str.replace("*pistols*", "̿' ̿'\\̵͇̿̿\\з=(◕_◕)=ε/̵͇̿̿/'̿'̿ ̿ ");
-		str = str.replace("x.x", "(✖╭╮✖)");
-		return str;
+	public String changeText(String txt) {
+		System.out.println(txt);
+		for(String check : checkTextStrings) {
+			String[] split = check.split(",");
+			txt = txt.replace(split[0], split[1]);
+		}
+		return txt;
 	}
 	
 	private boolean checkMultiple(String str, Client client) {
@@ -747,7 +732,7 @@ public class MainGUI extends JFrame implements ActionListener, KeyListener, Mous
 			app.stop();
 			animation.setCont(false);
 			rainbowMode = false;
-			prefMenu.dispose();
+			if(prefMenu != null) prefMenu.dispose();
 	        this.dispose();
 	    }
 	}
