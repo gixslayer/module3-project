@@ -326,8 +326,7 @@ public class MainGUI extends JFrame implements ActionListener, KeyListener, Mous
 		tabClose.addActionListener(new TabActionListener(i, this));
 	}
 	
-	@SuppressWarnings("unused")
-	private void removeTab(int index) {
+	public void removeTab(int index) {
 		if(!chatMap.get(index).isPrivate()) {
 			Group group = ((GroupChat)chatMap.get(index)).getGroup();
 			group.leaveGroup(localClient);
