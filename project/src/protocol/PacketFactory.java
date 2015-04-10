@@ -27,6 +27,8 @@ public final class PacketFactory {
 			return new FTRequestPacket();
 		case Packet.TYPE_FT_CANCEL:
 			return new FTCancelPacket();
+		case Packet.TYPE_POKE:
+			return new PokePacket();
 		}
 		
 		throw new IllegalArgumentException("Invalid type");

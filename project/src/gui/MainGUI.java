@@ -669,6 +669,10 @@ public class MainGUI extends JFrame implements ActionListener, KeyListener, Mous
 		}
 		return false;
 	}
+
+	public void poke(Client client) {
+		app.onSendPoke(client);
+	}
 	
 //=============================================================================
 //============================= EVENT HANDLERS ================================
@@ -1000,5 +1004,13 @@ public class MainGUI extends JFrame implements ActionListener, KeyListener, Mous
 		fileHandles.remove(handle);
 		if(handle.getReceiver().equals(localClient)) JOptionPane.showMessageDialog(this, "The transfer of " + handle.getFileName() + " from " + handle.getSender().getName() + " has been cancelled.");
 		if(handle.getSender().equals(localClient)) JOptionPane.showMessageDialog(this, "The transfer of " + handle.getFileName() + " to " + handle.getReceiver().getName() + " has cancelled. Please try again.");
+	}
+
+	@Override
+	public void onPokePacketReceived(Client client) {
+		addPrivateChat(client, false);
+		receiveText("*poke*", client, true, false, null);
+		if(JOptionPane.showConfirmDialog(this, "You've received a poke from " + client.getName() + ". Do you want to view it?") == JOptionPane.YES_OPTION)
+			tabPane.setSelectedIndex(tabMap.get(client));
 	}
 }

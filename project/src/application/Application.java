@@ -9,14 +9,7 @@ import client.CacheCallbacks;
 import client.Client;
 import client.ClientCache;
 import project.TCP;
-import protocol.AnnouncePacket;
-import protocol.CannotRoutePacket;
-import protocol.ChatPacket;
-import protocol.DisconnectPacket;
-import protocol.GroupChatPacket;
-import protocol.Packet;
-import protocol.PrivateChatPacket;
-import protocol.RouteRequestPacket;
+import protocol.*;
 import subscription.Subscribable;
 import subscription.SubscriptionCollection;
 import utils.NetworkUtils;
@@ -209,6 +202,13 @@ public class Application implements NetworkCallbacks, MulticastCallbacks, CacheC
 		
 	}
 
+	@Override
+	public void onSendPoke(Client client) {
+		PokePacket packet = new PokePacket(localClient);
+
+		sendReliableTo(client, packet);
+	}
+
 	//-------------------------------------------
 	// NetworkCallbacks.
 	//-------------------------------------------
@@ -228,6 +228,8 @@ public class Application implements NetworkCallbacks, MulticastCallbacks, CacheC
 			handleCannotRoutePacket((CannotRoutePacket)packet);
 		} else if(type == Packet.TYPE_GROUP_CHAT) {
 			handleGroupChatPacket((GroupChatPacket)packet);
+		} else if(type == Packet.TYPE_POKE) {
+			handlePokePacket((PokePacket)packet);
 		}
 	}
 	
@@ -304,6 +306,12 @@ public class Application implements NetworkCallbacks, MulticastCallbacks, CacheC
 	private void handleGroupChatPacket(GroupChatPacket packet) {
 		for(ApplicationCallbacks subscriber : callbacks) {
 			subscriber.onGroupChatMessageReceived(packet.getSender(), packet.getGroup(), packet.getMessage());
+		}
+	}
+
+	private void handlePokePacket(PokePacket packet) {
+		for(ApplicationCallbacks subscriber : callbacks) {
+			subscriber.onPokePacketReceived(packet.getClient());
 		}
 	}
 

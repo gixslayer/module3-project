@@ -20,4 +20,6 @@ public interface ApplicationCallbacks {
 	void onFileTransferFailed(FTHandle handle);
 	void onFileTransferProgress(FTHandle handle, float progress); // TODO: Only call this every X steps of progress
 	void onFileTransferCancelled(FTHandle handle);
+
+	void onPokePacketReceived(Client client);
 }
