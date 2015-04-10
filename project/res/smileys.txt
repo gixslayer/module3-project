@@ -1,3 +1,11 @@
+*red*,<font color=red>
+*blue*,<font color=blue>
+*black*,<font color=black>
+*purple*,<font color=purple>
+*white*,<font color=white>
+*yellow*,<font color=yellow>
+*orange*,<font color=orange>
+*green*,<font color=green>
 :),☺
 :(,☹
 *check*,✔
@@ -33,32 +41,32 @@ x.x,(✖╭╮✖)
 *barcode*,║▌║█║▌│║▌║▌█
 *sing*,d(^o^)b¸¸♬·¯·♩¸¸♪·¯·♫¸¸
 *cards*,[♥]]][♦]]][♣]]][♠]]]
-*sa*,🂡
-*s2*,🂢
-*s3*,🂣
-*s4*,🂤
-*s5*,🂥
-*s6*,🂦
-*s7*,🂧
-*s8*,🂨
-*s9*,🂩
-*s10*,🂪
-*sj*,🂫
-*sq*,🂭
-*sk*,🂮
-*ca*,🃑
-*c2*,🃒
-*c3*,🃓
-*c4*,🃔
-*c5*,🃕
-*c6*,🃖
-*c7*,🃗
-*c8*,🃘
-*c9*,🃙
-*c10*,🃚
-*cj*,🃛
-*cq*,🃝
-*ck*,🃞
+*sa*,<font size=20 color=black>🂡</font>
+*s2*,<font size=20 color=black>🂢</font>
+*s3*,<font size=20 color=black>🂣</font>
+*s4*,<font size=20 color=black>🂤</font>
+*s5*,<font size=20 color=black>🂥</font>
+*s6*,<font size=20 color=black>🂦</font>
+*s7*,<font size=20 color=black>🂧</font>
+*s8*,<font size=20 color=black>🂨</font>
+*s9*,<font size=20 color=black>🂩</font>
+*s10*,<font size=20 color=black>🂪</font>
+*sj*,<font size=20 color=black>🂫</font>
+*sq*,<font size=20 color=black>🂭</font>
+*sk*,<font size=20 color=black>🂮</font>
+*ca*,<font size=20 color=black>🃑</font>
+*c2*,<font size=20 color=black>🃒</font>
+*c3*,<font size=20 color=black>🃓</font>
+*c4*,<font size=20 color=black>🃔</font>
+*c5*,<font size=20 color=black>🃕</font>
+*c6*,<font size=20 color=black>🃖</font>
+*c7*,<font size=20 color=black>🃗</font>
+*c8*,<font size=20 color=black>🃘</font>
+*c9*,<font size=20 color=black>🃙</font>
+*c10*,<font size=20 color=black>🃚</font>
+*cj*,<font size=20 color=black>🃛</font>
+*cq*,<font size=20 color=black>🃝</font>
+*ck*,<font size=20 color=black>🃞</font>
 *ha*,<font size=20 color=red>🂱</font>
 *h2*,<font size=20 color=red>🂲</font>
 *h3*,<font size=20 color=red>🂳</font>
@@ -85,6 +93,6 @@ x.x,(✖╭╮✖)
 *dj*,<font size=20 color=red>🃋</font>
 *dq*,<font size=20 color=red>🃍</font>
 *dk*,<font size=20 color=red>🃎</font>
-*cardback*,🂠
-*bjoker*,🃏
+*cardback*,<font size=20>🂠</font>
+*bjoker*,<font size=20 color=black>🃏</font>
 *rjoker*,<font size=20 color=red>🃟</font>
