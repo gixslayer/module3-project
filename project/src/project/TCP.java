@@ -330,7 +330,7 @@ public class TCP {
 	public static void sendData(int source, int destination, Packet packet) {
 		init(source, destination);
 		if(connections.containsKey(destination) && connections.get(destination).equals(State.ESTABLISHED)) {
-			PacketHeader toSend = new PacketHeader(myAddress, destination, 0, lastInfo.get(destination)[0], lastInfo.get(destination)[1], false, true, false, 5, packet.g);
+			PacketHeader toSend = new PacketHeader(myAddress, destination, 0, lastInfo.get(destination)[0], lastInfo.get(destination)[1], false, true, false, 5, packet.getContentLength());
 			lastInfo.put(destination, new int[]{toSend.getSeq()+toSend.getLength(),toSend.getAck()});
 			System.out.println(toSend.getDestination() + ", seq: " + toSend.getSeq() +", ack: " + toSend.getAck());
 			ArrayList<PacketHeader> temp = packetsInBuffer.get(destination);
