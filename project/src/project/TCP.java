@@ -18,7 +18,6 @@ public class TCP {
 	private static Map<Integer, ArrayList<Packet>> packetsInBuffer;
 	private static Map<Packet, Timer> timerOfPacket;
 	private static boolean constructed = false;
-	private static NetworkInterface ni;
 	
 	private static void init(int source, int dest) {
 		if(!constructed) {
