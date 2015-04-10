@@ -17,6 +17,8 @@ public final class PacketFactory {
 			return new EmptyPacket();
 		case Packet.TYPE_CANNOT_ROUTE:
 			return new CannotRoutePacket();
+		case Packet.TYPE_GROUP_CHAT:
+			return new GroupChatPacket();
 		}
 		
 		throw new IllegalArgumentException("Invalid type");
