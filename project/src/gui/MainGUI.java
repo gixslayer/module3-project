@@ -46,14 +46,17 @@ public class MainGUI extends JFrame implements ActionListener, KeyListener, Mous
 	private ArrayList<String> checkTextStrings = new ArrayList<String>();
 	private Color chatFG;
 	
-	private HashMap<Integer, PrivateChat> chatMap = new HashMap<Integer, PrivateChat>();
+	private HashMap<Integer, Chat> chatMap = new HashMap<Integer, Chat>();
 	private HashMap<Client, Integer> tabMap = new HashMap<Client, Integer>();
+	private HashMap<Group, Integer> groupMap = new HashMap<Group, Integer>();
+	private ArrayList<Group> groupList = new ArrayList<Group>();
 	
 	private JMenuBar menu;
 	private JMenu optionMenu;
 	private JMenuItem preferencesItem;
 	private JMenuItem rainbowModeItem;
 	private JMenuItem nameChangeItem;
+	private JMenuItem createGroupItem;
 	private JMenu otherMenu;
 	private JMenuItem fileItem;
 	
@@ -188,6 +191,9 @@ public class MainGUI extends JFrame implements ActionListener, KeyListener, Mous
 		nameChangeItem = new JMenuItem("Change Name");
 		nameChangeItem.addActionListener(this);
 		
+		createGroupItem = new JMenuItem("Create/Join Group");
+		createGroupItem.addActionListener(this);
+		
 		otherMenu = new JMenu("Other");
 		
 		fileItem = new JMenuItem("Open file...");
@@ -246,6 +252,26 @@ public class MainGUI extends JFrame implements ActionListener, KeyListener, Mous
 			}
 			in.close();
 		} catch (IOException e) { e.printStackTrace(); }
+	}
+	
+	public void addGroupChat(Group group) {
+		if(groupMap.containsKey(group)) {
+			tabPane.setSelectedIndex(groupMap.get(group));
+			return;
+		}
+		JPanel groupChat = new JPanel();
+		groupChat.setLayout(new BorderLayout());
+		GroupChat gChat = new GroupChat(localClient, group, this, app, animation);
+		groupChat.add(gChat, BorderLayout.CENTER);
+		
+		tabPane.addTab("t", groupChat);
+		int i = tabPane.indexOfTab("t");
+		
+		groupMap.put(group, i);
+		chatMap.put(i, gChat);
+		
+		addTabName(i, group.getName());
+		tabPane.setSelectedIndex(i);
 	}
 	
 	/**
@@ -318,7 +344,7 @@ public class MainGUI extends JFrame implements ActionListener, KeyListener, Mous
 		if(txt.toLowerCase().length() == 0 || txt.toLowerCase().matches("\\s*") || txt.toLowerCase().matches(".*<.*>.*") || txt.toLowerCase().matches(".*<script.*") || txt.length() > 3000) return;
 		typeField.setText("");
 		addToHistory(txt);
-		receiveText(txt, localClient, false);
+		receiveText(txt, localClient, false, false, null);
 		app.onSendMessage(txt);
 	}
 	
@@ -335,7 +361,7 @@ public class MainGUI extends JFrame implements ActionListener, KeyListener, Mous
 	 * @param name the name of the Sender.
 	 * @param priv true if it is part of the private chat between the two Users | false if it is part of the global chat.
 	 */
-	public void receiveText(String str, Client client, boolean priv) {
+	public void receiveText(String str, Client client, boolean priv, boolean g, Group group) {
 		str = changeText(str);
 		if(checkMultiple(str, client)) return;
 		
@@ -344,13 +370,29 @@ public class MainGUI extends JFrame implements ActionListener, KeyListener, Mous
 			if(!tabMap.containsKey(client)) 
 				addPrivateChat(client, false);
 			index = tabMap.get(client);
-			PrivateChat pChat = chatMap.get(index);
+			Chat chat = chatMap.get(index);
+			if(!chat.isPrivate()) return;
+			PrivateChat pChat = (PrivateChat)chat;
 			pChat.receiveText(str, client);
 			if(tabPane.getSelectedIndex() != index) {
 				tabPane.remove(index);
 				tabPane.add(pChat, index);
 				tabPane.setBackgroundAt(index, Color.YELLOW);
 				addTabName(index, client.getName() + " [!]");
+			}
+		}
+		else if(g) {
+			int index = 0;
+			index = groupMap.get(group);
+			Chat chat = chatMap.get(index);
+			if(chat.isPrivate()) return;
+			GroupChat gChat = (GroupChat)chat;
+			gChat.receiveText(str, client);
+			if(tabPane.getSelectedIndex() != index) {
+				tabPane.remove(index);
+				tabPane.add(gChat, index);
+				tabPane.setBackgroundAt(index, Color.YELLOW);
+				addTabName(index, group.getName() + " [!]");
 			}
 		}
 		else {
@@ -567,6 +609,14 @@ public class MainGUI extends JFrame implements ActionListener, KeyListener, Mous
 		return botClient;
 	}
 	
+	public Group getGroup(String name) {
+		for(Group group : groupList) {
+			if(group.getName().equals(name))
+				return group;
+		}
+		return null;
+	}
+	
 	/**
 	 * Repaints all text areas.
 	 */
@@ -609,8 +659,17 @@ public class MainGUI extends JFrame implements ActionListener, KeyListener, Mous
 		
 		if(e.getSource().equals(nameChangeItem)) {
 			String name = JOptionPane.showInputDialog("Please input your new name.", localClient.getName());
-			addToScreen(botClient, "HAH! Like hell you'll be named: " + name + "!");
-			localClient.setName(name);
+			if(name != null) {
+				addToScreen(botClient, "HAH! Like hell you'll be named: " + name + "!");
+				localClient.setName(name);
+			}
+		}
+		
+		if(e.getSource().equals(createGroupItem)) {
+			String name = JOptionPane.showInputDialog("Please input the group's name.", "Group Name");
+			Group g = new Group(name);
+			groupList.add(g);
+			addGroupChat(g);
 		}
 		
 		if(e.getSource().equals(fileItem)) {
@@ -677,11 +736,25 @@ public class MainGUI extends JFrame implements ActionListener, KeyListener, Mous
 				tabPane.setSelectedIndex(index);
 			}
 			else {
-				Client otherClient = chatMap.get(index).getOtherClient();
-				PrivateChat pChat = chatMap.get(index);
-				tabPane.remove(index);
-				tabPane.add(pChat, index);
-				addTabName(index, otherClient.getName());
+				Client otherClient = null;
+				PrivateChat pChat = null;
+				Group group = null;
+				GroupChat gChat = null;
+				if(chatMap.get(index).isPrivate()) {
+					pChat = (PrivateChat)chatMap.get(index);
+					otherClient = pChat.getOtherClient();
+					tabPane.remove(index);
+					tabPane.add(pChat, index);
+					addTabName(index, otherClient.getName());
+				}
+				else {
+					gChat = (GroupChat)chatMap.get(index);
+					group = gChat.getGroup();
+					tabPane.remove(index);
+					tabPane.add(gChat, index);
+					addTabName(index, group.getName());
+				}
+				
 				tabPane.setSelectedIndex(index);
 			}
 		}
@@ -792,12 +865,20 @@ public class MainGUI extends JFrame implements ActionListener, KeyListener, Mous
 
 	@Override
 	public void onChatMessageReceived(Client client, String message) {
-		receiveText(message, client, false);
+		receiveText(message, client, false, false, null);
 	}
 
 	@Override
 	public void onPrivateChatMessageReceived(Client client, String message) {
-		receiveText(message, client, true);
+		receiveText(message, client, true, false, null);
+	}
+	
+	@Override
+	public void onGroupChatMessageReceived(Client client, String groupName, String message) {
+		Group group = getGroup(groupName);
+		if(group != null) {
+			receiveText(message, client, false, true, group);
+		}
 	}
 	
 	public class RainBowMode extends Thread {

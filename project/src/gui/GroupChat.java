@@ -12,7 +12,7 @@ import java.awt.event.KeyEvent;
 import java.awt.event.KeyListener;
 
 @SuppressWarnings("serial")
-public class PrivateChat extends JPanel implements ActionListener, KeyListener, Chat {
+public class GroupChat extends JPanel implements ActionListener, KeyListener, Chat {
 	//private Container c;
 
 	private JTextField typeField;
@@ -24,14 +24,14 @@ public class PrivateChat extends JPanel implements ActionListener, KeyListener, 
 	private JButton sendButton;
 	
 	private Client localClient;
-	private Client otherClient;
+	private Group group;
 	private MainGUI main;
 	private Application app;
 	private AnimationThread animation;
 	
-	public PrivateChat(Client localClient, Client otherClient, MainGUI main, Application app, AnimationThread animation) {
+	public GroupChat(Client localClient, Group group, MainGUI main, Application app, AnimationThread animation) {
 		this.localClient = localClient;
-		this.otherClient = otherClient;
+		this.group = group;
 		this.main = main;
 		this.app = app;
 		this.animation = animation;
@@ -83,7 +83,7 @@ public class PrivateChat extends JPanel implements ActionListener, KeyListener, 
 		addToScreen(localClient, txt);
 		typeField.setText("");
 		
-		app.onSendPrivateMessage(otherClient, txt);
+		app.onSendGroupMessage(group.getName(), txt);
 	}
 	
 	public void receiveText(String str, Client client) {
@@ -91,11 +91,11 @@ public class PrivateChat extends JPanel implements ActionListener, KeyListener, 
 	}
 	
 	public boolean isPrivate() {
-		return true;
+		return false;
 	}
 	
-	public Client getOtherClient() {
-		return otherClient;
+	public Group getGroup() {
+		return group;
 	}
 
 	@Override
