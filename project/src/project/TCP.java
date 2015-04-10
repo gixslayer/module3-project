@@ -199,6 +199,9 @@ public class TCP {
 	
 	public static boolean closeConnection(int destination) {
 		connections.put(destination, State.CLOSED);
+		for(Timer i: timers.values()){
+			i.cancel();
+		}
 		timers.remove(destination);
 		lastInfo.remove(destination);
 		toSend.remove(destination);
@@ -208,6 +211,16 @@ public class TCP {
 	public static boolean closeConnection(InetAddress destination) {
 		int dest = Integer.parseInt(""+destination.getHostAddress().charAt(10));
 		return closeConnection(dest);
+	}
+	
+	public static void stopConnections(){
+		connections.clear();
+		for(Timer i: timers.values()){
+			i.cancel();
+		}
+		timers.clear();
+		lastInfo.clear();
+		toSend.clear();
 	}
 	
 	private static void sendSyn(int destination) {
