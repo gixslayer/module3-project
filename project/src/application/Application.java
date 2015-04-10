@@ -198,7 +198,7 @@ public class Application implements NetworkCallbacks, MulticastCallbacks, CacheC
 	}
 
 	@Override
-	public void onReplyToFileTransfer(FTHandle handle, boolean response) {
+	public void onReplyToFileTransfer(FTHandle handle, boolean response, String savePath) {
 		// TODO Auto-generated method stub
 		
 	}
