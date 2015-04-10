@@ -274,7 +274,7 @@ public class MainGUI extends JFrame implements ActionListener, KeyListener, Mous
 		groupChat.setLayout(new BorderLayout());
 		GroupChat gChat = new GroupChat(localClient, group, this, app, animation);
 		groupChat.add(gChat, BorderLayout.CENTER);
-		
+
 		tabPane.addTab("t", groupChat);
 		int i = tabPane.indexOfTab("t");
 		
@@ -332,6 +332,7 @@ public class MainGUI extends JFrame implements ActionListener, KeyListener, Mous
 		tabPanel.add(tabClose, gbc);
 
 		tabPane.setTabComponentAt(i, tabPanel);
+		tabPane.setTitleAt(i, str);
 		tabClose.addActionListener(new TabActionListener(i, this));
 	}
 	
@@ -701,6 +702,12 @@ public class MainGUI extends JFrame implements ActionListener, KeyListener, Mous
 		if(e.getSource().equals(createGroupItem)) {
 			String name = JOptionPane.showInputDialog("Please input the group's name.", "Group Name");
 			if(name != null && !IllegalCharCheck(name)) {
+				if(name.equals(localClient.getName())) return;
+				if(tabPane.indexOfTab(name) != -1) return;
+				for(Group group : groupList) {
+					if(group.getName().equals(group))
+						return;
+				}
 				Group g = new Group(name);
 				groupList.add(g);
 				addGroupChat(g);
