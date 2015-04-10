@@ -17,14 +17,15 @@ public final class ReliableLayer {
 	public void close() {
 		// TODO: Needed processing. The network interface will be closed and is unusable as soon as this
 		// method returns.
+		TCP.stopConnections();
 	}
 	
 	public void send(InetAddress dest, Packet packet) {
 		TCP.sendData(ni, localAddress, dest, packet.serialize());
-		//ni.send(dest, packet);
 	}
 	
 	public void onPacketReceived(Packet packet) {
 		// TODO: Needed processing. Perhaps a way to signal to drop the packet, EG return a boolean?
+		TCP.handlePacket(ni, localAddress, packet.getHeader());
 	}
 }

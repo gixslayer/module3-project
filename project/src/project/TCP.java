@@ -7,6 +7,8 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.Timer;
 
+import protocol.PacketHeader;
+
 import network.NetworkInterface;
 
 public class TCP {
@@ -15,8 +17,8 @@ public class TCP {
 	private static Map<Integer, Timer> timers;
 	private static Map<Integer, int[]> lastInfo;
 	private static Map<Integer, ArrayList<byte[]>> toSend;
-	private static Map<Integer, ArrayList<Packet>> packetsInBuffer;
-	private static Map<Packet, Timer> timerOfPacket;
+	private static Map<Integer, ArrayList<PacketHeader>> packetsInBuffer;
+	private static Map<PacketHeader, Timer> timerOfPacket;
 	private static boolean constructed = false;
 	private static NetworkInterface ni;
 	
@@ -37,11 +39,11 @@ public class TCP {
 		CLOSED, SYNSENT, SYN_RECEIVED, ESTABLISHED, FIN_WAIT, LAST_ACK, TIME_WAIT;
 	}
 	
-	public static byte[] handlePacket(NetworkInterface ni, InetAddress myAddr, Packet packet) {
+	public static void handlePacket(NetworkInterface ni, InetAddress myAddr, PacketHeader packet) {
 		init(inetToInt(myAddr), packet.getSource());
 		int destAddress = packet.getSource();
 		TCP.ni = ni;
-		if(packet.getDestination() == myAddress && checksumCheck(packet)) {
+		if(packet.getDestination() == myAddress) {
 			System.out.println("From:" + packet.getSource() + ", seq: " + packet.getSeq() +", ack: " + packet.getAck());
 			if(packetsInBuffer.get(destAddress) != null) {
 				System.out.println("SEQACK INFO FROM: " + destAddress + " :" + packetsInBuffer.get(destAddress).size());
@@ -103,19 +105,17 @@ public class TCP {
 						//TODO check seqs and acks.
 					} else {
 						sendAck(packet);
-						return packet.getData();
 					}
 				}
 			}
 		}
-		return null;
 	}
 	
-	private static void ackReceivedDuringHandshake(Packet packet) {
-		ArrayList<Packet> buffer = packetsInBuffer.get(packet.getSource());
-		Packet toDelete = null;
+	private static void ackReceivedDuringHandshake(PacketHeader packet) {
+		ArrayList<PacketHeader> buffer = packetsInBuffer.get(packet.getSource());
+		PacketHeader toDelete = null;
 		
-		for(Packet p: buffer) {
+		for(PacketHeader p: buffer) {
 			if(p.getSeq()+1 == packet.getAck()) {
 				//This is packet to remove
 				toDelete = p;
@@ -131,12 +131,12 @@ public class TCP {
 		}
 	}
 	
-	private static void ackReceived(Packet packet) {
-		ArrayList<Packet> buffer = packetsInBuffer.get(packet.getSource());
-		Packet toDelete = null;
+	private static void ackReceived(PacketHeader packet) {
+		ArrayList<PacketHeader> buffer = packetsInBuffer.get(packet.getSource());
+		PacketHeader toDelete = null;
 		System.out.println("ack RECEIVED!!! " + buffer.size());
 				
-		for(Packet p: buffer) {
+		for(PacketHeader p: buffer) {
 			if(p.getSeq()+p.getLength() == packet.getAck()) {
 				//This is packet to remove
 				toDelete = p;
@@ -153,10 +153,6 @@ public class TCP {
 			packetsInBuffer.put(packet.getSource(), buffer);
 		}
 	}
-	
-	private static boolean checksumCheck(Packet packet) {
-		return packet.getCheckSum() == packet.calculateChecksum(packet.getData());
-	}
 
 	public static void timeOut(int destination) {
 		if(connections.containsKey(destination) && connections.get(destination).equals(State.TIME_WAIT)) {
@@ -165,7 +161,7 @@ public class TCP {
 		}
 	}
 	
-	public static void ackTimeOut(Packet packet) {
+	public static void ackTimeOut(PacketHeader packet) {
 		Timer timer = new Timer();
 		timer.schedule(new AckTimeOut(packet), 100);
 		timerOfPacket.put(packet, timer);
@@ -214,19 +210,21 @@ public class TCP {
 	}
 	
 	public static void stopConnections(){
-		connections.clear();
-		for(Timer i: timers.values()){
-			i.cancel();
+		if(constructed) {
+			connections.clear();
+			for(Timer i: timers.values()){
+				i.cancel();
+			}
+			timers.clear();
+			lastInfo.clear();
+			toSend.clear();
 		}
-		timers.clear();
-		lastInfo.clear();
-		toSend.clear();
 	}
 	
 	private static void sendSyn(int destination) {
-		Packet syn = new Packet(myAddress, destination, 0, 0, 0, true, false, false, 5, new byte[0]);
+		PacketHeader syn = new PacketHeader(myAddress, destination, 0, 0, 0, true, false, false, 5, 0);
 		System.out.println(syn.getDestination() + ", seq: " + syn.getSeq() +", ack: " + syn.getAck());
-		ArrayList<Packet> temp = packetsInBuffer.get(destination);
+		ArrayList<PacketHeader> temp = packetsInBuffer.get(destination);
 		if(temp == null) {
 			temp = new ArrayList<>();
 		}
@@ -244,11 +242,11 @@ public class TCP {
 		sendSyn(Integer.parseInt(""+destination.getHostAddress().charAt(10)));
 	}
 	
-	private static void sendSynAck(Packet lastPacket) {
-		Packet synAck = new Packet(myAddress, lastPacket.getSource(), 0, 0, 1, true, true, false, 5, new byte[0]);
+	private static void sendSynAck(PacketHeader lastPacket) {
+		PacketHeader synAck = new PacketHeader(myAddress, lastPacket.getSource(), 0, 0, 1, true, true, false, 5, 0);
 		System.out.println(synAck.getDestination() + ", seq: " + synAck.getSeq() +", ack: " + synAck.getAck());
 		
-		ArrayList<Packet> temp = packetsInBuffer.get(synAck.getDestination());
+		ArrayList<PacketHeader> temp = packetsInBuffer.get(synAck.getDestination());
 		if(temp == null) {
 			temp = new ArrayList<>();
 		}
@@ -264,28 +262,28 @@ public class TCP {
 		sendPacket(synAck, synAck.getDestination());
 	}
 	
-	private static void sendAckForSynAck(Packet lastPacket) {
+	private static void sendAckForSynAck(PacketHeader packet) {
 		int newSeq = 1;
 		int newAck = 1;
-		Packet ack = new Packet(myAddress, lastPacket.getSource(), 0, newSeq, newAck, false, true, false, 5, new byte[0]);
+		PacketHeader ack = new PacketHeader(myAddress, packet.getSource(), 0, newSeq, newAck, false, true, false, 5, 0);
 		System.out.println(ack.getDestination() + ", seq: " + ack.getSeq() +", ack: " + ack.getAck());
-		lastInfo.put(lastPacket.getSource(), new int[]{newSeq, newAck});
+		lastInfo.put(packet.getSource(), new int[]{newSeq, newAck});
 		sendPacket(ack, ack.getDestination());
 
 	}
 	
-	private static void sendAckForFinAck(Packet lastPacket) {
+	private static void sendAckForFinAck(PacketHeader lastPacket) {
 		int newSeq = lastPacket.getAck();
 		int newAck = lastPacket.getSeq()+1;
-		Packet ack = new Packet(myAddress, lastPacket.getSource(), 0, newSeq, newAck, false, true, false, 5, new byte[0]);
+		PacketHeader ack = new PacketHeader(myAddress, lastPacket.getSource(), 0, newSeq, newAck, false, true, false, 5, 0);
 		System.out.println(ack.getDestination() + ", seq: " + ack.getSeq() +", ack: " + ack.getAck());
 		sendPacket(ack, ack.getDestination());
 	}
 	
-	private static void sendAck(Packet lastPacket) {
+	private static void sendAck(PacketHeader lastPacket) {
 		int newSeq = lastPacket.getAck();
 		int newAck = lastPacket.getSeq()+lastPacket.getLength();
-		Packet ack = new Packet(myAddress, lastPacket.getSource(), 0, newSeq, newAck, false, true, false, 5, new byte[0]);
+		PacketHeader ack = new PacketHeader(myAddress, lastPacket.getSource(), 0, newSeq, newAck, false, true, false, 5, 0);
 		System.out.println(ack.getDestination() + ", seq: " + ack.getSeq() +", ack: " + ack.getAck());
 		//add to info
 		lastInfo.put(lastPacket.getSource(), new int[]{newSeq, newAck});
@@ -295,9 +293,9 @@ public class TCP {
 	private static void sendFin(int destination) {
 		int newSeq = lastInfo.get(destination)[1];
 		int newAck = lastInfo.get(destination)[0];
-		Packet fin = new Packet(myAddress, destination, 0, newSeq, newAck, false, false, true, 5, new byte[0]);
+		PacketHeader fin = new PacketHeader(myAddress, destination, 0, newSeq, newAck, false, false, true, 5, 0);
 		System.out.println(fin.getDestination() + ", seq: " + fin.getSeq() +", ack: " + fin.getAck());
-		ArrayList<Packet> temp = packetsInBuffer.get(destination);
+		ArrayList<PacketHeader> temp = packetsInBuffer.get(destination);
 		if(temp == null) {
 			temp = new ArrayList<>();
 		}
@@ -310,12 +308,12 @@ public class TCP {
 		sendPacket(fin, destination);
 	}
 	
-	private static void sendFinAck(Packet lastPacket) {
+	private static void sendFinAck(PacketHeader lastPacket) {
 		int newSeq = lastPacket.getAck();
 		int newAck = lastPacket.getSeq()+1;
-		Packet ack = new Packet(myAddress, lastPacket.getSource(), 0, newSeq, newAck, false, true, true, 5, new byte[0]);
+		PacketHeader ack = new PacketHeader(myAddress, lastPacket.getSource(), 0, newSeq, newAck, false, true, true, 5, 0);
 		System.out.println(ack.getDestination() + ", seq: " + ack.getSeq() +", ack: " + ack.getAck());
-		ArrayList<Packet> temp = packetsInBuffer.get(ack.getDestination());
+		ArrayList<PacketHeader> temp = packetsInBuffer.get(ack.getDestination());
 		if(temp == null) {
 			temp = new ArrayList<>();
 		}
@@ -331,10 +329,10 @@ public class TCP {
 	public static void sendData(int source, int destination, byte[] data) {
 		init(source, destination);
 		if(connections.containsKey(destination) && connections.get(destination).equals(State.ESTABLISHED)) {
-			Packet toSend = new Packet(myAddress, destination, 0, lastInfo.get(destination)[0], lastInfo.get(destination)[1], false, true, false, 5, data);
+			PacketHeader toSend = new PacketHeader(myAddress, destination, 0, lastInfo.get(destination)[0], lastInfo.get(destination)[1], false, true, false, 5, data.length);
 			lastInfo.put(destination, new int[]{toSend.getSeq()+toSend.getLength(),toSend.getAck()});
 			System.out.println(toSend.getDestination() + ", seq: " + toSend.getSeq() +", ack: " + toSend.getAck());
-			ArrayList<Packet> temp = packetsInBuffer.get(destination);
+			ArrayList<PacketHeader> temp = packetsInBuffer.get(destination);
 			if(temp == null) {
 				temp = new ArrayList<>();
 			}
@@ -364,7 +362,7 @@ public class TCP {
 		sendData(inetToInt(source), inetToInt(destination), data);
 	}
 	
-	public static void sendPacket(Packet packet, int destination) {
+	public static void sendPacket(PacketHeader packet, int destination) {
 		System.out.println("I AM ACKING WITH: ACK=" + packet.getAck() + " SEQ=" + packet.getSeq());
 		InetAddress destAddress = null;
 		try {
