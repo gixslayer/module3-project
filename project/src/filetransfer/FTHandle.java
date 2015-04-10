@@ -8,7 +8,8 @@ public final class FTHandle {
 	private String fileName;
 	private long fileSize;
 	private boolean hasStarted;
-	private Client otherClient;
+	private Client sender;
+	private Client receiver;
 	private String savePath;
 	
 	public FTHandle() {
@@ -35,8 +36,12 @@ public final class FTHandle {
 		return hasStarted;
 	}
 	
-	public Client getOtherClient() {
-		return otherClient;
+	public Client getSender() {
+		return sender;
+	}
+	
+	public Client getReceiver() {
+		return receiver;
 	}
 	
 	public String getSavePath() {
