@@ -390,6 +390,15 @@ public class MainGUI extends JFrame implements ActionListener, KeyListener, Mous
 		str = str.replace("1/4", "¼");
 		str = str.replace("*R*", "ℜ");
 		str = str.replace("*N*", "ℵ");
+		str = str.replace("*tflip*", " 	(╯°□°）╯︵ ┻━┻");
+		str = str.replace("*money*", "[̲̅$̲̅(̲̅ιοο̲̅)̲̅$̲̅]");
+		str = str.replace("*big*", "<font size=30>");
+		str = str.replace("*B*", "ℬ");
+		str = str.replace("*P*", "℘");
+		str = str.replace("*sniper*", "︻デ┳═ー ");
+		str = str.replace("o_o", " 	◕_◕ ");
+		str = str.replace("*pistols*", "̿' ̿'\\̵͇̿̿\\з=(◕_◕)=ε/̵͇̿̿/'̿'̿ ̿ ");
+		str = str.replace("x.x", "(✖╭╮✖)");
 		return str;
 	}
 	
