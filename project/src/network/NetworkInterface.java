@@ -55,7 +55,7 @@ public final class NetworkInterface implements Subscribable<NetworkCallbacks> {
 		}
 	}
 	
-	public void send(InetAddress dest, byte[] data) {
+	/*public void send(InetAddress dest, byte[] data) {
 		DatagramPacket datagram = new DatagramPacket(data,  0, data.length, dest, port);
 		
 		try {
@@ -63,7 +63,7 @@ public final class NetworkInterface implements Subscribable<NetworkCallbacks> {
 		} catch (IOException e) {
 			System.err.printf("IOException during DatagramSocket.send: %s%n", e.getMessage());
 		}
-	}
+	}*/
 	
 	public void sendReliable(InetAddress dest, Packet packet) {
 		reliableLayer.send(dest, packet);
@@ -78,13 +78,7 @@ public final class NetworkInterface implements Subscribable<NetworkCallbacks> {
 			byte[] receivedData = new byte[datagram.getLength()];
 			System.arraycopy(recvBuffer, datagram.getOffset(), receivedData, 0, receivedData.length);
 			InetAddress sourceAddress = datagram.getAddress();
-			byte[] data = TCP.handlePacket(this, localAddress, new project.Packet(receivedData));
-			
-			Packet packet = null;
-			if(data == null) {
-				packet = PacketFactory.fromType(Packet.TYPE_EMPTY);
-			}
-			else packet = Packet.deserialize(sourceAddress, data);
+			Packet packet = Packet.deserialize(sourceAddress, receivedData);
 			
 			if(packet.hasHeader()) {
 				reliableLayer.onPacketReceived(packet);

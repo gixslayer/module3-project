@@ -7,8 +7,9 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.Timer;
 
+import protocol.EmptyPacket;
+import protocol.Packet;
 import protocol.PacketHeader;
-
 import network.NetworkInterface;
 
 public class TCP {
@@ -371,6 +372,8 @@ public class TCP {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
 		}
-		ni.send(destAddress, packet.getBytes());
+		Packet newPacket = new EmptyPacket();
+		newPacket.setHeader(packet);
+		ni.send(destAddress, newPacket);
 	}
 }

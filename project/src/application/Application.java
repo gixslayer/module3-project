@@ -62,7 +62,6 @@ public class Application implements NetworkCallbacks, MulticastCallbacks, CacheC
 		// TODO: Reconsider how we want to handle this (call it here, reliable/unreliable etc).
 		sendToAll(new DisconnectPacket(localClient));
 		
-		TCP.stopConnections();
 		announceThread.close();
 		mci.close();
 		ni.stop();

@@ -29,21 +29,21 @@ public abstract class Packet {
 		byte[] headerData = hasHeader ? header.serialize() : null;
 		int contentLength = content.length;
 		int headerLength = hasHeader ? headerData.length : 0;
-		int length = hasHeader ? 13 + headerLength + contentLength : 9 + content.length;
+		int length = hasHeader ? 13 + contentLength + headerLength : 9 + content.length;
 		byte[] buffer = new byte[length];
 		int offset = 5;
 		
 		ByteUtils.getIntBytes(type, buffer, 0);
 		buffer[4] = hasHeader ? (byte)0x1 : (byte)0x0;
 		
+		ByteUtils.getIntBytes(contentLength, buffer, offset);
+		System.arraycopy(content, 0, buffer, offset + 4, contentLength);
+		offset += 4 + contentLength;
+		
 		if(hasHeader) {
 			ByteUtils.getIntBytes(headerLength, buffer, offset);
 			System.arraycopy(headerData, 0, buffer, offset + 4, headerLength);
-			offset += 4 + headerLength;
 		}
-		
-		ByteUtils.getIntBytes(contentLength, buffer, offset);
-		System.arraycopy(content, 0, buffer, offset + 4, contentLength);
 		
 		return buffer;
 	}
@@ -55,15 +55,16 @@ public abstract class Packet {
 		boolean hasHeader = buffer[4] == 0x1;
 		int offset = 5;
 		
+		int contentLength = ByteUtils.getIntFromBytes(buffer, offset);
+		packet.deserializeContent(buffer, offset + 4, contentLength);
+		offset += 4 + contentLength;
+		
 		if(hasHeader) {
 			header = new PacketHeader();
 			int headerLength = ByteUtils.getIntFromBytes(buffer, offset);
-			offset += 4 + header.deserialize(buffer, offset + 4, headerLength);
+			header.deserialize(buffer, contentLength, offset + 4, headerLength);
 		}
 		
-		int contentLength = ByteUtils.getIntFromBytes(buffer, offset);
-		
-		packet.deserializeContent(buffer, offset + 4, contentLength);
 		packet.sourceAddress = sourceAddress;
 		packet.hasHeader = hasHeader;
 		packet.header = header;
