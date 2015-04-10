@@ -22,7 +22,7 @@ public final class ReliableLayer {
 		TCP.sendData(ni, localAddress, dest, packet);
 	}
 	
-	public void onPacketReceived(Packet packet) {
-		TCP.handlePacket(ni, localAddress, packet.getHeader());
+	public boolean onPacketReceived(Packet packet) {
+		return TCP.handlePacket(ni, localAddress, packet.getHeader());
 	}
 }
