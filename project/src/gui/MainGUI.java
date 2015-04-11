@@ -3,7 +3,7 @@ package gui;
 import javax.swing.*;
 
 import client.Client;
-import filetransfer.FTHandle;
+import filetransfer.FileTransferHandle;
 import application.Application;
 import application.ApplicationCallbacks;
 
@@ -80,7 +80,7 @@ public class MainGUI extends JFrame implements ActionListener, KeyListener, Mous
 	
 	private Application app;
 	
-	private ArrayList<FTHandle> fileHandles = new ArrayList<FTHandle>();
+	private ArrayList<FileTransferHandle> fileHandles = new ArrayList<FileTransferHandle>();
 	
 	private Thread rbThread;
 	private AnimationThread animation;
@@ -356,7 +356,7 @@ public class MainGUI extends JFrame implements ActionListener, KeyListener, Mous
 	}
 	
 	//TODO: Make progress go from 0 to 100.
-	public void addToScreen(Client sender, Client receiver, FTHandle handle, float progress) {
+	public void addToScreen(Client sender, Client receiver, FileTransferHandle handle, float progress) {
 		FileLine f = new FileLine(sender, receiver, handle.getFileName(), progress);
 		f.setLine(changeText(f.getLine()));
 		list.addElement(f);
@@ -942,7 +942,7 @@ public class MainGUI extends JFrame implements ActionListener, KeyListener, Mous
 	}
 
 	@Override
-	public void onFileTransferRequest(FTHandle handle) {
+	public void onFileTransferRequest(FileTransferHandle handle) {
 		if (JOptionPane.showConfirmDialog(this, handle.getSender().getName() + " would like to send you " + handle.getFileName() + "."
 				+ System.lineSeparator() + "This file is " + handle.getFileSize() + " bytes long."
 				+ System.lineSeparator() + "Do you accept?", "File Transfer", 
@@ -950,7 +950,7 @@ public class MainGUI extends JFrame implements ActionListener, KeyListener, Mous
 			JFileChooser chooser = new JFileChooser();
 		    int returnVal = chooser.showOpenDialog(this);
 		    if(returnVal == JFileChooser.APPROVE_OPTION) {
-		    	app.onReplyToFileTransfer(handle, true, chooser.getSelectedFile().getName());
+		    	app.onReplyToFileTransfer(handle, true, chooser.getSelectedFile().getAbsolutePath());
 		    }
 		    else
 		    	app.onReplyToFileTransfer(handle, false, null);
@@ -960,20 +960,20 @@ public class MainGUI extends JFrame implements ActionListener, KeyListener, Mous
 	}
 
 	@Override
-	public void onFileTransferStarted(FTHandle handle) {
+	public void onFileTransferStarted(FileTransferHandle handle) {
 		fileHandles.add(handle);
 		addToScreen(handle.getSender(), handle.getReceiver(), handle, 0);
 	}
 
 	@Override
-	public void onFileTransferRejected(FTHandle handle) {
+	public void onFileTransferRejected(FileTransferHandle handle) {
 		fileHandles.remove(handle);
 		if(handle.getReceiver().equals(localClient)) JOptionPane.showMessageDialog(this, "You've successfully rejected the transfer of " + handle.getFileName() + " from " + handle.getSender().getName() + ".");
 		if(handle.getSender().equals(localClient)) JOptionPane.showMessageDialog(this, "The transfer of " + handle.getFileName() + " to " + handle.getReceiver().getName() + " has been rejected.");
 	}
 
 	@Override
-	public void onFileTransferCompleted(FTHandle handle) {
+	public void onFileTransferCompleted(FileTransferHandle handle) {
 		fileHandles.remove(handle);
 		if(handle.getReceiver().equals(localClient)) {
 			if(JOptionPane.showConfirmDialog(this, "The transfer of " + handle.getFileName() + " from " + handle.getSender().getName() + " has succeeded." + System.lineSeparator() + "Do you want to open it?") == JOptionPane.YES_OPTION) {
@@ -987,19 +987,19 @@ public class MainGUI extends JFrame implements ActionListener, KeyListener, Mous
 	}
 
 	@Override
-	public void onFileTransferFailed(FTHandle handle) {
+	public void onFileTransferFailed(FileTransferHandle handle) {
 		fileHandles.remove(handle);
 		if(handle.getReceiver().equals(localClient)) JOptionPane.showMessageDialog(this, "The transfer of " + handle.getFileName() + " from " + handle.getSender().getName() + " has failed. Please try again.");
 		if(handle.getSender().equals(localClient)) JOptionPane.showMessageDialog(this, "The transfer of " + handle.getFileName() + " to " + handle.getReceiver().getName() + " has failed. Please try again.");
 	}
 
 	@Override
-	public void onFileTransferProgress(FTHandle handle, float progress) {
+	public void onFileTransferProgress(FileTransferHandle handle, float progress) {
 		addToScreen(handle.getSender(), handle.getReceiver(), handle, progress);
 	}
 
 	@Override
-	public void onFileTransferCancelled(FTHandle handle) {
+	public void onFileTransferCancelled(FileTransferHandle handle) {
 		fileHandles.remove(handle);
 		if(handle.getReceiver().equals(localClient)) JOptionPane.showMessageDialog(this, "The transfer of " + handle.getFileName() + " from " + handle.getSender().getName() + " has been cancelled.");
 		if(handle.getSender().equals(localClient)) JOptionPane.showMessageDialog(this, "The transfer of " + handle.getFileName() + " to " + handle.getReceiver().getName() + " has cancelled. Please try again.");

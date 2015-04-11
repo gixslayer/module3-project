@@ -1,24 +1,52 @@
 package protocol;
 
+import utils.ByteUtils;
+
 public final class FTReplyPacket extends Packet {
-	private int requestId; // This reply responds to a request with this id.
-	private boolean response; // Accept/reject request.
-	private int transferId; // Id used for the transfer, 0 if response = false.
+	private int requestId;
+	private int transferId;
+	private boolean response;
 	
 	public FTReplyPacket() {
 		super(Packet.TYPE_FT_REPLY);
 	}
+	
+	public FTReplyPacket(int requestId, int transferId, boolean response) {
+		super(Packet.TYPE_FT_REPLY);
+		
+		this.requestId = requestId;
+		this.transferId = transferId;
+		this.response = response;
+	}
 
 	@Override
 	protected byte[] serializeContent() {
-		// TODO Auto-generated method stub
-		return null;
+		byte[] buffer = new byte[9];
+		
+		ByteUtils.getIntBytes(transferId, buffer, 0);
+		ByteUtils.getIntBytes(requestId, buffer, 4);
+		buffer[8] = response ? (byte)0xff : (byte)0x0;
+		
+		return buffer;
 	}
 
 	@Override
 	protected void deserializeContent(byte[] buffer, int offset, int length) {
-		// TODO Auto-generated method stub
+		transferId = ByteUtils.getIntFromBytes(buffer, offset);
+		requestId = ByteUtils.getIntFromBytes(buffer, offset + 4);
+		response = buffer[offset + 8] == 0xff;
 		
 	}
 
+	public int getRequestId() {
+		return requestId;
+	}
+	
+	public int getTransferId() {
+		return transferId;
+	}
+	
+	public boolean getResponse() {
+		return response;
+	}
 }

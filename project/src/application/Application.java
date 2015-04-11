@@ -1,6 +1,6 @@
 package application;
 
-import filetransfer.FTHandle;
+import filetransfer.FileTransferHandle;
 import filetransfer.FileTransfer;
 import gui.GUICallbacks;
 
@@ -185,17 +185,17 @@ public class Application implements UnicastCallbacks, MulticastCallbacks, CacheC
 	}
 	
 	@Override
-	public FTHandle onRequestFileTransfer(Client dest, String filePath) {
+	public FileTransferHandle onRequestFileTransfer(Client dest, String filePath) {
 		return fileTransfer.createRequest(dest, filePath);
 	}
 
 	@Override
-	public void onReplyToFileTransfer(FTHandle handle, boolean response, String savePath) {
+	public void onReplyToFileTransfer(FileTransferHandle handle, boolean response, String savePath) {
 		fileTransfer.sendReply(handle, response, savePath);
 	}
 
 	@Override
-	public void onCancelFileTransfer(FTHandle handle) {
+	public void onCancelFileTransfer(FileTransferHandle handle) {
 		fileTransfer.cancel(handle);
 	}
 
@@ -220,6 +220,14 @@ public class Application implements UnicastCallbacks, MulticastCallbacks, CacheC
 			handleGroupChatPacket((GroupChatPacket)packet);
 		} else if(type == Packet.TYPE_POKE) {
 			handlePokePacket((PokePacket)packet);
+		} else if(type == Packet.TYPE_FT_REQUEST) {
+			fileTransfer.onRequestPacketReceived((FTRequestPacket)packet);
+		} else if(type == Packet.TYPE_FT_REPLY) {
+			fileTransfer.onReplyPacketReceived((FTReplyPacket)packet);
+		} else if(type == Packet.TYPE_FT_DATA) {
+			fileTransfer.onDataPacketReceived((FTDataPacket)packet);
+		} else if(type == Packet.TYPE_FT_CANCEL) {
+			fileTransfer.onCancelPacketReceived((FTCancelPacket)packet);
 		}
 	}
 	
