@@ -49,10 +49,7 @@ public class MulticastInterface {
 	}
 	
 	public void send(Packet packet) {
-		send(packet.serialize());
-	}
-	
-	public void send(byte[] data) {
+		byte[] data = packet.serialize();
 		DatagramPacket datagram = new DatagramPacket(data, data.length, group, port);
 		
 		try {

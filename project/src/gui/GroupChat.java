@@ -2,8 +2,8 @@ package gui;
 
 import javax.swing.*;
 
+import backend.Backend;
 import client.Client;
-import application.Application;
 
 import java.awt.*;
 import java.awt.event.ActionEvent;
@@ -27,10 +27,10 @@ public class GroupChat extends JPanel implements ActionListener, KeyListener, Ch
 	private Client localClient;
 	private Group group;
 	private MainGUI main;
-	private Application app;
+	private Backend app;
 	private AnimationThread animation;
 	
-	public GroupChat(Client localClient, Group group, MainGUI main, Application app, AnimationThread animation) {
+	public GroupChat(Client localClient, Group group, MainGUI main, Backend app, AnimationThread animation) {
 		this.localClient = localClient;
 		this.group = group;
 		this.main = main;

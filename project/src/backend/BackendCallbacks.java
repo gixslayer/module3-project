@@ -1,9 +1,9 @@
-package application;
+package backend;
 
 import client.Client;
 import filetransfer.FileTransferCallbacks;
 
-public interface ApplicationCallbacks extends FileTransferCallbacks {
+public interface BackendCallbacks extends FileTransferCallbacks {
 	void onClientConnected(Client client);
 	void onClientDisconnected(Client client);
 	void onClientTimedOut(Client client);

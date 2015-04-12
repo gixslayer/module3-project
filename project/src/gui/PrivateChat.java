@@ -2,8 +2,8 @@ package gui;
 
 import javax.swing.*;
 
+import backend.Backend;
 import client.Client;
-import application.Application;
 
 import java.awt.*;
 import java.awt.event.ActionEvent;
@@ -28,10 +28,10 @@ public class PrivateChat extends JPanel implements ActionListener, KeyListener, 
 	private Client localClient;
 	private Client otherClient;
 	private MainGUI main;
-	private Application app;
+	private Backend app;
 	private AnimationThread animation;
 	
-	public PrivateChat(Client localClient, Client otherClient, MainGUI main, Application app, AnimationThread animation) {
+	public PrivateChat(Client localClient, Client otherClient, MainGUI main, Backend app, AnimationThread animation) {
 		this.localClient = localClient;
 		this.otherClient = otherClient;
 		this.main = main;

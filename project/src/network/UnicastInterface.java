@@ -45,13 +45,10 @@ public final class UnicastInterface {
 		try {
 			socket.send(datagram);
 		} catch (IOException e) {
+			// TODO: Should this throw an exception or just print an error message to stderr?
 			//System.err.printf("IOException during DatagramSocket.send: %s%", e.getMessage());
 			throw new RuntimeException(e);
 		}
-	}
-	
-	public void sendReliable(InetAddress dest, Packet packet) {
-		reliableLayer.send(dest, packet);
 	}
 	
 	private Packet recv() {
@@ -86,7 +83,7 @@ public final class UnicastInterface {
 				if(packet == null) {
 					break;
 				} else if(packet.getType() == Packet.TYPE_EMPTY) {
-					// Don't send empty packets to the callback (they should only be used by the reliableLayer). 
+					// Don't send empty packets to the callback (they should only be used by the TcpInterface). 
 					continue;
 				}
 				

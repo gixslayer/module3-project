@@ -2,10 +2,10 @@ package gui;
 
 import javax.swing.*;
 
+import backend.Backend;
+import backend.BackendCallbacks;
 import client.Client;
 import filetransfer.FileTransferHandle;
-import application.Application;
-import application.ApplicationCallbacks;
 
 import java.awt.*;
 import java.awt.event.ActionEvent;
@@ -25,7 +25,7 @@ import java.util.ArrayList;
 import java.util.HashMap;
 
 @SuppressWarnings("serial")
-public class MainGUI extends JFrame implements ActionListener, KeyListener, MouseListener, WindowListener, ApplicationCallbacks {
+public class MainGUI extends JFrame implements ActionListener, KeyListener, MouseListener, WindowListener, BackendCallbacks {
 	private Container c;
 	
 	private static final Color BGCOLOR = Color.LIGHT_GRAY;
@@ -78,7 +78,7 @@ public class MainGUI extends JFrame implements ActionListener, KeyListener, Mous
 	private Client localClient;
 	private Icon closeIcon;
 	
-	private Application app;
+	private Backend app;
 	
 	private ArrayList<FileTransferHandle> fileHandles = new ArrayList<FileTransferHandle>();
 	
@@ -91,7 +91,7 @@ public class MainGUI extends JFrame implements ActionListener, KeyListener, Mous
 	 */
 	public MainGUI(String name) {
 		super("Chat");
-		app = new Application(name, this);
+		app = new Backend(name, this);
 		localClient = app.getLocalClient();
 		init();
 		app.start();
@@ -854,7 +854,7 @@ public class MainGUI extends JFrame implements ActionListener, KeyListener, Mous
 	public void windowClosing(WindowEvent arg0) {
 		if (JOptionPane.showConfirmDialog(this, "Are you sure to close this window?", "Really Closing?", 
 				JOptionPane.YES_NO_OPTION, JOptionPane.QUESTION_MESSAGE) == JOptionPane.YES_OPTION){
-			app.stop();
+			app.close();
 			animation.setCont(false);
 			rainbowMode = false;
 			if(prefMenu != null) prefMenu.dispose();
