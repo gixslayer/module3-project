@@ -1,8 +1,15 @@
 package backend;
 
+import events.CancelFileTransferEvent;
 import events.Event;
 import events.EventQueue;
 import events.MulticastPacketReceivedEvent;
+import events.ReplyToFileTransferEvent;
+import events.RequestFileTransferEvent;
+import events.SendChatEvent;
+import events.SendGroupChatEvent;
+import events.SendPokeEvent;
+import events.SendPrivateChatEvent;
 import events.UnicastPacketReceivedEvent;
 import filetransfer.FileTransferHandle;
 import filetransfer.FileTransfer;
@@ -57,45 +64,56 @@ public class Backend extends Thread implements UnicastCallbacks, MulticastCallba
 		this.eventQueue = new EventQueue();
 	}
 
-	public void close() {
-		keepProcessing = false;
-	}
-	
-	//-------------------------------------------
-	// Processing.
-	//-------------------------------------------
 	@Override
 	public void run() {
-		// Startup phase.
-		setName("backend");
+		startup();
 		
-		multicastInterface.start();
-		unicastInterface.start();
-		keepProcessing = true;
-		
-		// Enter processing loop.
 		while(keepProcessing) {
 			process();
 			
 			// TODO: Should we call a short Thread.sleep here to limit cpu usage?
 		}
 		
-		// Shutdown phase.
+		shutdown();
+	}
+	
+	public void close() {
+		keepProcessing = false;
+	}
+	
+	private void startup() {
+		// Open the sockets/start the receive threads.
+		multicastInterface.start();
+		unicastInterface.start();
+		
+		// Set the thread name for debugging purposes.
+		setName("backend");		
+		keepProcessing = true;
+	}
+	
+	private void shutdown() {
 		// TODO: Reconsider how we want to handle this (call it here, reliable/unreliable etc).
 		sendToAll(new DisconnectPacket(localClient));
+		
+		// Close the receive threads/sockets.
 		multicastInterface.close();
 		unicastInterface.close();
 	}
-	
+	//-------------------------------------------
+	// Processing.
+	//-------------------------------------------
 	private void process() {
 		// Process all events currently queued.
 		processEventQueue();
+
+		// Let the client cache check for timed-out clients etc...
+		clientCache.process();
+		
+		// Let the TCP implementation do the work it needs (check for retransmission/send new packets/etc).
+		tcpInterface.process();
 		
 		// Send multicast announcement if required.
 		announceSender.process();
-		
-		// Let the client cache check for timed-out clients etc...
-		clientCache.process();
 	}
 	
 	private void processEventQueue() {
@@ -121,6 +139,20 @@ public class Backend extends Thread implements UnicastCallbacks, MulticastCallba
 			handleMulticastPacketReceivedEvent((MulticastPacketReceivedEvent)event);
 		} else if(type == Event.TYPE_UNICAST_PACKET_RECEIVED) {
 			handleUnicastPacketReceivedEvent((UnicastPacketReceivedEvent)event);
+		} else if(type == Event.TYPE_SEND_CHAT) {
+			handleSendChatEvent((SendChatEvent)event);
+		} else if(type == Event.TYPE_SEND_GROUP_CHAT) {
+			handleSendGroupChatEvent((SendGroupChatEvent)event);
+		} else if(type == Event.TYPE_SEND_POKE) {
+			handleSendPokeEvent((SendPokeEvent)event);
+		} else if(type == Event.TYPE_SEND_PRIVATE_CHAT) {
+			handleSendPrivateChatEvent((SendPrivateChatEvent)event);
+		} else if(type == Event.TYPE_REQUEST_FILE_TRANSFER) {
+			handleRequestFileTransferEvent((RequestFileTransferEvent)event);
+		} else if(type == Event.TYPE_REPLY_TO_FILE_TRANSFER) {
+			handleReplyToFileTransferEvent((ReplyToFileTransferEvent)event);
+		} else if(type == Event.TYPE_CANCEL_FILE_TRANSFER) {
+			handleCancelFileTransferEvent((CancelFileTransferEvent)event);
 		}
 	}
 	
@@ -172,6 +204,42 @@ public class Backend extends Thread implements UnicastCallbacks, MulticastCallba
 		} else if(type == Packet.TYPE_FT_CANCEL) {
 			fileTransfer.onCancelPacketReceived((FTCancelPacket)packet);
 		}
+	}
+	
+	private void handleSendChatEvent(SendChatEvent event) {
+		ChatPacket packet = new ChatPacket(localClient, event.getMessage());
+		
+		sendReliableToAll(packet);
+	}
+	
+	private void handleSendGroupChatEvent(SendGroupChatEvent event) {
+		GroupChatPacket packet = new GroupChatPacket(localClient, event.getGroup(), event.getMessage());
+		
+		sendReliableToAll(packet);
+	}
+	
+	private void handleSendPokeEvent(SendPokeEvent event) {
+		PokePacket packet = new PokePacket(localClient);
+		
+		sendReliableTo(event.getClient(), packet);
+	}
+	
+	private void handleSendPrivateChatEvent(SendPrivateChatEvent event) {
+		PrivateChatPacket packet = new PrivateChatPacket(localClient, event.getMessage());
+		
+		sendReliableTo(event.getClient(), packet);
+	}
+	
+	private void handleRequestFileTransferEvent(RequestFileTransferEvent event) {
+		fileTransfer.createRequest(event.getClient(), event.getFilePath());
+	}
+	
+	private void handleReplyToFileTransferEvent(ReplyToFileTransferEvent event) {
+		fileTransfer.sendReply(event.getHandle(), event.getResponse(), event.getSavePath());
+	}
+	
+	private void handleCancelFileTransferEvent(CancelFileTransferEvent event) {
+		fileTransfer.cancel(event.getHandle());
 	}
 	
 	//-------------------------------------------
@@ -315,6 +383,8 @@ public class Backend extends Thread implements UnicastCallbacks, MulticastCallba
 	//-------------------------------------------
 	// MulticastCallbacks.
 	//-------------------------------------------
+	// NOTE: These methods should never process anything backend related directly as they are always called from
+	// the multicast receive thread. Push an appropriate event onto the event queue so it can be processed on the backend thread. 
 	@Override
 	public void onMulticastPacketReceived(Packet packet) {
 		eventQueue.enqueue(new MulticastPacketReceivedEvent(packet));
@@ -323,6 +393,8 @@ public class Backend extends Thread implements UnicastCallbacks, MulticastCallba
 	//-------------------------------------------
 	// UnicastCallbacks.
 	//-------------------------------------------
+	// NOTE: These methods should never process anything backend related directly as they are always called from
+	// the unicast receive thread. Push an appropriate event onto the event queue so it can be processed on the backend thread. 
 	@Override
 	public void onUnicastPacketReceived(Packet packet) {
 		eventQueue.enqueue(new UnicastPacketReceivedEvent(packet));
@@ -331,10 +403,12 @@ public class Backend extends Thread implements UnicastCallbacks, MulticastCallba
 	//-------------------------------------------
 	// TcpCallbacks.
 	//-------------------------------------------
+	// NOTE: These methods should always be called by the backend thread.
 	@Override
 	public void onTcpPacketReceived(Packet packet) {
-		// Clear the packet header so that on the next event queue processing iteration it will be send to the correct event handler
-		// instead of being send to the TcpInterface again.
+		// We could process the received packet here, but it's nicer to have one central place to process all received packets.
+		// Push a new UnicastPacketReceivedEvent onto the event queue, but clear the packet header so that on the next 
+		// event queue processing iteration it will be send to the correct event handler instead of being send to the TcpInterface again.
 		packet.clearHeader();
 		
 		eventQueue.enqueue(new UnicastPacketReceivedEvent(packet));
@@ -343,6 +417,7 @@ public class Backend extends Thread implements UnicastCallbacks, MulticastCallba
 	//-------------------------------------------
 	// CacheCallbacks.
 	//-------------------------------------------
+	// NOTE: These methods should always be called by the backend thread.
 	@Override
 	public void onClientTimedOut(Client client) {
 		// Communication is no longer possible, force close any existing TCP connections.
@@ -376,46 +451,40 @@ public class Backend extends Thread implements UnicastCallbacks, MulticastCallba
 	//-------------------------------------------
 	// GUICallbacks.
 	//-------------------------------------------
+	// NOTE: These methods should never process anything backend related directly as they are always called from
+	// the GUI thread. Push an appropriate event onto the event queue so it can be processed on the backend thread. 
 	@Override
 	public void onSendPrivateMessage(Client client, String message) {
-		PrivateChatPacket packet = new PrivateChatPacket(localClient, message);
-		
-		sendReliableTo(client, packet);
+		eventQueue.enqueue(new SendPrivateChatEvent(client, message));
 	}
 	
 	@Override
 	public void onSendMessage(String message) {
-		ChatPacket packet = new ChatPacket(localClient, message);
-		
-		sendReliableToAll(packet);
+		eventQueue.enqueue(new SendChatEvent(message));
 	}
 	
 	@Override
-	public void onSendGroupMessage(String groupName, String message) {
-		GroupChatPacket packet = new GroupChatPacket(localClient, groupName, message);
-		
-		sendReliableToAll(packet);
+	public void onSendGroupMessage(String group, String message) {
+		eventQueue.enqueue(new SendGroupChatEvent(group, message));
 	}
 	
 	@Override
 	public void onSendPoke(Client client) {
-		PokePacket packet = new PokePacket(localClient);
-
-		sendReliableTo(client, packet);
+		eventQueue.enqueue(new SendPokeEvent(client));
 	}
 	
 	@Override
-	public FileTransferHandle onRequestFileTransfer(Client dest, String filePath) {
-		return fileTransfer.createRequest(dest, filePath);
+	public void onRequestFileTransfer(Client client, String filePath) {
+		eventQueue.enqueue(new RequestFileTransferEvent(client, filePath));
 	}
 
 	@Override
 	public void onReplyToFileTransfer(FileTransferHandle handle, boolean response, String savePath) {
-		fileTransfer.sendReply(handle, response, savePath);
+		eventQueue.enqueue(new ReplyToFileTransferEvent(handle, response, savePath));
 	}
 
 	@Override
 	public void onCancelFileTransfer(FileTransferHandle handle) {
-		fileTransfer.cancel(handle);
+		eventQueue.enqueue(new CancelFileTransferEvent(handle));
 	}
 }

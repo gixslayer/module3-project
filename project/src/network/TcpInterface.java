@@ -13,6 +13,10 @@ public final class TcpInterface {
 		this.callbacks = callbacks;
 	}
 	
+	public void process() {
+		
+	}
+	
 	public void send(InetAddress destination, Packet packet) {
 		
 	}
