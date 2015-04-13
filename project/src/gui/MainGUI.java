@@ -69,8 +69,6 @@ public class MainGUI extends JFrame implements ActionListener, KeyListener, Mous
 	
 	private boolean timestampEnabled = false;
 	
-	private float lastProgress = 0;
-	
 	private JTabbedPane tabPane;
 	private JTextField typeField;
 	
@@ -92,9 +90,8 @@ public class MainGUI extends JFrame implements ActionListener, KeyListener, Mous
 	
 	private Backend app;
 	
-	private ArrayList<FileTransferHandle> fileHandles = new ArrayList<FileTransferHandle>();
+	private HashMap<FileTransferHandle, Float> fileHandles = new HashMap<FileTransferHandle, Float>();
 	
-	private Thread rbThread;
 	private AnimationThread animation;
 	
 	/**
@@ -1028,9 +1025,8 @@ public class MainGUI extends JFrame implements ActionListener, KeyListener, Mous
 	@Override
 	public void onFileTransferStarted(FileTransferHandle handle) {
 		System.out.println("Started!");
-		fileHandles.add(handle);
+		fileHandles.put(handle, 0f);
 		addToScreen(handle.getSender(), handle.getReceiver(), handle, 0);
-		lastProgress = 0;
 	}
 
 	@Override
@@ -1066,9 +1062,10 @@ public class MainGUI extends JFrame implements ActionListener, KeyListener, Mous
 
 	@Override
 	public void onFileTransferProgress(FileTransferHandle handle, float progress) {
-		if(progress - lastProgress >= 10) {
+		if(progress - fileHandles.get(handle) >= 10) {
 			addToScreen(handle.getSender(), handle.getReceiver(), handle, progress);
-			lastProgress = progress;
+			fileHandles.remove(handle);
+			fileHandles.put(handle, progress);
 		}
 	}
 
