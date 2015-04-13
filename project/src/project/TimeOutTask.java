@@ -2,19 +2,26 @@ package project;
 
 import java.util.TimerTask;
 
-public class TimeOutTask  extends TimerTask {
+import protocol.Packet;
 
-	private int destination;
+public class TimeOutTask  extends Thread {
+
+	private Packet packet;
 	
-	public TimeOutTask(int destination) {
-		this.destination = destination;
+	public TimeOutTask(Packet packet) {
+		this.packet = packet;
 	}
 	
+	public void cancel() {
+		this.interrupt();
+	}
 	@Override
 	public void run() {
-		// TODO Auto-generated method stub
-		TCP.timeOut(destination);
-		
-		this.cancel();
+		try {
+			sleep(100);
+		} catch (InterruptedException e) {
+			return;
+		}
+		TCP.ackTimeOut(packet);
 	}
 }
