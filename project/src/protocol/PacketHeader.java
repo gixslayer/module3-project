@@ -12,6 +12,10 @@ public final class PacketHeader {
 		
 	}
 	
+	public PacketHeader(int seq, int ack, int flags) {
+		// TODO: Implement.
+	}
+	
 	public PacketHeader(int source, int destination, int type, int seq, int ack, boolean synFlag, boolean ackFlag, boolean finFlag, int windowSize, int dataLength) {
 		this.source = source;
 		this.destination = destination;
@@ -161,5 +165,15 @@ public final class PacketHeader {
 		this.length = dataLength;
 		fillVariables();
 		return length;
+	}
+	
+	public int getFlags() {
+		// TODO: Implement.
+		return 0;
+	}
+	
+	public boolean hasFlags(int flags) {
+		// TODO: Implement ((this.flags & flags) == flags).
+		return false;
 	}
 }
