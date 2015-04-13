@@ -32,10 +32,6 @@ public class UserMenu extends JPopupMenu implements ActionListener {
         }
         add(chooseColor);
         
-        fileItem = new JMenuItem("Send File");
-        fileItem.addActionListener(this);
-        add(fileItem);
-        
         if(!otherClient.equals(localClient)) {
         	privChatItem = new JMenuItem("Private Chat");
 	        privChatItem.addActionListener(this);
@@ -49,7 +45,9 @@ public class UserMenu extends JPopupMenu implements ActionListener {
 	        lastSeen.addActionListener(this);
 	        add(lastSeen);
 	        
-	        
+	        fileItem = new JMenuItem("Send File");
+	        fileItem.addActionListener(this);
+	        add(fileItem);
         }
     }
     
@@ -59,7 +57,7 @@ public class UserMenu extends JPopupMenu implements ActionListener {
 			main.addPrivateChat(otherClient, true);
 		}
 		else if(arg0.getSource().equals(pokeItem)) {
-			main.receiveText("Hey! Don't poke me! :(", otherClient, true, false, null);
+			main.poke(otherClient);
 		}
 		else if(arg0.getSource().equals(lastSeen)) {
 			main.addToScreen(main.getBot(), otherClient + " was last seen at: " + main.getLastSeen(otherClient));
