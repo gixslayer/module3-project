@@ -399,6 +399,6 @@ public class TCP {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
 		}
-		ni.send(destAddress, packet);
+		ni.sendTCP(destAddress, packet);
 	}
 }

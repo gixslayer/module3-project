@@ -6,6 +6,7 @@ import java.net.DatagramSocket;
 import java.net.InetAddress;
 import java.net.SocketException;
 
+import project.TCP;
 import protocol.Packet;
 
 public final class UnicastInterface {
@@ -16,6 +17,7 @@ public final class UnicastInterface {
 	private final byte[] recvBuffer;
 	private final UnicastCallbacks callbacks;
 	private final ReliableLayer reliableLayer;
+	private final InetAddress localAddress;
 	
 	public UnicastInterface(InetAddress localAddress, int port, UnicastCallbacks callbacks) {
 		try {
@@ -23,6 +25,7 @@ public final class UnicastInterface {
 			this.port = port;
 			this.recvBuffer = new byte[RECV_BUFFER_SIZE];
 			this.callbacks = callbacks;
+			this.localAddress = localAddress;
 			this.reliableLayer = new ReliableLayer(localAddress, this);
 		} catch (SocketException e) {
 			throw new RuntimeException(String.format("Failed to create unicast interface: %s", e.getMessage()));
@@ -40,6 +43,12 @@ public final class UnicastInterface {
 	
 	public void send(InetAddress dest, Packet packet) {
 		byte[] data = packet.serialize();
+		TCP.sendData(this, localAddress, dest, packet);
+	}
+	
+	public void sendTCP(InetAddress dest, Packet packet) {
+		byte[] data = packet.serialize();
+		
 		DatagramPacket datagram = new DatagramPacket(data,  0, data.length, dest, port);
 		
 		try {
