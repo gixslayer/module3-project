@@ -10,6 +10,12 @@ public abstract class Event {
 	public static final int TYPE_REQUEST_FILE_TRANSFER = 6;
 	public static final int TYPE_REPLY_TO_FILE_TRANSFER = 7;
 	public static final int TYPE_CANCEL_FILE_TRANSFER = 8;
+	public static final int TYPE_SEND_PACKET = 9;
+	public static final int TYPE_SEND_RELIABLE_PACKET = 10;
+	public static final int TYPE_FTTASK_FAILED = 11;
+	public static final int TYPE_FTTASK_CANCELLED = 12;
+	public static final int TYPE_FTTASK_COMPLETED = 13;
+	public static final int TYPE_FTTASK_PROGRESS = 14;
 	
 	private final int type;
 	

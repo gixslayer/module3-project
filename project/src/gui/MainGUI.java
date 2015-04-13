@@ -987,7 +987,7 @@ public class MainGUI extends JFrame implements ActionListener, KeyListener, Mous
 	}
 
 	@Override
-	public void onFileTransferFailed(FileTransferHandle handle) {
+	public void onFileTransferFailed(FileTransferHandle handle, String reason) {
 		fileHandles.remove(handle);
 		if(handle.getReceiver().equals(localClient)) JOptionPane.showMessageDialog(this, "The transfer of " + handle.getFileName() + " from " + handle.getSender().getName() + " has failed. Please try again.");
 		if(handle.getSender().equals(localClient)) JOptionPane.showMessageDialog(this, "The transfer of " + handle.getFileName() + " to " + handle.getReceiver().getName() + " has failed. Please try again.");

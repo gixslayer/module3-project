@@ -3,13 +3,19 @@ package backend;
 import events.CancelFileTransferEvent;
 import events.Event;
 import events.EventQueue;
+import events.FTTaskCancelledEvent;
+import events.FTTaskCompletedEvent;
+import events.FTTaskFailedEvent;
+import events.FTTaskProgressEvent;
 import events.MulticastPacketReceivedEvent;
 import events.ReplyToFileTransferEvent;
 import events.RequestFileTransferEvent;
 import events.SendChatEvent;
 import events.SendGroupChatEvent;
+import events.SendPacketEvent;
 import events.SendPokeEvent;
 import events.SendPrivateChatEvent;
+import events.SendReliablePacketEvent;
 import events.UnicastPacketReceivedEvent;
 import filetransfer.FileTransferHandle;
 import filetransfer.FileTransfer;
@@ -39,6 +45,7 @@ public class Backend extends Thread implements UnicastCallbacks, MulticastCallba
 	public static final int UNICAST_PORT = 6970;
 	public static final int ANNOUNCE_INTERVAL = 1000;
 	
+	private final EventQueue eventQueue;
 	private final Client localClient;
 	private final ClientCache clientCache;
 	private final FileTransfer fileTransfer;
@@ -47,21 +54,20 @@ public class Backend extends Thread implements UnicastCallbacks, MulticastCallba
 	private final TcpInterface tcpInterface;
 	private final AnnounceSender announceSender;
 	private final BackendCallbacks callbacks;
-	private final EventQueue eventQueue;
 	private volatile boolean keepProcessing;
 
 	public Backend(String username, BackendCallbacks callbacks) {
 		InetAddress localAddress = NetworkUtils.getLocalAddress();
 
+		this.eventQueue = new EventQueue();
 		this.localClient = new Client(username, localAddress);
 		this.clientCache = new ClientCache(localClient, this);
-		this.fileTransfer = new FileTransfer(callbacks, this);
+		this.fileTransfer = new FileTransfer(callbacks, this, eventQueue);
 		this.multicastInterface = new MulticastInterface(localAddress, GROUP, MULTICAST_PORT, this);
 		this.unicastInterface = new UnicastInterface(localAddress, UNICAST_PORT, this);
 		this.tcpInterface = new TcpInterface(unicastInterface, this);
 		this.announceSender = new AnnounceSender(multicastInterface, clientCache, ANNOUNCE_INTERVAL);
 		this.callbacks = callbacks;
-		this.eventQueue = new EventQueue();
 	}
 
 	@Override
@@ -153,6 +159,18 @@ public class Backend extends Thread implements UnicastCallbacks, MulticastCallba
 			handleReplyToFileTransferEvent((ReplyToFileTransferEvent)event);
 		} else if(type == Event.TYPE_CANCEL_FILE_TRANSFER) {
 			handleCancelFileTransferEvent((CancelFileTransferEvent)event);
+		} else if(type == Event.TYPE_SEND_PACKET) {
+			handleSendPacketEvent((SendPacketEvent)event);
+		} else if(type == Event.TYPE_SEND_RELIABLE_PACKET) {
+			handleSendReliablePacketEvent((SendReliablePacketEvent)event);
+		} else if(type == Event.TYPE_FTTASK_CANCELLED) {
+			handleFTTaskCancelledEvent((FTTaskCancelledEvent)event);
+		} else if(type == Event.TYPE_FTTASK_COMPLETED) {
+			handleFTTaskCompletedEvent((FTTaskCompletedEvent)event);
+		} else if(type == Event.TYPE_FTTASK_FAILED) {
+			handleFTTaskFailedEvent((FTTaskFailedEvent)event);
+		} else if(type == Event.TYPE_FTTASK_PROGRESS) {
+			handleFTTaskProgressEvent((FTTaskProgressEvent)event);
 		}
 	}
 	
@@ -203,6 +221,8 @@ public class Backend extends Thread implements UnicastCallbacks, MulticastCallba
 			fileTransfer.onDataPacketReceived((FTDataPacket)packet);
 		} else if(type == Packet.TYPE_FT_CANCEL) {
 			fileTransfer.onCancelPacketReceived((FTCancelPacket)packet);
+		} else if(type == Packet.TYPE_FT_FAILED) {
+			fileTransfer.onFailedPacketReceived((FTFailedPacket)packet);
 		}
 	}
 	
@@ -240,6 +260,30 @@ public class Backend extends Thread implements UnicastCallbacks, MulticastCallba
 	
 	private void handleCancelFileTransferEvent(CancelFileTransferEvent event) {
 		fileTransfer.cancel(event.getHandle());
+	}
+	
+	private void handleSendPacketEvent(SendPacketEvent event) {
+		sendTo(event.getDestination(), event.getPacket());
+	}
+	
+	private void handleSendReliablePacketEvent(SendReliablePacketEvent event) {
+		sendReliableTo(event.getDestination(), event.getPacket());
+	}
+	
+	private void handleFTTaskCancelledEvent(FTTaskCancelledEvent event) {
+		fileTransfer.taskCancelled(event.getHandle());
+	}
+	
+	private void handleFTTaskCompletedEvent(FTTaskCompletedEvent event) {
+		fileTransfer.taskCompleted(event.getHandle());
+	}
+	
+	private void handleFTTaskFailedEvent(FTTaskFailedEvent event) {
+		fileTransfer.taskFailed(event.getHandle(), event.getReason());
+	}
+	
+	private void handleFTTaskProgressEvent(FTTaskProgressEvent event) {
+		fileTransfer.taskProgress(event.getHandle(), event.getProgress());
 	}
 	
 	//-------------------------------------------
