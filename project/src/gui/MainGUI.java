@@ -625,12 +625,11 @@ public class MainGUI extends JFrame implements ActionListener, KeyListener, Mous
 		int g1 = getGradient(1).getGreen();
 		int b1 = getGradient(1).getBlue();
 		for(int i=0; i<MAX_GRADIENT_STEPS; i++) {
-			int r = (r0 * (i/100)) + (r1 * (1-(i/100)));
-			int g = (g0 * (i/100)) + (g1 * (1-(i/100)));
-			int b = (b0 * (i/100)) + (b1 * (1-(i/100)));
-			float[] hsb = Color.RGBtoHSB(r, g, b, null); 
-			totalGradient[i] = Color.getHSBColor(hsb[0], hsb[1], hsb[2]);
-			System.out.println(r + "|" + g + "|" + b + "|" + totalGradient[i]);
+			float ratio = (float)i / (float)MAX_GRADIENT_STEPS;
+	        int r = (int)(r1 * ratio + r0 * (1 - ratio));
+	        int g = (int)(g1 * ratio + g0 * (1 - ratio));
+	        int b = (int)(b1 * ratio + b0 * (1 - ratio));
+			totalGradient[i] = new Color(r, g, b);
 		}
 	}
 	
