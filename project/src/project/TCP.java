@@ -26,7 +26,6 @@ public class TCP extends TcpInterface{
 	private static Map<Integer, TCP.State> connections;
 	private static Map<Integer, int[]> lastInfo;
 	private static Map<Integer, ArrayList<Packet>> toSend;
-	private static Map<Integer, ArrayList<Packet>> packetsInBuffer;
 	private static Map<Packet, Long> timeOfSending;
 	private static boolean constructed = false;
 	private static UnicastInterface ni;
@@ -49,7 +48,6 @@ public class TCP extends TcpInterface{
 			connections = new HashMap<>();
 			toSend = new HashMap<>();
 			lastInfo = new HashMap<>();
-			packetsInBuffer = new HashMap<>();
 			timeOfSending = new HashMap<>();
 		}
 	}
@@ -65,9 +63,6 @@ public class TCP extends TcpInterface{
 		boolean answer = true;
 		if(packet.getDestination() == myAddress) {
 			System.out.println("From:" + packet.getSource() + ", seq: " + packet.getSeq() +", ack: " + packet.getAck());
-			if(packetsInBuffer.get(destAddress) != null) {
-				System.out.println("SEQACK INFO FROM: " + destAddress + " :" + packetsInBuffer.get(destAddress).size());
-			}
 			lastInfo.put(packet.getSource(), new int[]{packet.getSeq(), packet.getAck()});
 			
 			if(packet.getSynFlag() && !packet.getAckFlag() && !packet.getFinFlag()) {
@@ -138,7 +133,12 @@ public class TCP extends TcpInterface{
 	}
 	
 	private static void ackReceivedDuringHandshake(PacketHeader packet) {
-		ArrayList<Packet> buffer = packetsInBuffer.get(packet.getSource());
+		ArrayList<Packet> buffer = new ArrayList<>();
+		for(Entry<Packet, Long> e: timeOfSending.entrySet()) {
+			if(e.getKey().getHeader().getDestination() == packet.getSource()) {
+				buffer.add(e.getKey());
+			}
+		}
 		Packet toDelete = null;
 		
 		for(Packet p: buffer) {
@@ -150,29 +150,29 @@ public class TCP extends TcpInterface{
 		
 		
 		if(toDelete != null) {
-			buffer.remove(toDelete);
-			packetsInBuffer.put(packet.getSource(), buffer);
+			timeOfSending.remove(toDelete);
 		}
 	}
 	
 	private static void ackReceived(PacketHeader packet) {
-		ArrayList<Packet> buffer = packetsInBuffer.get(packet.getSource());
+		ArrayList<Packet> buffer = new ArrayList<>();
+		for(Entry<Packet, Long> e: timeOfSending.entrySet()) {
+			if(e.getKey().getHeader().getDestination() == packet.getSource()) {
+				buffer.add(e.getKey());
+			}
+		}
 		Packet toDelete = null;
-		System.out.println("ack RECEIVED!!! " + buffer.size());
-				
+		
 		for(Packet p: buffer) {
 			if(p.getHeader().getSeq()+p.getHeader().getLength() == packet.getAck()) {
 				//This is packet to remove
 				toDelete = p;
-				break;
 			}
 		}
 		
 		
 		if(toDelete != null) {
-			System.out.println("DELETING PACKET");
-			buffer.remove(toDelete);
-			packetsInBuffer.put(packet.getSource(), buffer);
+			timeOfSending.remove(toDelete);
 		}
 	}
 
@@ -241,16 +241,10 @@ public class TCP extends TcpInterface{
 	private static void sendSyn(int destination) {
 		PacketHeader syn = new PacketHeader(myAddress, destination, 0, 0, 0, true, false, false, 5, 0);
 		System.out.println(syn.getDestination() + ", seq: " + syn.getSeq() +", ack: " + syn.getAck());
-		ArrayList<Packet> temp = packetsInBuffer.get(destination);
-		if(temp == null) {
-			temp = new ArrayList<>();
-		}
 		
 		Packet toSend = new EmptyPacket();
 		toSend.setHeader(syn);
 		timeOfSending.put(toSend, System.currentTimeMillis());
-		temp.add(toSend);
-		packetsInBuffer.put(destination, temp);
 		sendPacket(toSend, syn.getDestination());
 	}
 	
@@ -262,18 +256,11 @@ public class TCP extends TcpInterface{
 		PacketHeader synAck = new PacketHeader(myAddress, lastPacket.getSource(), 0, 0, 1, true, true, false, 5, 0);
 		System.out.println(synAck.getDestination() + ", seq: " + synAck.getSeq() +", ack: " + synAck.getAck());
 		
-		ArrayList<Packet> temp = packetsInBuffer.get(synAck.getDestination());
-		if(temp == null) {
-			temp = new ArrayList<>();
-		}
-		
 		lastInfo.put(lastPacket.getSource(), new int[]{synAck.getSeq(), synAck.getAck()});
 		
 		Packet toSend = new EmptyPacket();
 		toSend.setHeader(synAck);
 		timeOfSending.put(toSend, System.currentTimeMillis());
-		temp.add(toSend);
-		packetsInBuffer.put(synAck.getDestination(), temp);
 		sendPacket(toSend, synAck.getDestination());
 	}
 	
@@ -316,16 +303,10 @@ public class TCP extends TcpInterface{
 		int newAck = lastInfo.get(destination)[0];
 		PacketHeader fin = new PacketHeader(myAddress, destination, 0, newSeq, newAck, false, false, true, 5, 0);
 		System.out.println(fin.getDestination() + ", seq: " + fin.getSeq() +", ack: " + fin.getAck());
-		ArrayList<Packet> temp = packetsInBuffer.get(destination);
-		if(temp == null) {
-			temp = new ArrayList<>();
-		}
 		
 		Packet toSend = new EmptyPacket();
 		toSend.setHeader(fin);
 		timeOfSending.put(toSend, System.currentTimeMillis());
-		temp.add(toSend);
-		packetsInBuffer.put(destination, temp);
 		sendPacket(toSend, fin.getDestination());
 	}
 	
@@ -334,16 +315,10 @@ public class TCP extends TcpInterface{
 		int newAck = lastPacket.getSeq()+1;
 		PacketHeader ack = new PacketHeader(myAddress, lastPacket.getSource(), 0, newSeq, newAck, false, true, true, 5, 0);
 		System.out.println(ack.getDestination() + ", seq: " + ack.getSeq() +", ack: " + ack.getAck());
-		ArrayList<Packet> temp = packetsInBuffer.get(ack.getDestination());
-		if(temp == null) {
-			temp = new ArrayList<>();
-		}
 		
 		Packet toSend = new EmptyPacket();
 		toSend.setHeader(ack);
 		timeOfSending.put(toSend, System.currentTimeMillis());
-		temp.add(toSend);
-		packetsInBuffer.put(ack.getDestination(), temp);
 		sendPacket(toSend, ack.getDestination());
 	}
 	
@@ -359,15 +334,9 @@ public class TCP extends TcpInterface{
 			}
 			
 			System.out.println(toSend.getDestination() + ", seq: " + toSend.getSeq() +", ack: " + toSend.getAck());
-			ArrayList<Packet> temp = packetsInBuffer.get(destination);
-			if(temp == null) {
-				temp = new ArrayList<>();
-			}
 			
 			packet.setHeader(toSend);
 			timeOfSending.put(packet, System.currentTimeMillis());
-			temp.add(packet);
-			packetsInBuffer.put(destination, temp);
 			sendPacket(packet, destination);
 		} else if(!connections.containsKey(destination) || connections.get(destination).equals(State.CLOSED)){
 			openConnection(destination);
