@@ -50,13 +50,24 @@ public class CustomCellRenderer extends JLabel implements ListCellRenderer<Objec
         	if(reverse) {
         		if(length - (index % length) == 0)
         			reverse = false;
-        		if(index % (2*length) >= length)
-        			background = Color.decode("0x" + main.getColorFromArray(main.getColoring(), (length-1) - (index % length)));
-        		else 
-            		background = Color.decode("0x" + main.getColorFromArray(main.getColoring(), index % length));
+        		if(index % (2*length) >= length) {
+        			if(main.getColoring() == ColoringColors.CUSTOM) {
+        				background = main.getTotalGradient((length-1) - (index % length));
+        			}
+        			else background = Color.decode("0x" + main.getColorFromArray(main.getColoring(), (length-1) - (index % length)));
+        		} else {
+        			if(main.getColoring() == ColoringColors.CUSTOM) {
+        				background = main.getTotalGradient(index % length);
+        			}
+        			else background = Color.decode("0x" + main.getColorFromArray(main.getColoring(), index % length));
+        		}
         	}
-        	else 
-        		background = Color.decode("0x" + main.getColorFromArray(main.getColoring(), index % length));
+        	else {
+        		if(main.getColoring() == ColoringColors.CUSTOM) {
+    				background = main.getTotalGradient(index % length);
+    			}
+        		else background = Color.decode("0x" + main.getColorFromArray(main.getColoring(), index % length));
+        	}
         }
         else {
         	if(index % 2 == 0)

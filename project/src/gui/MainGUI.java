@@ -31,6 +31,8 @@ public class MainGUI extends JFrame implements ActionListener, KeyListener, Mous
 	private Container c;
 	
 	private static final Color BGCOLOR = Color.LIGHT_GRAY;
+	private static final int MAX_GRADIENTS = 2;
+	private static final int MAX_GRADIENT_STEPS = 50;
 	
 	public static final int LIST_MAX_SIZE = 300;
 	public static final int HISTORY_MAX_SIZE = 20;
@@ -39,6 +41,9 @@ public class MainGUI extends JFrame implements ActionListener, KeyListener, Mous
 	
 	private HashMap<Client, String> colorMap = new HashMap<Client, String>();
 	private ColoringColors coloring = ColoringColors.NORMAL;
+	
+	private Color[] gradient = new Color[MAX_GRADIENTS];
+	private Color[] totalGradient = new Color[MAX_GRADIENT_STEPS];
 	
 	private String[] history = new String[0];
 	private int currentHistory;
@@ -111,7 +116,7 @@ public class MainGUI extends JFrame implements ActionListener, KeyListener, Mous
 		peopleList = new DefaultListModel<Client>();
 		loadResources();
 		
-		animation = new AnimationThread();
+		animation = new AnimationThread(this);
 		animation.setCont(true);
 		animation.start();
 		
@@ -193,7 +198,7 @@ public class MainGUI extends JFrame implements ActionListener, KeyListener, Mous
 		preferencesItem = new JMenuItem("Preferences");
 		preferencesItem.addActionListener(this);
 		
-		rainbowModeItem = new JMenuItem("Rainbow Mode");
+		rainbowModeItem = new JMenuItem("Enable Rainbow Mode");
 		rainbowModeItem.addActionListener(this);
 		
 		nameChangeItem = new JMenuItem("Change Name");
@@ -215,6 +220,8 @@ public class MainGUI extends JFrame implements ActionListener, KeyListener, Mous
 		setJMenuBar(menu);
 		
 		setBGColor(BGCOLOR);
+		gradient[0] = Color.WHITE;
+		setGradient(1, Color.BLACK);
 		
 		setSize(800,800);
 		setVisible(true);
@@ -602,6 +609,38 @@ public class MainGUI extends JFrame implements ActionListener, KeyListener, Mous
 		return colors[index];
 	}
 	
+	public void setGradient(int i, Color color) {
+		if(i >= 0 && i < gradient.length) {
+			gradient[i] = color;
+			updateGradient();
+		}
+	}
+	
+	public Color getGradient(int i) {
+		return gradient[i];
+	}
+	
+	public void updateGradient() {
+		int r0 = getGradient(0).getRed();
+		int g0 = getGradient(0).getGreen();
+		int b0 = getGradient(0).getBlue();
+		int r1 = getGradient(1).getRed();
+		int g1 = getGradient(1).getGreen();
+		int b1 = getGradient(1).getBlue();
+		for(int i=0; i<MAX_GRADIENT_STEPS; i++) {
+			int r = (r0 * (i/100)) + (r1 * (1-(i/100)));
+			int g = (g0 * (i/100)) + (g1 * (1-(i/100)));
+			int b = (b0 * (i/100)) + (b1 * (1-(i/100)));
+			float[] hsb = Color.RGBtoHSB(r, g, b, null); 
+			totalGradient[i] = Color.getHSBColor(hsb[0], hsb[1], hsb[2]);
+			System.out.println(r + "|" + g + "|" + b + "|" + totalGradient[i]);
+		}
+	}
+	
+	public Color getTotalGradient(int index) {
+		return totalGradient[index];
+	}
+	
 	/**
 	 * Get the specified Color from the pool of colors the background can be.
 	 * @param index the index of the Color.
@@ -634,6 +673,7 @@ public class MainGUI extends JFrame implements ActionListener, KeyListener, Mous
 			case LB2G: return ColorArrays.lblue2green.length;
 			case G2BL: return ColorArrays.gray2black.length;
 			case BLACK: return ColorArrays.black.length;
+			case CUSTOM: return totalGradient.length;
 			default: return 0;
 		}
 	}
@@ -711,7 +751,7 @@ public class MainGUI extends JFrame implements ActionListener, KeyListener, Mous
 		}
 		
 		if(e.getSource().equals(preferencesItem)) {
-			prefMenu = new PreferencesMenu(this);
+			if(prefMenu == null) prefMenu = new PreferencesMenu(this);
 			prefMenu.pack();
 			prefMenu.setVisible(true);
 		}
@@ -719,11 +759,11 @@ public class MainGUI extends JFrame implements ActionListener, KeyListener, Mous
 		if(e.getSource().equals(rainbowModeItem)) {
 			if(rainbowMode) {
 				rainbowMode = false;
+				rainbowModeItem.setText("Enable Rainbow Mode");
 			}
 			else {
 				rainbowMode = true;
-				rbThread = new Thread(new RainBowMode());
-				rbThread.start();
+				rainbowModeItem.setText("Disable Rainbow Mode");
 			}
 		}
 		
@@ -959,20 +999,6 @@ public class MainGUI extends JFrame implements ActionListener, KeyListener, Mous
 		Group group = getGroup(groupName);
 		if(group != null) {
 			receiveText(message, client, false, true, group);
-		}
-	}
-	
-	public class RainBowMode extends Thread {
-		@Override
-		public void run() {
-			while(rainbowMode) {
-				setBGColor(Color.getHSBColor(animation.getHue(), 1, 1));
-				repaintAll();
-				try {
-					Thread.sleep(10);
-				}	
-				catch (InterruptedException e) { }
-			}
 		}
 	}
 

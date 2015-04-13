@@ -1,7 +1,9 @@
 package gui;
 
 public class ColorArrays {
-	public static final int COLORING_ARRAYS = 11;
+	public static final int COLORING_ARRAYS = 12;
+	
+	public static final String[] custom = {"000000", "FFFFFF"};
 	
 	public static final String[] fiftyShades = {"E0E0E0", "DEDEDE", "DBDBDB", "D9D9D9", "D6D6D6", "D4D4D4", "D1D1D1", "CFCFCF",
 		"CCCCCC", "C9C9C9", "C7C7C7", "C4C4C4", "C2C2C2", "BFBFBF", "BDBDBD", "BABABA", "B8B8B8", "B5B5B5", "B3B3B3", "B0B0B0",

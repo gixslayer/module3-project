@@ -26,6 +26,8 @@ public class PreferencesMenu extends JFrame implements ActionListener, ChangeLis
 	private JLabel[] labels = new JLabel[4];
 	private JButton doneButton;
 	
+	private JButton[] chooseColor = new JButton[2];
+	
     private JComboBox<String> areaColor;
     private String[] areaStrings;
     
@@ -62,7 +64,14 @@ public class PreferencesMenu extends JFrame implements ActionListener, ChangeLis
         areaColor.addActionListener(this);
         panel.add(areaColor);
         
-        panel.add(new JPanel());
+        JPanel p = new JPanel();
+        chooseColor[0] = new JButton("Choose color #1");
+        chooseColor[0].addActionListener(this);
+        chooseColor[1] = new JButton("Choose color #2");
+        chooseColor[1].addActionListener(this);
+        p.add(chooseColor[0]);
+        p.add(chooseColor[1]);
+        panel.add(p);
         
         labels[3] = new JLabel("Text Coloring: ");
         panel.add(labels[3]);
@@ -117,6 +126,14 @@ public class PreferencesMenu extends JFrame implements ActionListener, ChangeLis
 		if(arg0.getSource().equals(doneButton)) {
 			this.dispose();
 		}
+		
+		if(arg0.getSource().equals(chooseColor[0])) {
+			main.setGradient(0, JColorChooser.showDialog(null, "Choose color #1", main.getGradient(0)));
+		}
+		
+		if(arg0.getSource().equals(chooseColor[1])) {
+			main.setGradient(1, JColorChooser.showDialog(null, "Choose color #2", main.getGradient(1)));
+		}
 	}
 
 	@Override
@@ -124,7 +141,8 @@ public class PreferencesMenu extends JFrame implements ActionListener, ChangeLis
 		if(arg0.getSource().equals(rainbowMode)) {
 			main.setAltRainBowMode(rainbowMode.isSelected());
 		}
-		if(arg0.getSource().equals(bgColor.getSelectionModel())) {
+		if(bgColor != null )
+			if(arg0.getSource().equals(bgColor.getSelectionModel())) {
 			main.setBGColor(bgColor.getColor());
 		}
 		if(arg0.getSource().equals(textColor.getSelectionModel())) {
@@ -158,6 +176,10 @@ class MyChooserPanel extends AbstractColorChooserPanel {
 			makeAddButton("Red", Color.RED);
 			makeAddButton("Green", Color.GREEN);
 			makeAddButton("Blue", Color.BLUE);
+		}
+		if(panel == 3) {
+			setLayout(new GridLayout(3,4));
+			
 		}
 	}
 

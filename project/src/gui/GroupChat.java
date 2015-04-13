@@ -10,6 +10,8 @@ import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.awt.event.KeyEvent;
 import java.awt.event.KeyListener;
+import java.text.SimpleDateFormat;
+import java.util.Date;
 
 @SuppressWarnings("serial")
 public class GroupChat extends JPanel implements ActionListener, KeyListener, Chat {
@@ -71,7 +73,9 @@ public class GroupChat extends JPanel implements ActionListener, KeyListener, Ch
 	}
 	
 	public void addToScreen(Client client, String str) {
-		list.addElement(new TextLine(client, str));
+		Date date = new Date();
+		SimpleDateFormat s = new SimpleDateFormat("HH:mm:ss");
+		list.addElement(new TextLine(s.format(date), client, str));
 		receiveArea.ensureIndexIsVisible(list.getSize() -1);
 		if(list.getSize() > MainGUI.LIST_MAX_SIZE) {
 			list.removeElement(list.firstElement());
