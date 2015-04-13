@@ -14,6 +14,8 @@ public final class FTReplyPacket extends Packet {
 	public FTReplyPacket(int requestId, int transferId, boolean response) {
 		super(Packet.TYPE_FT_REPLY);
 		
+		System.out.println("SDSDSDSDS: " + response);
+		
 		this.requestId = requestId;
 		this.transferId = transferId;
 		this.response = response;
@@ -34,7 +36,7 @@ public final class FTReplyPacket extends Packet {
 	protected void deserializeContent(byte[] buffer, int offset, int length) {
 		transferId = ByteUtils.getIntFromBytes(buffer, offset);
 		requestId = ByteUtils.getIntFromBytes(buffer, offset + 4);
-		response = buffer[offset + 8] == 0xff;
+		response = (buffer[offset + 8] & 0xFF) == 0xff;
 		
 	}
 
@@ -47,6 +49,7 @@ public final class FTReplyPacket extends Packet {
 	}
 	
 	public boolean getResponse() {
+		System.out.println("SDSDSDSDSDSDSDSDSDS:  " + response);
 		return response;
 	}
 }
