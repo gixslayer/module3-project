@@ -380,6 +380,8 @@ public final class FileTransfer {
 		
 		@Override
 		public void run() {
+			setName(String.format("TransferTask-%d", handle.getRequestId()));
+			
 			long offset = 0;
 			byte[] buffer = new byte[1024]; // TODO: Determine a proper buffer size.
 			int transferId = handle.getTransferId();
@@ -455,6 +457,7 @@ public final class FileTransfer {
 		
 		@Override
 		public void run() {
+			setName(String.format("ReceiveTask-%d", handle.getTransferId()));
 			boolean taskFailed = false;
 			
 			while(!taskCancelled && !taskFailed) {
