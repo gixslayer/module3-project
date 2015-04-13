@@ -25,6 +25,10 @@ public class CustomCellRenderer extends JLabel implements ListCellRenderer<Objec
         ChatLine cLine = (ChatLine)value;
         Client client = cLine.getClient();
         String line = cLine.getLine();
+        String time = "";
+        if(main.isTimestampEnabled()) {
+        	time = cLine.getTime();
+        }
         
         Color background = Color.WHITE;
         Color foreground = main.getChatFGColor();
@@ -61,7 +65,8 @@ public class CustomCellRenderer extends JLabel implements ListCellRenderer<Objec
        	 		background = Color.decode("0xADADAD");
         }
        
-        setText("<html><font color=" + main.getUserColor(client) + ">"+ client.getName() + "</font>: " + line);
+        if(main.isTimestampEnabled()) setText("<html>[" + time + "] <font color=" + main.getUserColor(client) + ">"+ client.getName() + "</font>: " + line);
+        else setText("<html><font color=" + main.getUserColor(client) + ">"+ client.getName() + "</font>: " + line);
        	 
         setBackground(background);
         setForeground(foreground);

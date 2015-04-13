@@ -21,7 +21,9 @@ import java.io.File;
 import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.InputStreamReader;
+import java.text.SimpleDateFormat;
 import java.util.ArrayList;
+import java.util.Date;
 import java.util.HashMap;
 
 @SuppressWarnings("serial")
@@ -58,6 +60,9 @@ public class MainGUI extends JFrame implements ActionListener, KeyListener, Mous
 	private JMenuItem rainbowModeItem;
 	private JMenuItem nameChangeItem;
 	private JMenuItem createGroupItem;
+	private JMenuItem timestampItem;
+	
+	private boolean timestampEnabled = false;
 	
 	private float lastProgress = 0;
 	
@@ -197,10 +202,14 @@ public class MainGUI extends JFrame implements ActionListener, KeyListener, Mous
 		createGroupItem = new JMenuItem("Create/Join Group");
 		createGroupItem.addActionListener(this);
 		
+		timestampItem = new JMenuItem("Enable Timestamps");
+		timestampItem.addActionListener(this);
+		
 		optionMenu.add(preferencesItem);
 		optionMenu.add(rainbowModeItem);
 		optionMenu.add(nameChangeItem);
 		optionMenu.add(createGroupItem);
+		optionMenu.add(timestampItem);
 		menu.add(optionMenu);
 		
 		setJMenuBar(menu);
@@ -350,7 +359,9 @@ public class MainGUI extends JFrame implements ActionListener, KeyListener, Mous
 	 * @param str the line of text to add.
 	 */
 	public void addToScreen(Client client, String str) {
-		list.addElement(new TextLine(client, str));
+		Date date = new Date();
+		SimpleDateFormat s = new SimpleDateFormat("HH:mm:ss");
+		list.addElement(new TextLine(s.format(date), client, str));
 		receiveArea.ensureIndexIsVisible(list.getSize() -1);
 		if(list.getSize() > LIST_MAX_SIZE) {
 			list.removeElement(list.firstElement());
@@ -361,6 +372,9 @@ public class MainGUI extends JFrame implements ActionListener, KeyListener, Mous
 	public void addToScreen(Client sender, Client receiver, FileTransferHandle handle, float progress) {
 		FileLine f = new FileLine(sender, receiver, handle.getFileName(), progress);
 		f.setLine(changeText(f.getLine()));
+		Date date = new Date();
+		SimpleDateFormat s = new SimpleDateFormat("HH:mm:ss");
+		f.setTime(s.format(date));
 		list.addElement(f);
 		receiveArea.ensureIndexIsVisible(list.getSize() -1);
 		if(list.getSize() >= LIST_MAX_SIZE) {
@@ -503,6 +517,14 @@ public class MainGUI extends JFrame implements ActionListener, KeyListener, Mous
 			return true;
 		}
 		return false;
+	}
+	
+	public boolean isTimestampEnabled() {
+		return timestampEnabled;
+	}
+	
+	public void setTimestampEnabled(boolean value) {
+		this.timestampEnabled = value;
 	}
 	
 //=============================================================================
@@ -725,6 +747,17 @@ public class MainGUI extends JFrame implements ActionListener, KeyListener, Mous
 				Group g = new Group(name);
 				groupList.add(g);
 				addGroupChat(g);
+			}
+		}
+		
+		if(e.getSource().equals(timestampItem)) {
+			if(isTimestampEnabled()) {
+				setTimestampEnabled(false);
+				timestampItem.setText("Enabled Timestamps");
+			}
+			else {
+				setTimestampEnabled(true);
+				timestampItem.setText("Disable Timestamps");
 			}
 		}
 	}

@@ -427,6 +427,10 @@ public final class FileTransfer {
 				
 				// TODO: Limit how often we call this (EG min 10% increase over last callback).
 				eventQueue.enqueue(new FTTaskProgressEvent(handle, progress));
+				
+				try {
+					Thread.sleep(10);
+				} catch (InterruptedException e) { }
 			}
 			// Close file handles.
 			handle.close();
