@@ -115,22 +115,14 @@ public class Backend extends Thread implements UnicastCallbacks, MulticastCallba
 		// Process all events currently queued.
 		processEventQueue();
 
-		System.out.println("post process events");
-		
 		// Let the client cache check for timed-out clients etc...
 		clientCache.process();
-		
-		System.out.println("post client cache");
 		
 		// Let the TCP implementation do the work it needs (check for retransmission/send new packets/etc).
 		tcpInterface.process();
 		
-		System.out.println("post tcp");
-		
 		// Send multicast announcement if required.
 		announceSender.process();
-		
-		System.out.println("post announce");
 	}
 	
 	private void processEventQueue() {
