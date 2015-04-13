@@ -16,6 +16,7 @@ public abstract class Event {
 	public static final int TYPE_FTTASK_CANCELLED = 12;
 	public static final int TYPE_FTTASK_COMPLETED = 13;
 	public static final int TYPE_FTTASK_PROGRESS = 14;
+	public static final int TYPE_FTTASK_DATA = 15;
 	
 	private final int type;
 	

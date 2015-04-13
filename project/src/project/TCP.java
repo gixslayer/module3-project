@@ -189,6 +189,7 @@ public class TCP { //extends TcpInterface{
 	
 	public static void ackTimeOut(Packet packet) {
 		if(timeOfSending.get(packet) != null) {
+			timeOfSending.remove(packet);
 			timeOfSending.put(packet, System.currentTimeMillis());
 			sendPacket(packet, packet.getHeader().getDestination());
 		}
@@ -334,6 +335,7 @@ public class TCP { //extends TcpInterface{
 			if(toSend.getSeq()+toSend.getLength()>20000){
 				System.out.println("RESET RESET RESET RESET RESET " + toSend.getSeq());
 				lastInfo.put(destination, new int[]{0+toSend.getLength(),toSend.getAck()});
+				toSend = new PacketHeader(myAddress, destination, 0, lastInfo.get(destination)[0], lastInfo.get(destination)[1], false, true, false, 5, packet.getContentLength());
 			} else {
 				lastInfo.put(destination, new int[]{toSend.getSeq()+toSend.getLength(),toSend.getAck()});
 			}
