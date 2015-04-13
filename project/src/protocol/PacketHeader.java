@@ -2,18 +2,24 @@ package protocol;
 
 import java.util.Arrays;
 
+import utils.ByteUtils;
+import network.TcpInterface;
+import network.TcpMode;
+
 public final class PacketHeader {
 	private int source, destination, type, length, seq, ack, windowSize;
 	private boolean synFlag, ackFlag, finFlag;
 	private byte[] header;
-	private int dataLength;
+	private int flags;
 	
 	public PacketHeader() {
 		
 	}
 	
 	public PacketHeader(int seq, int ack, int flags) {
-		// TODO: Implement.
+		this.seq = seq;
+		this.ack = ack;
+		this.flags = flags;
 	}
 	
 	public PacketHeader(int source, int destination, int type, int seq, int ack, boolean synFlag, boolean ackFlag, boolean finFlag, int windowSize, int dataLength) {
@@ -157,23 +163,40 @@ public final class PacketHeader {
 	}
 	
 	public byte[] serialize() {
-		return header;
+		if(TcpInterface.MODE == TcpMode.OldTCP) {
+			return header;
+		} else {
+			byte[] buffer = new byte[12];
+			
+			ByteUtils.getIntBytes(seq, buffer, 0);
+			ByteUtils.getIntBytes(ack, buffer, 4);
+			ByteUtils.getIntBytes(flags, buffer, 8);
+			
+			return buffer;
+		}
 	}
 	
 	public int deserialize(byte[] header, int dataLength, int offset, int length) {
-		this.header = Arrays.copyOfRange(header, offset, offset+length);
-		this.length = dataLength;
-		fillVariables();
+		if(TcpInterface.MODE == TcpMode.OldTCP) {
+			this.header = Arrays.copyOfRange(header, offset, offset+length);
+			this.length = dataLength;
+			fillVariables();
+		} else { /* NewTCP */
+			this.seq = ByteUtils.getIntFromBytes(header, offset);
+			this.ack = ByteUtils.getIntFromBytes(header, offset + 4);
+			this.flags = ByteUtils.getIntFromBytes(header, offset + 8);
+		}
+		
 		return length;
 	}
 	
+	// Only used by new TCP implementation.
 	public int getFlags() {
-		// TODO: Implement.
-		return 0;
+		return flags;
 	}
 	
+	// Only used by new TCP implementation.
 	public boolean hasFlags(int flags) {
-		// TODO: Implement ((this.flags & flags) == flags).
-		return false;
+		return (this.flags & flags) == flags;
 	}
 }

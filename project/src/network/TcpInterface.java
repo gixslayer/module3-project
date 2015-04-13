@@ -7,14 +7,8 @@ import java.util.Map;
 import project.TCP;
 import protocol.Packet;
 
-enum TcpMode {
-	Passthrough,
-	OldTCP,
-	NewTCP
-}
-
 public class TcpInterface {
-	private static final TcpMode MODE = TcpMode.NewTCP;
+	public static final TcpMode MODE = TcpMode.NewTCP;
 	
 	private final UnicastInterface unicastInterface;
 	private final TcpCallbacks callbacks;
