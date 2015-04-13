@@ -102,8 +102,8 @@ public final class FileTransfer {
 			}
 			
 			if(outputStream != null) {
-				ReceiveTask task = new ReceiveTask(handle);
 				handle.start(transferId, outputStream);			
+				ReceiveTask task = new ReceiveTask(handle);
 				incomingTransfers.put(transferId, handle);
 				receiveTasks.put(transferId, task);
 				
