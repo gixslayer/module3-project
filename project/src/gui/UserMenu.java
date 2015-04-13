@@ -31,6 +31,11 @@ public class UserMenu extends JPopupMenu implements ActionListener {
         	chooseColor.add(color[i]);
         }
         add(chooseColor);
+        
+        fileItem = new JMenuItem("Send File");
+        fileItem.addActionListener(this);
+        add(fileItem);
+        
         if(!otherClient.equals(localClient)) {
         	privChatItem = new JMenuItem("Private Chat");
 	        privChatItem.addActionListener(this);
@@ -44,9 +49,7 @@ public class UserMenu extends JPopupMenu implements ActionListener {
 	        lastSeen.addActionListener(this);
 	        add(lastSeen);
 	        
-	        fileItem = new JMenuItem("Send File");
-	        fileItem.addActionListener(this);
-	        add(fileItem);
+	        
         }
     }
     

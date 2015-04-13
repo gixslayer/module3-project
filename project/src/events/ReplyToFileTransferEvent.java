@@ -20,6 +20,7 @@ public final class ReplyToFileTransferEvent extends Event {
 	}
 	
 	public boolean getResponse() {
+		System.out.println("GET: " + response);
 		return response;
 	}
 	
