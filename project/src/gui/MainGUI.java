@@ -59,7 +59,7 @@ public class MainGUI extends JFrame implements ActionListener, KeyListener, Mous
 	private JMenuItem nameChangeItem;
 	private JMenuItem createGroupItem;
 	
-	private float lastProgress = -1;
+	private float lastProgress = 0;
 	
 	private JTabbedPane tabPane;
 	private JTextField typeField;
@@ -363,7 +363,7 @@ public class MainGUI extends JFrame implements ActionListener, KeyListener, Mous
 		f.setLine(changeText(f.getLine()));
 		list.addElement(f);
 		receiveArea.ensureIndexIsVisible(list.getSize() -1);
-		if(list.getSize() > LIST_MAX_SIZE) {
+		if(list.getSize() >= LIST_MAX_SIZE) {
 			list.removeElement(list.firstElement());
 		}
 	}
@@ -951,6 +951,7 @@ public class MainGUI extends JFrame implements ActionListener, KeyListener, Mous
 				+ System.lineSeparator() + "Do you accept?", "File Transfer", 
 				JOptionPane.YES_NO_OPTION, JOptionPane.QUESTION_MESSAGE) == JOptionPane.YES_OPTION) {
 			JFileChooser chooser = new JFileChooser();
+			chooser.setSelectedFile(new File(handle.getFileName()));
 			chooser.setApproveButtonText("Save");
 		    int returnVal = chooser.showOpenDialog(this);
 		    System.out.println(returnVal);
@@ -970,6 +971,7 @@ public class MainGUI extends JFrame implements ActionListener, KeyListener, Mous
 		System.out.println("Started!");
 		fileHandles.add(handle);
 		addToScreen(handle.getSender(), handle.getReceiver(), handle, 0);
+		lastProgress = 0;
 	}
 
 	@Override
@@ -1005,7 +1007,7 @@ public class MainGUI extends JFrame implements ActionListener, KeyListener, Mous
 
 	@Override
 	public void onFileTransferProgress(FileTransferHandle handle, float progress) {
-		if(progress != lastProgress) {
+		if(progress - lastProgress >= 10) {
 			addToScreen(handle.getSender(), handle.getReceiver(), handle, progress);
 			lastProgress = progress;
 		}
