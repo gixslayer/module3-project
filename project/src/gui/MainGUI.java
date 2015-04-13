@@ -219,7 +219,7 @@ public class MainGUI extends JFrame implements ActionListener, KeyListener, Mous
 	 * Removes a User from the Chat Room.
 	 * @param name the name of the User.
 	 */
-	public void removeUser(Client client) {
+	public void removeUser(Client client, String reason) {
 		for(Group group : groupList) {
 			if(group.isPartOfGroup(client))
 				group.leaveGroup(client);
@@ -227,7 +227,7 @@ public class MainGUI extends JFrame implements ActionListener, KeyListener, Mous
 		if(tabMap.containsKey(client))
 			((PrivateChat)chatMap.get(tabMap.get(client))).receiveText(client.getName() + " has disconnected. He/She will not receive any messages", botClient); 
 		peopleList.removeElement(client);
-		addToScreen(botClient, "User " + client.getName() + " has left the chat room.");
+		addToScreen(botClient, "User " + client.getName() + " has left the chat room. [" + reason + "]");
 	}
 	
 	/**
@@ -896,19 +896,19 @@ public class MainGUI extends JFrame implements ActionListener, KeyListener, Mous
 	@Override
 	public void onClientDisconnected(Client client) {
 		System.out.println("Disconnected!");
-		removeUser(client);
+		removeUser(client, "Disconnected");
 	}
 
 	@Override
 	public void onClientTimedOut(Client client) {
 		System.out.println("Time Out!");
-		removeUser(client);
+		removeUser(client, "Time Out");
 	}
 
 	@Override
 	public void onClientLostRoute(Client client) {
 		System.out.println("Lost Route!");
-		removeUser(client);
+		removeUser(client, "Lost Client");
 	}
 
 	@Override
@@ -990,8 +990,8 @@ public class MainGUI extends JFrame implements ActionListener, KeyListener, Mous
 			if(JOptionPane.showConfirmDialog(this, "The transfer of " + handle.getFileName() + " from " + handle.getSender().getName() + " has succeeded." + System.lineSeparator() + "Do you want to open it?") == JOptionPane.YES_OPTION) {
 				File file = new File(handle.getSavePath());
 				try {
-					Desktop.getDesktop().browse(file.toURI());
-				} catch (IOException e) { }
+					Desktop.getDesktop().open(file);
+				} catch (IOException e) { e.printStackTrace(); }
 			}
 		}
 		if(handle.getSender().equals(localClient)) JOptionPane.showMessageDialog(this, "The transfer of " + handle.getFileName() + " to " + handle.getReceiver().getName() + " has succeeded.");

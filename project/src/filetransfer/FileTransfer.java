@@ -1,10 +1,12 @@
 package filetransfer;
 
+import java.io.BufferedWriter;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
 import java.io.IOException;
+import java.io.Writer;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -426,7 +428,6 @@ public final class FileTransfer {
 				// TODO: Limit how often we call this (EG min 10% increase over last callback).
 				eventQueue.enqueue(new FTTaskProgressEvent(handle, progress));
 			}
-			
 			// Close file handles.
 			handle.close();
 			
