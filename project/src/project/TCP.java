@@ -16,11 +16,11 @@ import protocol.Packet;
 import protocol.PacketHeader;
 import network.UnicastInterface;
 
-public class TCP extends TcpInterface{
-	public TCP(UnicastInterface unicastInterface, TcpCallbacks callbacks) {
+public class TCP { //extends TcpInterface{
+	/*public TCP(UnicastInterface unicastInterface, TcpCallbacks callbacks) {
 		super(unicastInterface, callbacks);
 		// TODO Auto-generated constructor stub
-	}
+	}*/
 
 	private static int myAddress;
 	private static Map<Integer, TCP.State> connections;
@@ -396,6 +396,6 @@ public class TCP extends TcpInterface{
 			// TODO Auto-generated catch block
 			e.printStackTrace();
 		}
-		ni.sendTCP(destAddress, packet);
+		ni.send(destAddress, packet);
 	}
 }

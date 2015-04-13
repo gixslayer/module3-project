@@ -34,7 +34,6 @@ import network.AnnounceSender;
 import network.MulticastCallbacks;
 import network.MulticastInterface;
 import network.NetworkInterface;
-import network.ReliableLayer;
 import network.TcpCallbacks;
 import network.TcpInterface;
 import network.UnicastCallbacks;
@@ -66,7 +65,7 @@ public class Backend extends Thread implements UnicastCallbacks, MulticastCallba
 		this.fileTransfer = new FileTransfer(callbacks, this, eventQueue);
 		this.multicastInterface = new MulticastInterface(localAddress, GROUP, MULTICAST_PORT, this);
 		this.unicastInterface = new UnicastInterface(localAddress, UNICAST_PORT, this);
-		this.tcpInterface = new TcpInterface(unicastInterface, this);
+		this.tcpInterface = new TcpInterface(unicastInterface, localAddress, this);
 		this.announceSender = new AnnounceSender(multicastInterface, clientCache, ANNOUNCE_INTERVAL);
 		this.callbacks = callbacks;
 	}

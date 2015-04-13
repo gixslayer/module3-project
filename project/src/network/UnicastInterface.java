@@ -6,7 +6,6 @@ import java.net.DatagramSocket;
 import java.net.InetAddress;
 import java.net.SocketException;
 
-import project.TCP;
 import protocol.Packet;
 
 public final class UnicastInterface {
@@ -16,8 +15,6 @@ public final class UnicastInterface {
 	private final int port;
 	private final byte[] recvBuffer;
 	private final UnicastCallbacks callbacks;
-	private final ReliableLayer reliableLayer;
-	private final InetAddress localAddress;
 	
 	public UnicastInterface(InetAddress localAddress, int port, UnicastCallbacks callbacks) {
 		try {
@@ -25,8 +22,6 @@ public final class UnicastInterface {
 			this.port = port;
 			this.recvBuffer = new byte[RECV_BUFFER_SIZE];
 			this.callbacks = callbacks;
-			this.localAddress = localAddress;
-			this.reliableLayer = new ReliableLayer(localAddress, this);
 		} catch (SocketException e) {
 			throw new RuntimeException(String.format("Failed to create unicast interface: %s", e.getMessage()));
 		}
@@ -37,18 +32,11 @@ public final class UnicastInterface {
 	}
 	
 	public void close() {
-		reliableLayer.close();
 		socket.close();
 	}
-	
+
 	public void send(InetAddress dest, Packet packet) {
 		byte[] data = packet.serialize();
-		TCP.sendData(this, localAddress, dest, packet);
-	}
-	
-	public void sendTCP(InetAddress dest, Packet packet) {
-		byte[] data = packet.serialize();
-		
 		DatagramPacket datagram = new DatagramPacket(data,  0, data.length, dest, port);
 		
 		try {
@@ -70,11 +58,7 @@ public final class UnicastInterface {
 			System.arraycopy(recvBuffer, datagram.getOffset(), receivedData, 0, receivedData.length);
 			InetAddress sourceAddress = datagram.getAddress();
 			Packet packet = Packet.deserialize(sourceAddress, receivedData);
-			
-			if(packet.hasHeader()) {
-				reliableLayer.onPacketReceived(packet);
-			}
-			
+
 			return packet;
 		} catch (IOException e) {
 			return null;
@@ -91,10 +75,10 @@ public final class UnicastInterface {
 				
 				if(packet == null) {
 					break;
-				} else if(packet.getType() == Packet.TYPE_EMPTY) {
+				} /*else if(packet.getType() == Packet.TYPE_EMPTY) {
 					// Don't send empty packets to the callback (they should only be used by the TcpInterface). 
 					continue;
-				}
+				}*/
 				
 				callbacks.onUnicastPacketReceived(packet);
 			}
