@@ -6,6 +6,7 @@ import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
 import java.io.IOException;
+import java.io.RandomAccessFile;
 import java.io.Writer;
 import java.util.HashMap;
 import java.util.Map;
@@ -87,10 +88,10 @@ public final class FileTransfer {
 		FTReplyPacket replyPacket = new FTReplyPacket(requestId, transferId, response);
 		
 		if(response) {
-			FileOutputStream outputStream = null;
+			RandomAccessFile outputStream = null;
 			
 			try {
-				outputStream = new FileOutputStream(savePath);
+				outputStream = new RandomAccessFile(savePath, "rws");
 			} catch (FileNotFoundException e) {
 				// We failed to open an output stream to store the to be received file content so reject the transfer.
 				replyPacket = new FTReplyPacket(requestId, transferId, false);
@@ -223,11 +224,10 @@ public final class FileTransfer {
 		}
 		
 		try {
-			FileOutputStream outputStream = handle.getOutputStream();
+			RandomAccessFile outputStream = handle.getOutputStream();
 			
-			outputStream.getChannel().position(offset);
+			outputStream.seek(offset);
 			outputStream.write(data);
-			outputStream.flush();
 		} catch (IOException e) {
 			// Failed file transfer as received data could not be written to output file. End the file transfer and inform the other client
 			// the transfer has failed.

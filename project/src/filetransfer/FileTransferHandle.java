@@ -1,8 +1,8 @@
 package filetransfer;
 
 import java.io.FileInputStream;
-import java.io.FileOutputStream;
 import java.io.IOException;
+import java.io.RandomAccessFile;
 
 import client.Client;
 
@@ -14,13 +14,13 @@ public final class FileTransferHandle {
 	private String fileName;
 	private long fileSize;
 	private FileInputStream inputStream;
-	private FileOutputStream outputStream;
+	private RandomAccessFile outputStream;
 	private boolean hasStarted;
 	private String savePath;
 	private long bytesReceived;
 	
 	private FileTransferHandle(int requestId, int transferId, Client sender, Client receiver, String fileName, long fileSize, 
-			FileInputStream inputStream, FileOutputStream outputStream, boolean hasStarted, String savePath, long bytesReceived) {
+			FileInputStream inputStream, RandomAccessFile outputStream, boolean hasStarted, String savePath, long bytesReceived) {
 		this.requestId = requestId;
 		this.transferId = transferId;
 		this.sender = sender;
@@ -61,7 +61,7 @@ public final class FileTransferHandle {
 		this.hasStarted = true;
 	}
 	
-	void start(int transferId, FileOutputStream outputStream) {
+	void start(int transferId, RandomAccessFile outputStream) {
 		this.transferId = transferId;
 		this.outputStream = outputStream;
 		this.hasStarted = true;
@@ -84,7 +84,7 @@ public final class FileTransferHandle {
 		return inputStream;
 	}
 	
-	FileOutputStream getOutputStream() {
+	RandomAccessFile getOutputStream() {
 		return outputStream;
 	}
 	

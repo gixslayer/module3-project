@@ -18,7 +18,9 @@ public final class FTDataPacket extends Packet {
 		this.transferId = transferId;
 		this.offset = offset;
 		this.data = new byte[dataLength];
-		System.arraycopy(data, 0, this.data, 0, dataLength);
+		if(dataLength != 0) {
+			System.arraycopy(data, 0, this.data, 0, dataLength);
+		}
 		this.dataLength = dataLength;
 	}
 
