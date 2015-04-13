@@ -176,6 +176,7 @@ public class TCP {
 		if(threadOfPacket.get(packet) != null) {
 			threadOfPacket.get(packet).cancel();
 			TimeOutTask thread = new TimeOutTask(packet);
+			thread.start();
 			threadOfPacket.put(packet, thread);
 			sendPacket(packet, packet.getHeader().getDestination());
 		}
@@ -250,6 +251,7 @@ public class TCP {
 		temp.add(toSend);
 		packetsInBuffer.put(destination, temp);
 		TimeOutTask thread = new TimeOutTask(toSend);
+		thread.start();
 		threadOfPacket.put(toSend, thread);
 		sendPacket(toSend, syn.getDestination());
 	}
@@ -274,6 +276,7 @@ public class TCP {
 		temp.add(toSend);
 		packetsInBuffer.put(synAck.getDestination(), temp);
 		TimeOutTask thread = new TimeOutTask(toSend);
+		thread.start();
 		threadOfPacket.put(toSend, thread);
 		sendPacket(toSend, synAck.getDestination());
 	}
@@ -327,6 +330,7 @@ public class TCP {
 		temp.add(toSend);
 		packetsInBuffer.put(destination, temp);
 		TimeOutTask thread = new TimeOutTask(toSend);
+		thread.start();
 		threadOfPacket.put(toSend, thread);
 		sendPacket(toSend, fin.getDestination());
 	}
@@ -346,6 +350,7 @@ public class TCP {
 		temp.add(toSend);
 		packetsInBuffer.put(ack.getDestination(), temp);
 		TimeOutTask thread = new TimeOutTask(toSend);
+		thread.start();
 		threadOfPacket.put(toSend, thread);
 		sendPacket(toSend, ack.getDestination());
 	}
@@ -368,6 +373,7 @@ public class TCP {
 			
 			packet.setHeader(toSend);
 			TimeOutTask thread = new TimeOutTask(packet);
+			thread.start();
 			temp.add(packet);
 			packetsInBuffer.put(destination, temp);
 			threadOfPacket.put(packet, thread);
