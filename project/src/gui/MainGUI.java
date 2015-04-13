@@ -59,6 +59,8 @@ public class MainGUI extends JFrame implements ActionListener, KeyListener, Mous
 	private JMenuItem nameChangeItem;
 	private JMenuItem createGroupItem;
 	
+	private float lastProgress = -1;
+	
 	private JTabbedPane tabPane;
 	private JTextField typeField;
 	
@@ -1003,7 +1005,10 @@ public class MainGUI extends JFrame implements ActionListener, KeyListener, Mous
 
 	@Override
 	public void onFileTransferProgress(FileTransferHandle handle, float progress) {
-		addToScreen(handle.getSender(), handle.getReceiver(), handle, progress);
+		if(progress != lastProgress) {
+			addToScreen(handle.getSender(), handle.getReceiver(), handle, progress);
+			lastProgress = progress;
+		}
 	}
 
 	@Override
