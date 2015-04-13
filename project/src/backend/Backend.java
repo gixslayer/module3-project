@@ -53,7 +53,6 @@ public class Backend extends Thread implements UnicastCallbacks, MulticastCallba
 	private final MulticastInterface multicastInterface;
 	private final UnicastInterface unicastInterface;
 	private final TcpInterface tcpInterface;
-	private final ReliableLayer reliableLayer;
 	private final AnnounceSender announceSender;
 	private final BackendCallbacks callbacks;
 	private volatile boolean keepProcessing;
@@ -69,7 +68,6 @@ public class Backend extends Thread implements UnicastCallbacks, MulticastCallba
 		this.unicastInterface = new UnicastInterface(localAddress, UNICAST_PORT, this);
 		this.tcpInterface = new TcpInterface(unicastInterface, this);
 		this.announceSender = new AnnounceSender(multicastInterface, clientCache, ANNOUNCE_INTERVAL);
-		this.reliableLayer = new ReliableLayer(localAddress, unicastInterface);
 		this.callbacks = callbacks;
 	}
 
@@ -196,8 +194,7 @@ public class Backend extends Thread implements UnicastCallbacks, MulticastCallba
 		// Send it to the TcpInterface which will add the packet to the event queue again (stripping the header)
 		// when it is done processing the packet (or drop the packet entirely if it deems it invalid/control only).
 		if(packet.hasHeader()) {
-			reliableLayer.onPacketReceived(packet);
-			//tcpInterface.onPacketReceived(packet);
+			tcpInterface.onPacketReceived(packet);
 			return;
 		}
 		
@@ -390,8 +387,7 @@ public class Backend extends Thread implements UnicastCallbacks, MulticastCallba
 		if(client.isIndirect()) {
 			Client route = client.getRoute();
 			RouteRequestPacket routePacket = new RouteRequestPacket(localClient, client, packet.serialize());
-			//tcpInterface.send(route.getAddress(), routePacket);
-			reliableLayer.send(route.getAddress(), packet);
+			tcpInterface.send(route.getAddress(), routePacket);
 		} else {
 			unicastInterface.send(client.getAddress(), packet);
 		}
@@ -401,9 +397,9 @@ public class Backend extends Thread implements UnicastCallbacks, MulticastCallba
 		if(client.isIndirect()) {
 			Client route = client.getRoute();
 			RouteRequestPacket routePacket = new RouteRequestPacket(localClient, client, packet.serialize());
-			reliableLayer.send(route.getAddress(), packet);
+			tcpInterface.send(route.getAddress(), routePacket);
 		} else {
-			reliableLayer.send(client.getAddress(), packet);
+			tcpInterface.send(client.getAddress(), packet);
 		}
 	}
 	
@@ -529,7 +525,6 @@ public class Backend extends Thread implements UnicastCallbacks, MulticastCallba
 
 	@Override
 	public void onReplyToFileTransfer(FileTransferHandle handle, boolean response, String savePath) {
-		System.out.println(response);
 		eventQueue.enqueue(new ReplyToFileTransferEvent(handle, response, savePath));
 	}
 
