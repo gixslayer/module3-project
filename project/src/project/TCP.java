@@ -32,11 +32,16 @@ public class TCP extends TcpInterface{
 	
 	public static void processTime() {
 		if(timeOfSending != null) {
+			ArrayList<Packet> toCall = new ArrayList<>();
 			for(Entry<Packet, Long> e: timeOfSending.entrySet()) {
 				if(System.currentTimeMillis() - e.getValue() > 100) {
-					//timeout
-					ackTimeOut(e.getKey());
+					//timeoutackTimeOut(e.getKey());
+					toCall.add(e.getKey());
 				}
+			}
+			
+			for(Packet p:toCall) {
+				ackTimeOut(p);
 			}
 		}
 	}
