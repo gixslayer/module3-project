@@ -108,6 +108,8 @@ public final class FileTransfer {
 				receiveTasks.put(transferId, task);
 				
 				task.start();
+				
+				callbacks.onFileTransferStarted(handle);
 			}
 		}
 		
