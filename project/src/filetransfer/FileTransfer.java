@@ -1,15 +1,13 @@
 package filetransfer;
 
-import java.io.BufferedWriter;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
-import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.RandomAccessFile;
-import java.io.Writer;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.Queue;
 
 import protocol.FTCancelPacket;
 import protocol.FTDataPacket;
@@ -19,9 +17,11 @@ import protocol.FTRequestPacket;
 import protocol.Packet;
 import network.NetworkInterface;
 import client.Client;
+import events.Event;
 import events.EventQueue;
 import events.FTTaskCancelledEvent;
 import events.FTTaskCompletedEvent;
+import events.FTTaskDataEvent;
 import events.FTTaskFailedEvent;
 import events.FTTaskProgressEvent;
 import events.SendReliablePacketEvent;
@@ -34,6 +34,7 @@ public final class FileTransfer {
 	private final Map<Integer, FileTransferHandle> incomingTransfers;
 	private final Map<Integer, FileTransferHandle> outgoingTransfers;
 	private final Map<Integer, TransferTask> activeTasks;
+	private final Map<Integer, ReceiveTask> receiveTasks;
 	private final Client localClient;
 	private int nextRequestId;
 	private int nextTransferId;
@@ -46,6 +47,7 @@ public final class FileTransfer {
 		this.incomingTransfers = new HashMap<Integer, FileTransferHandle>();
 		this.outgoingTransfers = new HashMap<Integer, FileTransferHandle>();
 		this.activeTasks = new HashMap<Integer, TransferTask>();
+		this.receiveTasks = new HashMap<Integer, ReceiveTask>();
 		this.localClient = networkInterface.getLocalClient();
 		this.nextRequestId = 0;
 		this.nextTransferId = 0;
@@ -100,8 +102,12 @@ public final class FileTransfer {
 			}
 			
 			if(outputStream != null) {
+				ReceiveTask task = new ReceiveTask(handle);
 				handle.start(transferId, outputStream);			
 				incomingTransfers.put(transferId, handle);
+				receiveTasks.put(transferId, task);
+				
+				task.start();
 			}
 		}
 		
@@ -120,7 +126,7 @@ public final class FileTransfer {
 			incomingTransfers.remove(transferId);
 			
 			if(handle.hasStarted()) {
-				// TODO: Remove existing file data?
+				receiveTasks.get(transferId).cancel();
 			}
 		} else { /* Outgoing */
 			outgoingTransfers.remove(requestId);
@@ -140,24 +146,41 @@ public final class FileTransfer {
 	}
 	
 	public void taskCancelled(FileTransferHandle handle) {
-		activeTasks.remove(handle.getRequestId());
-		outgoingTransfers.remove(handle.getRequestId());
+		if(handle.isOutgoing(localClient)) {
+			activeTasks.remove(handle.getRequestId());
+			outgoingTransfers.remove(handle.getRequestId());
+		} else {
+			receiveTasks.remove(handle.getTransferId());
+			incomingTransfers.remove(handle.getTransferId());
+		}
 	}
 	
 	public void taskCompleted(FileTransferHandle handle) {
-		activeTasks.remove(handle.getRequestId());
-		outgoingTransfers.remove(handle.getRequestId());
+		if(handle.isOutgoing(localClient)) {
+			activeTasks.remove(handle.getRequestId());
+			outgoingTransfers.remove(handle.getRequestId());
+		} else {
+			receiveTasks.remove(handle.getTransferId());
+			incomingTransfers.remove(handle.getTransferId());
+		}
 		
 		callbacks.onFileTransferCompleted(handle);
 	}
 	
 	public void taskFailed(FileTransferHandle handle, String reason) {
-		activeTasks.remove(handle.getRequestId());
-		outgoingTransfers.remove(handle.getRequestId());
+		if(handle.isOutgoing(localClient)) {
+			activeTasks.remove(handle.getRequestId());
+			outgoingTransfers.remove(handle.getRequestId());
+		} else {
+			receiveTasks.remove(handle.getTransferId());
+			incomingTransfers.remove(handle.getTransferId());
+		}
 		
-		// Send a failed message to receiving client.
-		FTFailedPacket packet = new FTFailedPacket(handle.getTransferId(), handle.getRequestId(), false);
-		sendPacket(handle.getReceiver(), packet);
+		// Send a failed message to other client.
+		boolean isReceiver = handle.isIncoming(localClient);
+		Client destination = isReceiver ? handle.getSender() : handle.getReceiver();
+		FTFailedPacket packet = new FTFailedPacket(handle.getTransferId(), handle.getRequestId(), isReceiver);
+		sendPacket(destination, packet);
 		
 		callbacks.onFileTransferFailed(handle, reason);
 	}
@@ -216,51 +239,14 @@ public final class FileTransfer {
 		int transferId = packet.getTransferId();
 		long offset = packet.getOffset();
 		byte[] data = packet.getData();
-		FileTransferHandle handle = incomingTransfers.get(transferId);
+		ReceiveTask task = receiveTasks.get(transferId);
 		
 		// Ignore if the transfer id wasn't valid.
-		if(handle == null) {
+		if(task == null) {
 			return;
 		}
-		
-		try {
-			RandomAccessFile outputStream = handle.getOutputStream();
-			
-			outputStream.seek(offset);
-			outputStream.write(data);
-		} catch (IOException e) {
-			// Failed file transfer as received data could not be written to output file. End the file transfer and inform the other client
-			// the transfer has failed.
-			FTFailedPacket failedPacket = new FTFailedPacket(transferId, handle.getRequestId(), true);
-			sendPacket(handle.getSender(), failedPacket);
-			
-			incomingTransfers.remove(transferId);
-			
-			if(handle.hasStarted()) {
-				// TODO: Remove existing file data?				
-			}
-			
-			// Close file handles.
-			handle.close();
-			
-			callbacks.onFileTransferFailed(handle, String.format("Could not write received data -> %s", e.getMessage()));
-			return;
-		}
-		
-		handle.receivedBytes(data.length);
-		float progress = ((float)handle.getBytesReceived() / (float)handle.getFileSize()) * 100.0f;
-		
-		// TODO: Limit how often we call this (EG min 10% increase over last callback).
-		callbacks.onFileTransferProgress(handle, progress);
-		
-		if(handle.hasCompleted()) {
-			incomingTransfers.remove(transferId);
-			
-			// Close file handles.
-			handle.close();
-			
-			callbacks.onFileTransferCompleted(handle);
-		}
+	
+		task.queueData(offset, data);
 	}
 	
 	public void onCancelPacketReceived(FTCancelPacket packet) {
@@ -290,7 +276,7 @@ public final class FileTransfer {
 			}
 			
 			if(handle.hasStarted()) {
-				// TODO: Remove existing file data?
+				receiveTasks.get(transferId).cancel();
 			}
 		}
 		
@@ -327,7 +313,7 @@ public final class FileTransfer {
 			}
 					
 			if(handle.hasStarted()) {
-				// TODO: Remove existing file data?
+				receiveTasks.get(transferId).cancel();
 			}
 		}
 				
@@ -444,5 +430,94 @@ public final class FileTransfer {
 			}
 		}
 		
+	}
+	
+	class ReceiveTask extends Thread {
+		private final EventQueue localEventQueue;
+		private final FileTransferHandle handle;
+		private final RandomAccessFile outputStream;
+		private volatile boolean taskCancelled;
+		private String exceptionMessage;
+		
+		public ReceiveTask(FileTransferHandle handle) {
+			this.localEventQueue = new EventQueue();
+			this.handle = handle;
+			this.outputStream = handle.getOutputStream();
+			this.taskCancelled = false;
+		}
+		
+		void cancel() {
+			taskCancelled = true;
+			try {
+				join();
+			} catch (InterruptedException e) { }
+		}
+		
+		@Override
+		public void run() {
+			boolean taskFailed = false;
+			
+			while(!taskCancelled && !taskFailed) {
+				Queue<Event> queue = localEventQueue.swapBuffers();
+				
+				while(true) {
+					Event event = queue.poll();
+					
+					if(event == null) {
+						break;
+					} else if(event.getType() != Event.TYPE_FTTASK_DATA) {
+						continue;
+					}
+					
+					if(handleDataEvent((FTTaskDataEvent)event)) {
+						// TODO: Limit how often we call this (EG min 10% increase over last callback).
+						float progress = ((float)handle.getBytesReceived() / (float)handle.getFileSize()) * 100.0f;
+						eventQueue.enqueue(new FTTaskProgressEvent(handle, progress));
+					} else {
+						taskFailed = true;
+					}
+				}
+				
+				if(handle.hasCompleted()) {
+					break;
+				}
+				
+				try {
+					Thread.sleep(10);
+				} catch (InterruptedException e) { } 
+			}
+			
+			// Close file handles.
+			handle.close();
+			
+			if(taskFailed) {
+				eventQueue.enqueue(new FTTaskFailedEvent(handle, String.format("Could not write to output file -> %s", exceptionMessage)));
+			} else if(taskCancelled) {
+				eventQueue.enqueue(new FTTaskCancelledEvent(handle));
+			} else {
+				eventQueue.enqueue(new FTTaskCompletedEvent(handle));
+			}
+		}
+		
+		public void queueData(long offset, byte[] data) {
+			localEventQueue.enqueue(new FTTaskDataEvent(offset, data));
+		}
+		
+		private boolean handleDataEvent(FTTaskDataEvent event) {
+			byte[] data = event.getData();
+			long offset = event.getOffset();
+
+			try {
+				outputStream.seek(offset);
+				outputStream.write(data);
+				
+				handle.receivedBytes(data.length);
+				
+				return true;
+			} catch (IOException e) {
+				exceptionMessage = e.getMessage();
+				return false;
+			}
+		}
 	}
 }

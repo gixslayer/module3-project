@@ -17,20 +17,20 @@ public class TcpInterface {
 	}
 	
 	public void process() {
-		TCP.processTime();
+		//TCP.processTime();
 	}
 	
 	public void send(InetAddress destination, Packet packet) {
 		// Act as a simple pass-through to the unicast interface as we have no working TCP implementation.
-		//unicastInterface.send(destination, packet);
-		TCP.sendData(unicastInterface, localAddress, destination, packet);
+		unicastInterface.send(destination, packet);
+		//TCP.sendData(unicastInterface, localAddress, destination, packet);
 	}
 	
 	public void onPacketReceived(Packet packet) {
 		// Act as a simple pass-through to the unicast interface as we have no working TCP implementation.
-		if(TCP.handlePacket(unicastInterface, localAddress, packet.getHeader())) {
+		//if(TCP.handlePacket(unicastInterface, localAddress, packet.getHeader())) {
 			callbacks.onTcpPacketReceived(packet);
-		}
+		//}
 	}
 	
 	public void forceClose(InetAddress remoteAddress) {
