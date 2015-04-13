@@ -1,10 +1,14 @@
 package project;
 
+import network.TcpCallbacks;
+import network.TcpInterface;
+
 import java.net.InetAddress;
 import java.net.UnknownHostException;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.Map.Entry;
 import java.util.Timer;
 
 import protocol.EmptyPacket;
@@ -12,16 +16,29 @@ import protocol.Packet;
 import protocol.PacketHeader;
 import network.UnicastInterface;
 
-public class TCP {
+public class TCP extends TcpInterface{
+	public TCP(UnicastInterface unicastInterface, TcpCallbacks callbacks) {
+		super(unicastInterface, callbacks);
+		// TODO Auto-generated constructor stub
+	}
+
 	private static int myAddress;
 	private static Map<Integer, TCP.State> connections;
-	private static Map<Integer, TimeOutTask> threads;
 	private static Map<Integer, int[]> lastInfo;
 	private static Map<Integer, ArrayList<Packet>> toSend;
 	private static Map<Integer, ArrayList<Packet>> packetsInBuffer;
-	private static Map<Packet, TimeOutTask> threadOfPacket;
+	private static Map<Packet, Long> timeOfSending;
 	private static boolean constructed = false;
 	private static UnicastInterface ni;
+	
+	public static void processTime() {
+		for(Entry<Packet, Long> e: timeOfSending.entrySet()) {
+			if(System.currentTimeMillis() - e.getValue() > 100) {
+				//timeout
+				ackTimeOut(e.getKey());
+			}
+		}
+	}
 	
 	private static void init(int source, int dest) {
 		if(!constructed) {
@@ -29,10 +46,9 @@ public class TCP {
 			constructed = true;
 			connections = new HashMap<>();
 			toSend = new HashMap<>();
-			threads = new HashMap<>();
 			lastInfo = new HashMap<>();
 			packetsInBuffer = new HashMap<>();
-			threadOfPacket = new HashMap<>();
+			timeOfSending = new HashMap<>();
 		}
 	}
 	
@@ -132,8 +148,6 @@ public class TCP {
 		
 		
 		if(toDelete != null) {
-			threadOfPacket.get(toDelete).cancel();
-			threadOfPacket.remove(toDelete);
 			buffer.remove(toDelete);
 			packetsInBuffer.put(packet.getSource(), buffer);
 		}
@@ -154,11 +168,6 @@ public class TCP {
 		
 		
 		if(toDelete != null) {
-			if(threadOfPacket.get(toDelete) != null) {
-				threadOfPacket.get(toDelete).cancel();
-				threadOfPacket.put(toDelete, null);
-			}
-			threadOfPacket.remove(toDelete);
 			System.out.println("DELETING PACKET");
 			buffer.remove(toDelete);
 			packetsInBuffer.put(packet.getSource(), buffer);
@@ -168,16 +177,12 @@ public class TCP {
 	public static void timeOut(int destination) {
 		if(connections.containsKey(destination) && connections.get(destination).equals(State.TIME_WAIT)) {
 			connections.put(destination, State.CLOSED);
-			threads.remove(destination);
 		}
 	}
 	
 	public static void ackTimeOut(Packet packet) {
-		if(threadOfPacket.get(packet) != null) {
-			threadOfPacket.get(packet).cancel();
-			TimeOutTask thread = new TimeOutTask(packet);
-			thread.start();
-			threadOfPacket.put(packet, thread);
+		if(timeOfSending.get(packet) != null) {
+			timeOfSending.put(packet, System.currentTimeMillis());
 			sendPacket(packet, packet.getHeader().getDestination());
 		}
 	}
@@ -210,10 +215,7 @@ public class TCP {
 	public static boolean closeConnection(int destination) {
 		if(connections != null) {
 			connections.put(destination, State.CLOSED);
-			for(TimeOutTask i: threads.values()){
-				i.cancel();
-			}
-			threads.remove(destination);
+			//TODO delete timers
 			lastInfo.remove(destination);
 			toSend.remove(destination);
 		}
@@ -228,12 +230,9 @@ public class TCP {
 	public static void stopConnections(){
 		if(constructed) {
 			connections.clear();
-			for(TimeOutTask i: threads.values()){
-				i.cancel();
-			}
-			threads.clear();
 			lastInfo.clear();
 			toSend.clear();
+			//TODO delete timers for packets
 		}
 	}
 	
@@ -245,14 +244,11 @@ public class TCP {
 			temp = new ArrayList<>();
 		}
 		
-		
 		Packet toSend = new EmptyPacket();
 		toSend.setHeader(syn);
+		timeOfSending.put(toSend, System.currentTimeMillis());
 		temp.add(toSend);
 		packetsInBuffer.put(destination, temp);
-		TimeOutTask thread = new TimeOutTask(toSend);
-		thread.start();
-		threadOfPacket.put(toSend, thread);
 		sendPacket(toSend, syn.getDestination());
 	}
 	
@@ -273,11 +269,9 @@ public class TCP {
 		
 		Packet toSend = new EmptyPacket();
 		toSend.setHeader(synAck);
+		timeOfSending.put(toSend, System.currentTimeMillis());
 		temp.add(toSend);
 		packetsInBuffer.put(synAck.getDestination(), temp);
-		TimeOutTask thread = new TimeOutTask(toSend);
-		thread.start();
-		threadOfPacket.put(toSend, thread);
 		sendPacket(toSend, synAck.getDestination());
 	}
 	
@@ -327,11 +321,9 @@ public class TCP {
 		
 		Packet toSend = new EmptyPacket();
 		toSend.setHeader(fin);
+		timeOfSending.put(toSend, System.currentTimeMillis());
 		temp.add(toSend);
 		packetsInBuffer.put(destination, temp);
-		TimeOutTask thread = new TimeOutTask(toSend);
-		thread.start();
-		threadOfPacket.put(toSend, thread);
 		sendPacket(toSend, fin.getDestination());
 	}
 	
@@ -347,11 +339,9 @@ public class TCP {
 		
 		Packet toSend = new EmptyPacket();
 		toSend.setHeader(ack);
+		timeOfSending.put(toSend, System.currentTimeMillis());
 		temp.add(toSend);
 		packetsInBuffer.put(ack.getDestination(), temp);
-		TimeOutTask thread = new TimeOutTask(toSend);
-		thread.start();
-		threadOfPacket.put(toSend, thread);
 		sendPacket(toSend, ack.getDestination());
 	}
 	
@@ -360,6 +350,7 @@ public class TCP {
 		if(connections.containsKey(destination) && connections.get(destination).equals(State.ESTABLISHED)) {
 			PacketHeader toSend = new PacketHeader(myAddress, destination, 0, lastInfo.get(destination)[0], lastInfo.get(destination)[1], false, true, false, 5, packet.getContentLength());
 			if(toSend.getSeq()+toSend.getLength()>20000){
+				System.out.println("RESET RESET RESET RESET RESET " + toSend.getSeq());
 				lastInfo.put(destination, new int[]{0+toSend.getLength(),toSend.getAck()});
 			} else {
 				lastInfo.put(destination, new int[]{toSend.getSeq()+toSend.getLength(),toSend.getAck()});
@@ -372,11 +363,9 @@ public class TCP {
 			}
 			
 			packet.setHeader(toSend);
-			TimeOutTask thread = new TimeOutTask(packet);
-			thread.start();
+			timeOfSending.put(packet, System.currentTimeMillis());
 			temp.add(packet);
 			packetsInBuffer.put(destination, temp);
-			threadOfPacket.put(packet, thread);
 			sendPacket(packet, destination);
 		} else if(!connections.containsKey(destination) || connections.get(destination).equals(State.CLOSED)){
 			openConnection(destination);

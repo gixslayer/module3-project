@@ -2,9 +2,10 @@ package network;
 
 import java.net.InetAddress;
 
+import project.TCP;
 import protocol.Packet;
 
-public final class TcpInterface {
+public class TcpInterface {
 	private final UnicastInterface unicastInterface;
 	private final TcpCallbacks callbacks;
 	
@@ -14,7 +15,7 @@ public final class TcpInterface {
 	}
 	
 	public void process() {
-		
+		TCP.processTime();
 	}
 	
 	public void send(InetAddress destination, Packet packet) {
