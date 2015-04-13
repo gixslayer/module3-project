@@ -102,7 +102,7 @@ public class MainGUI extends JFrame implements ActionListener, KeyListener, Mous
 	 */
 	public void init() {
 		peopleList = new DefaultListModel<Client>();
-		//loadResources();
+		loadResources();
 		
 		animation = new AnimationThread();
 		animation.setCont(true);
@@ -337,8 +337,8 @@ public class MainGUI extends JFrame implements ActionListener, KeyListener, Mous
 			groupMap.remove(group);
 		}
 		else {
-			PrivateChat priv = ((PrivateChat)chatMap.get(index));
-			tabMap.remove(priv);
+			Client client = ((PrivateChat)chatMap.get(index)).getOtherClient();
+			tabMap.remove(client);
 		}
 		chatMap.remove(index);
 	}
