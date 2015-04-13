@@ -75,7 +75,7 @@ public class Backend extends Thread implements UnicastCallbacks, MulticastCallba
 		startup();
 		
 		while(keepProcessing) {
-			System.out.printf("Backend process at %d%n", System.currentTimeMillis());
+			//System.out.printf("Backend process at %d%n", System.currentTimeMillis());
 			
 			process();
 			
@@ -115,28 +115,28 @@ public class Backend extends Thread implements UnicastCallbacks, MulticastCallba
 		// Process all events currently queued.
 		processEventQueue();
 
-		System.out.println("post process events");
+		//System.out.println("post process events");
 		
 		// Let the client cache check for timed-out clients etc...
 		clientCache.process();
 		
-		System.out.println("post client cache");
+		//System.out.println("post client cache");
 		
 		// Let the TCP implementation do the work it needs (check for retransmission/send new packets/etc).
 		tcpInterface.process();
 		
-		System.out.println("post tcp");
+		//System.out.println("post tcp");
 		
 		// Send multicast announcement if required.
 		announceSender.process();
 		
-		System.out.println("post announce");
+		//System.out.println("post announce");
 	}
 	
 	private void processEventQueue() {
 		Queue<Event> queue = eventQueue.swapBuffers();
 		
-		System.out.printf("Processing event queue len=%d%n", queue.size());
+		//System.out.printf("Processing event queue len=%d%n", queue.size());
 		
 		while(true) {
 			// Grab the next event (if the queue is empty null is returned).
