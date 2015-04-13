@@ -32,10 +32,12 @@ public class TCP extends TcpInterface{
 	private static UnicastInterface ni;
 	
 	public static void processTime() {
-		for(Entry<Packet, Long> e: timeOfSending.entrySet()) {
-			if(System.currentTimeMillis() - e.getValue() > 100) {
-				//timeout
-				ackTimeOut(e.getKey());
+		if(timeOfSending != null) {
+			for(Entry<Packet, Long> e: timeOfSending.entrySet()) {
+				if(System.currentTimeMillis() - e.getValue() > 100) {
+					//timeout
+					ackTimeOut(e.getKey());
+				}
 			}
 		}
 	}
