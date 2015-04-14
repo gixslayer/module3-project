@@ -737,7 +737,10 @@ public class MainGUI extends JFrame implements ActionListener, KeyListener, Mous
 	public void updateFileLine(FileTransferHandle handle, float progress) {
 		if(fileLines.containsKey(handle)) {
 			FileLine fLine = fileLines.get(handle);
-			fLine.setProgress(progress);
+			fLine.setNumericalProgress(progress);
+			if(progress - fileHandles.get(handle) >= 10) {
+				fLine.setProgress(progress);
+			}
 			fLine.setLine(changeText(fLine.getLine()));
 		}
 	}
@@ -1073,7 +1076,7 @@ public class MainGUI extends JFrame implements ActionListener, KeyListener, Mous
 
 	@Override
 	public void onFileTransferProgress(FileTransferHandle handle, float progress) {
-		if(progress - fileHandles.get(handle) >= 10) {
+		if(progress - fileHandles.get(handle) >= 1) {
 			updateFileLine(handle, progress);
 			fileHandles.put(handle, progress);
 		}
