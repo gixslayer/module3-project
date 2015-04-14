@@ -92,6 +92,10 @@ public final class FileTransferHandle {
 		return bytesReceived;
 	}
 	
+	long getMissingBytes() {
+		return fileSize - bytesReceived;
+	}
+	
 	boolean hasCompleted() {
 		return bytesReceived == fileSize;
 	}

@@ -25,9 +25,7 @@ import client.Client;
 import events.Event;
 import events.FTTaskCancelledEvent;
 import events.FTTaskCompletedEvent;
-import events.FTTaskDataEvent;
 import events.FTTaskFailedEvent;
-import events.FTTaskProgressEvent;
 import events.SendReliablePacketEvent;
 
 public final class FileTransfer {
@@ -107,7 +105,7 @@ public final class FileTransfer {
 			RandomAccessFile outputStream = null;
 			
 			try {
-				outputStream = new RandomAccessFile(savePath, "rws");
+				outputStream = new RandomAccessFile(savePath, "rw");
 			} catch (FileNotFoundException e) {
 				// We failed to open an output stream to store the to be received file content so reject the transfer.
 				replyPacket = new FTReplyPacket(requestId, transferId, false);
@@ -420,12 +418,16 @@ public final class FileTransfer {
 	// Transfer task class.
 	//-------------------------------------------
 	class TransferTask extends Thread {
-		private volatile boolean taskCancelled;
 		private final FileTransferHandle handle;
+		private volatile boolean taskCancelled;
+		private volatile boolean taskFailed;
+		private volatile String failMessage;
 		
 		TransferTask(FileTransferHandle handle) {
-			this.taskCancelled = false;
 			this.handle = handle;
+			this.taskCancelled = false;
+			this.taskFailed = false;
+			this.failMessage = null;
 		}
 		
 		void cancel() {
@@ -435,16 +437,23 @@ public final class FileTransfer {
 			} catch (InterruptedException e) { }
 		}
 		
+		void fail(String failMessage) {
+			this.failMessage = failMessage;
+			this.taskFailed = true;
+			
+			try {
+				join();
+			} catch(InterruptedException e) { }
+		}
+		
 		@Override
 		public void run() {
 			setName(String.format("TransferTask-%d", handle.getRequestId()));
 			
 			long offset = 0;
-			byte[] buffer = new byte[UnicastInterface.RECV_BUFFER_SIZE - 1024]; // TODO: Determine a proper buffer size.
+			byte[] buffer = new byte[UnicastInterface.RECV_BUFFER_SIZE - 1024];
 			int transferId = handle.getTransferId();
 			Client destination = handle.getReceiver();
-			boolean taskFailed = false;
-			String exceptionMessage = null;
 			int bytesRead = 0;
 			
 			while(!taskCancelled && !taskFailed) {
@@ -452,7 +461,7 @@ public final class FileTransfer {
 					bytesRead = handle.getInputStream().read(buffer);
 				} catch (IOException e) {
 					taskFailed = true;
-					exceptionMessage = e.getMessage();
+					failMessage = String.format("Could not read from input file -> %s", e.getMessage());
 					break;
 				}
 				
@@ -471,7 +480,7 @@ public final class FileTransfer {
 			handle.close();
 			
 			if(taskFailed) {
-				eventQueue.enqueue(new FTTaskFailedEvent(handle, String.format("Could not read from input file -> %s", exceptionMessage)));
+				eventQueue.enqueue(new FTTaskFailedEvent(handle, failMessage));
 			} else if(taskCancelled) {
 				eventQueue.enqueue(new FTTaskCancelledEvent(handle));
 			} else {
@@ -481,18 +490,28 @@ public final class FileTransfer {
 		
 	}
 	
+	//-------------------------------------------
+	// Receive task class.
+	//-------------------------------------------
 	class ReceiveTask extends Thread {
-		private final SynchronizedQueue<Event> localEventQueue;
+		private final SynchronizedQueue<DataFragment> dataQueue;
 		private final FileTransferHandle handle;
 		private final RandomAccessFile outputStream;
 		private volatile boolean taskCancelled;
-		private String exceptionMessage;
+		private volatile boolean taskFailed;
+		private volatile String failMessage;
+		private long bytesReceived;
+		private float lastProgressUpdate;
 		
 		public ReceiveTask(FileTransferHandle handle) {
-			this.localEventQueue = new SynchronizedQueue<Event>();
+			this.dataQueue = new SynchronizedQueue<DataFragment>();
 			this.handle = handle;
 			this.outputStream = handle.getOutputStream();
 			this.taskCancelled = false;
+			this.taskFailed = false;
+			this.failMessage = null;
+			this.bytesReceived = 0;
+			this.lastProgressUpdate = 0.0f;
 		}
 		
 		void cancel() {
@@ -502,38 +521,78 @@ public final class FileTransfer {
 			} catch (InterruptedException e) { }
 		}
 		
+		void fail(String failMessage) {
+			this.failMessage = failMessage;
+			this.taskFailed = true;
+			
+			try {
+				join();
+			} catch(InterruptedException e) { }
+		}
+		
 		@Override
 		public void run() {
-			setName(String.format("ReceiveTask-%d", handle.getTransferId()));
-			boolean taskFailed = false;
-			float lastProgressUpdate = 0f;
-			
-			sendProgressUpdate(0f);
+			setName(String.format("ReceiveTask-%d", handle.getTransferId()));			
+			byte[] buffer = new byte[65536];
 			
 			while(!taskCancelled && !taskFailed) {
-				Queue<Event> queue = localEventQueue.swapBuffers();
+				Queue<DataFragment> queue = dataQueue.swapBuffers();
+				long currentOffset = 0;
+				long expectedOffset = 0;
+				int bufferSpaceUsed = 0;
 				
 				while(true) {
-					Event event = queue.poll();
+					DataFragment fragment = queue.poll();
 					
-					if(event == null) {
+					if(fragment == null) {
 						break;
-					} else if(event.getType() != Event.TYPE_FTTASK_DATA) {
-						continue;
 					}
 					
-					if(handleDataEvent((FTTaskDataEvent)event)) {
-						float progress = ((float)handle.getBytesReceived() / (float)handle.getFileSize()) * 100.0f;
-						
-						eventQueue.enqueue(new FTTaskProgressEvent(handle, progress));
-						
-						// Only send a progress update if there is a reasonable difference to prevent spamming packets. 
-						if(progress - lastProgressUpdate >= 1.0f) {
-							sendProgressUpdate(progress);
-							lastProgressUpdate = progress;
+					long offset = fragment.getOffset();
+					byte[] data = fragment.getData();
+					
+					if(offset != expectedOffset) {
+						// We're skipping one or more data fragments from writing in a sequential order. Flush any existing data to the file
+						// and begin constructing a new buffer.
+						if(bufferSpaceUsed != 0) {
+							if(!writeToFile(currentOffset, buffer, bufferSpaceUsed)) {
+								taskFailed = true;
+								break;			
+							}
 						}
+						
+						currentOffset = offset;
+						expectedOffset = offset + data.length;
+						bufferSpaceUsed = 0;
+						System.arraycopy(data, 0, buffer, bufferSpaceUsed, data.length);
+						bufferSpaceUsed = data.length;
+					} else if(bufferSpaceUsed + data.length > buffer.length) {
+						// We received a sequential data fragment, but the data cannot fit inside the buffer. Flush any existing data to the
+						// file and begin constructing a new buffer.
+						if(!writeToFile(currentOffset, buffer, bufferSpaceUsed)) {
+							taskFailed = true;
+							break;			
+						}
+						
+						currentOffset = offset;
+						expectedOffset = offset + data.length;
+						bufferSpaceUsed = 0;
+						System.arraycopy(data, 0, buffer, bufferSpaceUsed, data.length);
+						bufferSpaceUsed = data.length;
 					} else {
+						// We received a sequential data fragment and we can append it to the current buffer. No need to perform and I/O operations.
+						currentOffset = expectedOffset;
+						expectedOffset += data.length;
+						System.arraycopy(data, 0, buffer, bufferSpaceUsed, data.length);
+						bufferSpaceUsed += data.length;
+					}
+				}
+				
+				// If we have buffered the final data fragments required to complete the file write flush them to the file now so this task finishes.
+				if(handle.getMissingBytes() == bufferSpaceUsed) {
+					if(!writeToFile(currentOffset, buffer, bufferSpaceUsed)) {
 						taskFailed = true;
+						break;
 					}
 				}
 				
@@ -550,33 +609,46 @@ public final class FileTransfer {
 			handle.close();
 			
 			if(taskFailed) {
-				eventQueue.enqueue(new FTTaskFailedEvent(handle, String.format("Could not write to output file -> %s", exceptionMessage)));
+				eventQueue.enqueue(new FTTaskFailedEvent(handle, failMessage));
 			} else if(taskCancelled) {
 				eventQueue.enqueue(new FTTaskCancelledEvent(handle));
 			} else {
 				eventQueue.enqueue(new FTTaskCompletedEvent(handle));
-				FTCompletedPacket packet = new FTCompletedPacket(handle.getRequestId());
-				sendPacketFromTask(handle.getSender(), packet, Priority.Normal);
 			}
 		}
 		
 		public void queueData(long offset, byte[] data) {
-			localEventQueue.enqueue(new FTTaskDataEvent(offset, data));
+			bytesReceived += data.length;
+			float progress = ((float)bytesReceived / (float)handle.getFileSize()) * 100.0f;
+			
+			if(progress - lastProgressUpdate >= 1.0f) {
+				callbacks.onFileTransferProgress(handle, progress);
+				sendProgressUpdate(progress);
+				lastProgressUpdate = progress;
+			}
+			
+			if(bytesReceived == handle.getFileSize()) {
+				// All file data has been received, but not necessarily flushed to disk.
+				// Send completed packet to other client to inform all data has been received.
+				FTCompletedPacket packet = new FTCompletedPacket(handle.getRequestId());
+				sendPacket(handle.getSender(), packet, Priority.Normal);
+				
+				// TODO: Might want to inform the receiver all data is received and is being flushed to disk.
+			}
+			
+			dataQueue.enqueue(new DataFragment(offset, data));
 		}
 		
-		private boolean handleDataEvent(FTTaskDataEvent event) {
-			byte[] data = event.getData();
-			long offset = event.getOffset();
-
+		private boolean writeToFile(long offset, byte[] data, int length) {
 			try {
 				outputStream.seek(offset);
-				outputStream.write(data);
+				outputStream.write(data, 0, length);
 				
-				handle.receivedBytes(data.length);
+				handle.receivedBytes(length);
 				
 				return true;
 			} catch (IOException e) {
-				exceptionMessage = e.getMessage();
+				failMessage = String.format("Could not write to output file -> %s", e.getMessage());
 				return false;
 			}
 		}
@@ -584,6 +656,27 @@ public final class FileTransfer {
 		private void sendProgressUpdate(float progress) {
 			FTProgressPacket packet = new FTProgressPacket(handle.getRequestId(), progress);
 			sendPacketFromTask(handle.getSender(), packet, Priority.Normal);
+		}
+	}
+	
+	//-------------------------------------------
+	// Data fragment class.
+	//-------------------------------------------
+	class DataFragment {
+		private final long offset;
+		private final byte[] data;
+		
+		public DataFragment(long offset, byte[] data) {
+			this.offset = offset;
+			this.data = data;
+		}
+		
+		public long getOffset() {
+			return offset;
+		}
+		
+		public byte[] getData() {
+			return data;
 		}
 	}
 }
