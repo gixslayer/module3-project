@@ -289,6 +289,7 @@ public final class TcpConnection {
 			int seq = task.getPacket().getHeader().getSeq();
 			
 			if(ackedSeq.isAfter(seq)) {
+				System.out.printf("Removing seq=%d%n", seq);
 				it.remove();
 			}
 		}

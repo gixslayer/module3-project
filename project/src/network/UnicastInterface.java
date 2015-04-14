@@ -9,7 +9,7 @@ import java.net.SocketException;
 import protocol.Packet;
 
 public final class UnicastInterface {
-	public static final int RECV_BUFFER_SIZE = 4096;
+	public static final int RECV_BUFFER_SIZE = 65536;
 	
 	private final DatagramSocket socket;
 	private final int port;

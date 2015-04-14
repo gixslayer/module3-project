@@ -16,6 +16,7 @@ import protocol.FTReplyPacket;
 import protocol.FTRequestPacket;
 import protocol.Packet;
 import network.NetworkInterface;
+import network.UnicastInterface;
 import client.Client;
 import events.Event;
 import events.EventQueue;
@@ -116,7 +117,7 @@ public final class FileTransfer {
 		sendPacket(sender, replyPacket);
 	}
 	
-	public void cancel(FileTransferHandle handle) {
+	public void cancel(final FileTransferHandle handle) {
 		// Processed by both receiver/sender.
 		boolean isReceiver = handle.isIncoming(localClient); 
 		int transferId = handle.getTransferId();
@@ -144,7 +145,11 @@ public final class FileTransfer {
 		// Inform the other client we cancelled the transfer.
 		sendPacket(destination, cancelPacket);
 		
-		callbacks.onFileTransferCancelled(handle);
+		(new Thread() {
+			public void run() {
+				callbacks.onFileTransferCancelled(handle);
+			}
+		}).start();
 	}
 	
 	public void taskCancelled(FileTransferHandle handle) {
@@ -157,7 +162,7 @@ public final class FileTransfer {
 		}
 	}
 	
-	public void taskCompleted(FileTransferHandle handle) {
+	public void taskCompleted(final FileTransferHandle handle) {
 		if(handle.isOutgoing(localClient)) {
 			activeTasks.remove(handle.getRequestId());
 			outgoingTransfers.remove(handle.getRequestId());
@@ -166,10 +171,14 @@ public final class FileTransfer {
 			incomingTransfers.remove(handle.getTransferId());
 		}
 		
-		callbacks.onFileTransferCompleted(handle);
+		(new Thread() {
+			public void run() {
+				callbacks.onFileTransferCompleted(handle);				
+			}
+		}).start();
 	}
 	
-	public void taskFailed(FileTransferHandle handle, String reason) {
+	public void taskFailed(final FileTransferHandle handle, final String reason) {
 		if(handle.isOutgoing(localClient)) {
 			activeTasks.remove(handle.getRequestId());
 			outgoingTransfers.remove(handle.getRequestId());
@@ -184,7 +193,11 @@ public final class FileTransfer {
 		FTFailedPacket packet = new FTFailedPacket(handle.getTransferId(), handle.getRequestId(), isReceiver);
 		sendPacket(destination, packet);
 		
-		callbacks.onFileTransferFailed(handle, reason);
+		(new Thread() {
+			public void run() {
+				callbacks.onFileTransferFailed(handle, reason);
+			}
+		}).start();
 	}
 	
 	public void taskProgress(FileTransferHandle handle, float progress) {
@@ -201,9 +214,13 @@ public final class FileTransfer {
 		Client receiver = localClient;
 		String fileName = packet.getFileName();
 		long fileSize = packet.getFileSize();
-		FileTransferHandle handle = FileTransferHandle.createRequestHandle(requestId, sender, receiver, fileName, fileSize);
+		final FileTransferHandle handle = FileTransferHandle.createRequestHandle(requestId, sender, receiver, fileName, fileSize);
 		
-		callbacks.onFileTransferRequest(handle);
+		(new Thread() {
+			public void run() {
+				callbacks.onFileTransferRequest(handle);							
+			};
+		}).start();
 	}
 	
 	public void onReplyPacketReceived(FTReplyPacket packet) {
@@ -385,7 +402,7 @@ public final class FileTransfer {
 			setName(String.format("TransferTask-%d", handle.getRequestId()));
 			
 			long offset = 0;
-			byte[] buffer = new byte[1024]; // TODO: Determine a proper buffer size.
+			byte[] buffer = new byte[UnicastInterface.RECV_BUFFER_SIZE - 1024]; // TODO: Determine a proper buffer size.
 			int transferId = handle.getTransferId();
 			Client destination = handle.getReceiver();
 			long size = handle.getFileSize();
@@ -415,12 +432,11 @@ public final class FileTransfer {
 				
 				sendPacketFromTask(destination, dataPacket);
 				
-				// TODO: Limit how often we call this (EG min 10% increase over last callback).
 				eventQueue.enqueue(new FTTaskProgressEvent(handle, progress));
 				
-				try {
+				/*try {
 					Thread.sleep(10);
-				} catch (InterruptedException e) { }
+				} catch (InterruptedException e) { }*/
 			}
 			// Close file handles.
 			handle.close();
@@ -475,7 +491,6 @@ public final class FileTransfer {
 					}
 					
 					if(handleDataEvent((FTTaskDataEvent)event)) {
-						// TODO: Limit how often we call this (EG min 10% increase over last callback).
 						float progress = ((float)handle.getBytesReceived() / (float)handle.getFileSize()) * 100.0f;
 						eventQueue.enqueue(new FTTaskProgressEvent(handle, progress));
 					} else {

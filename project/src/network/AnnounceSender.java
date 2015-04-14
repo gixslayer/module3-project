@@ -22,8 +22,6 @@ public final class AnnounceSender {
 	
 	public void process() {
 		if(System.currentTimeMillis() - lastSent >= interval) {
-			System.out.println("Sending announce");
-			
 			// Update the last seen time-stamp of the local client to the current epoch time.
 			localClient.setLastSeen(DateUtils.getEpochTime());
 
