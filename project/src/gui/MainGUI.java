@@ -372,7 +372,6 @@ public class MainGUI extends JFrame implements ActionListener, KeyListener, Mous
 		}
 	}
 	
-	//TODO: Make progress go from 0 to 100.
 	public void addToScreen(Client sender, Client receiver, FileTransferHandle handle, float progress) {
 		FileLine f = new FileLine(sender, receiver, handle.getFileName(), progress);
 		f.setLine(changeText(f.getLine()));
