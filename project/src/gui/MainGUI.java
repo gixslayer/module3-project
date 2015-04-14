@@ -532,6 +532,10 @@ public class MainGUI extends JFrame implements ActionListener, KeyListener, Mous
 		this.timestampEnabled = value;
 	}
 	
+	public boolean isConnected(Client client) {
+		return peopleList.contains(client);
+	}
+	
 //=============================================================================
 //========================== GETTERS AND SETTERS ==============================
 //=============================================================================
