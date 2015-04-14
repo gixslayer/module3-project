@@ -9,7 +9,7 @@ import java.net.SocketException;
 import protocol.Packet;
 
 public final class UnicastInterface {
-	public static final int RECV_BUFFER_SIZE = 65536;
+	public static final int RECV_BUFFER_SIZE = 4096;
 	
 	private final DatagramSocket socket;
 	private final int port;
@@ -40,7 +40,9 @@ public final class UnicastInterface {
 		DatagramPacket datagram = new DatagramPacket(data,  0, data.length, dest, port);
 		
 		try {
+			long time = System.currentTimeMillis();
 			socket.send(datagram);
+			//System.out.println("direct socket send: " + (System.currentTimeMillis()-time));
 		} catch (IOException e) {
 			// TODO: Should this throw an exception or just print an error message to stderr?
 			//System.err.printf("IOException during DatagramSocket.send: %s%", e.getMessage());

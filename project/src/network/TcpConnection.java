@@ -102,7 +102,7 @@ public final class TcpConnection {
 	private static final int FLAG_ACK = 2;
 	private static final int FLAG_DATA = 4;
 	private static final int MAX_RETRANSMISSION_QUEUE_SIZE = 100; // Can only send new packets if the queue has less than this number of elements in it.
-	private static final boolean DEBUG_PRINTS = true;
+	private static final boolean DEBUG_PRINTS = false;
 	
 	private final UnicastInterface unicastInterface;
 	private final InetAddress remoteAddress;
@@ -256,18 +256,25 @@ public final class TcpConnection {
 	}
 	
 	private void processRetransmissionQueue() {
+		long lastTime = System.currentTimeMillis();
+		//System.out.println("queue retrans: " + retransmissionQueue.size());
 		for(RetransmissionTask task : retransmissionQueue) {
 			if(task.requiresResend()) {
 				task.updateLastSent();
 				send(task.getPacket());
 			}
 		}
+		//System.out.println("retrans " + (System.currentTimeMillis()-lastTime));
 	}
 	
 	private void processPacketQueue() {
 		if(state != State.Established) return;
+		long lastTime = System.currentTimeMillis();
+		//System.out.println("queue packet before loop: " + retransmissionQueue.size());
 		while(retransmissionQueue.size() < MAX_RETRANSMISSION_QUEUE_SIZE) {
+			long pollTime = System.currentTimeMillis();
 			Packet packet = packetQueue.poll();
+			//System.out.println("pollTime" + (System.currentTimeMillis()-pollTime));
 			
 			if(packet == null) {
 				// Queue depleted, break out of loop.
@@ -275,21 +282,23 @@ public final class TcpConnection {
 			}
 			
 			// Send the next packet with a data flag, this will also add it to the retransmission queue.
+			long sendTime = System.currentTimeMillis();
 			sendPacket(FLAG_DATA, packet);
+			//System.out.println("sendTime" + (System.currentTimeMillis()-sendTime));
 		}
-		
+		//System.out.println("queue packet after loop: " + retransmissionQueue.size());
+		//System.out.println("packetqueue "+(System.currentTimeMillis()-lastTime));
 	}
 	
 	private void cancelRetransmissionsUpTo(int ack) {
 		SequenceNumber ackedSeq = new SequenceNumber(ack);
 		Iterator<RetransmissionTask> it = retransmissionQueue.iterator();
-		
 		while(it.hasNext()) {
 			RetransmissionTask task = it.next();
 			int seq = task.getPacket().getHeader().getSeq();
 			
 			if(ackedSeq.isAfter(seq)) {
-				System.out.printf("Removing seq=%d%n", seq);
+				//System.out.printf("Removing seq=%d%n", seq);
 				it.remove();
 			}
 		}
@@ -335,7 +344,9 @@ public final class TcpConnection {
 			System.out.printf("TCP OUT [%s] seq=%-11d ack=%-11d flags=%-9s%n", remoteAddress.getHostAddress(), seq, ack, flagsToString(flags));
 		}
 		
+		long time = System.currentTimeMillis();
 		unicastInterface.send(remoteAddress, packet);
+		//System.out.println("kernel send: " + (System.currentTimeMillis()-time));
 	}
 	
 	private static String flagsToString(int flags) {
