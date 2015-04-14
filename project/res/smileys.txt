@@ -114,3 +114,6 @@ x.x,(✖╭╮✖)
 *plane2*,‛¯¯٭٭¯¯(▫▫)¯¯٭٭¯¯’
 *yuno*,(ლಠ益ಠ)﻿ლ
 *butterfly*,.•°*”˜˜”*°•.ƸӜƷ
+*scissors*,<font size=15>✌</font>
+*paper*,<font size=15>✋</font>
+*rock*,<font size=15>✊</font>
