@@ -16,6 +16,7 @@ import protocol.FTReplyPacket;
 import protocol.FTRequestPacket;
 import protocol.Packet;
 import network.NetworkInterface;
+import network.Priority;
 import network.UnicastInterface;
 import client.Client;
 import events.Event;
@@ -80,7 +81,7 @@ public final class FileTransfer {
 		
 		outgoingRequests.put(requestId, handle);
 		
-		sendPacket(receiver, requestPacket);
+		sendPacket(receiver, requestPacket, Priority.Normal);
 	}
 	
 	public void sendReply(FileTransferHandle handle, boolean response, String savePath) {
@@ -114,7 +115,7 @@ public final class FileTransfer {
 			}
 		}
 		
-		sendPacket(sender, replyPacket);
+		sendPacket(sender, replyPacket, Priority.Normal);
 	}
 	
 	public void cancel(final FileTransferHandle handle) {
@@ -143,7 +144,7 @@ public final class FileTransfer {
 		handle.close();
 		
 		// Inform the other client we cancelled the transfer.
-		sendPacket(destination, cancelPacket);
+		sendPacket(destination, cancelPacket, Priority.High);
 		
 		(new Thread() {
 			public void run() {
@@ -191,7 +192,7 @@ public final class FileTransfer {
 		boolean isReceiver = handle.isIncoming(localClient);
 		Client destination = isReceiver ? handle.getSender() : handle.getReceiver();
 		FTFailedPacket packet = new FTFailedPacket(handle.getTransferId(), handle.getRequestId(), isReceiver);
-		sendPacket(destination, packet);
+		sendPacket(destination, packet, Priority.High);
 		
 		(new Thread() {
 			public void run() {
@@ -369,13 +370,13 @@ public final class FileTransfer {
 		return result;
 	}
 	
-	private void sendPacket(Client destination, Packet packet) {
-		networkInterface.sendReliableTo(destination, packet);
+	private void sendPacket(Client destination, Packet packet, Priority priority) {
+		networkInterface.sendReliableTo(destination, packet, priority);
 	}
 	
-	private void sendPacketFromTask(Client destination, Packet packet) {
+	private void sendPacketFromTask(Client destination, Packet packet, Priority priority) {
 		// This is called from a transfer task thread so push a new event on the event queue so the backend thread processes it.
-		eventQueue.enqueue(new SendReliablePacketEvent(destination, packet));
+		eventQueue.enqueue(new SendReliablePacketEvent(destination, packet, priority));
 	}
 	
 	//-------------------------------------------
@@ -411,8 +412,6 @@ public final class FileTransfer {
 			int bytesRead = 0;
 			
 			while(!taskCancelled && !taskFailed) {
-				// TODO: Some kind of 'rate limit' to prevent flooding TCP stack with packets which could cause a massive outgoing delay of other data.
-				// Perhaps a priority queue in the TCP stack is another solution.
 				try {
 					bytesRead = handle.getInputStream().read(buffer);
 				} catch (IOException e) {
@@ -430,7 +429,7 @@ public final class FileTransfer {
 				offset += bytesRead;
 				float progress = ((float)offset / (float)size) * 100.0f;
 				
-				sendPacketFromTask(destination, dataPacket);
+				sendPacketFromTask(destination, dataPacket, Priority.Low);
 				
 				eventQueue.enqueue(new FTTaskProgressEvent(handle, progress));
 				

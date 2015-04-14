@@ -108,7 +108,7 @@ public final class TcpConnection {
 	private final InetAddress remoteAddress;
 	private final TcpCallbacks callbacks;
 	private final Queue<RetransmissionTask> retransmissionQueue;
-	private final Queue<Packet> packetQueue;
+	private final PriorityQueue<Packet> packetQueue;
 	private State state;
 	private SequenceNumber localSeq;
 	private SequenceNumber localAck;
@@ -118,15 +118,15 @@ public final class TcpConnection {
 		this.remoteAddress = remoteAddress;
 		this.callbacks = callbacks;
 		this.retransmissionQueue = new LinkedList<RetransmissionTask>();
-		this.packetQueue = new LinkedList<Packet>(); // TODO: Perhaps some kind of priority queue? (low/normal/high).
+		this.packetQueue = new PriorityQueue<Packet>();
 		this.state = State.Closed;
 		 // TODO: Random value in [0, SEQ_MAX] range once confirmed to work. Should probably leave some room and stay a bit under SEQ_MAX to start out.
 		this.localSeq = new SequenceNumber(0);
 		this.localAck = new SequenceNumber(0);
 	}
 	
-	public void queuePacket(Packet packet) {
-		packetQueue.add(packet);
+	public void queuePacket(Packet packet, Priority priority) {
+		packetQueue.add(packet, priority);
 		
 		if(state == State.Closed) {
 			connect();

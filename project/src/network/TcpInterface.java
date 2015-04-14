@@ -4,58 +4,47 @@ import java.net.InetAddress;
 import java.util.HashMap;
 import java.util.Map;
 
-import project.TCP;
 import protocol.Packet;
 
 public class TcpInterface {
-	public static final TcpMode MODE = TcpMode.NewTCP;
+	private static final boolean USE_TCP= true;
 	
 	private final UnicastInterface unicastInterface;
 	private final TcpCallbacks callbacks;
-	private final InetAddress localAddress;
 	private final Map<InetAddress, TcpConnection> connections;
 	
-	public TcpInterface(UnicastInterface unicastInterface, InetAddress localAddress, TcpCallbacks callbacks) {
+	public TcpInterface(UnicastInterface unicastInterface, TcpCallbacks callbacks) {
 		this.unicastInterface = unicastInterface;
-		this.localAddress = localAddress;
 		this.callbacks = callbacks;
 		this.connections = new HashMap<InetAddress, TcpConnection>();
 	}
 	
 	public void process() {
-		if(MODE == TcpMode.OldTCP) {
-			TCP.processTime();
-		} else if(MODE == TcpMode.NewTCP) {
+		if(USE_TCP) {
 			for(TcpConnection connection : connections.values()) {
 				connection.process();
 			}
 		}
 	}
 	
-	public void send(InetAddress destination, Packet packet) {
-		if(MODE == TcpMode.Passthrough) {
+	public void send(InetAddress destination, Packet packet, Priority priority) {
+		if(USE_TCP) {
+			getConnection(destination).queuePacket(packet, priority);
+		} else {
 			unicastInterface.send(destination, packet);
-		} else if(MODE == TcpMode.OldTCP) {
-			TCP.sendData(unicastInterface, localAddress, destination, packet);
-		} else if(MODE == TcpMode.NewTCP) {
-			getConnection(destination).queuePacket(packet);
 		}
 	}
 	
 	public void onPacketReceived(Packet packet) {
-		if(MODE == TcpMode.Passthrough) {
-			callbacks.onTcpPacketReceived(packet);
-		} else if(MODE == TcpMode.OldTCP) {
-			if(TCP.handlePacket(unicastInterface, localAddress, packet.getHeader())) {
-				callbacks.onTcpPacketReceived(packet);
-			}
-		} else if(MODE == TcpMode.NewTCP) {
+		if(USE_TCP) {
 			getConnection(packet.getSourceAddress()).onPacketReceived(packet);
+		} else {
+			callbacks.onTcpPacketReceived(packet);
 		}
 	}
 	
 	public void forceClose(InetAddress remoteAddress) {
-		if(MODE == TcpMode.NewTCP) {
+		if(USE_TCP) {
 			connections.remove(remoteAddress);
 		}
 	}

@@ -27,13 +27,13 @@ import java.util.Queue;
 import client.CacheCallbacks;
 import client.Client;
 import client.ClientCache;
-import project.TCP;
 import protocol.*;
 import utils.NetworkUtils;
 import network.AnnounceSender;
 import network.MulticastCallbacks;
 import network.MulticastInterface;
 import network.NetworkInterface;
+import network.Priority;
 import network.TcpCallbacks;
 import network.TcpInterface;
 import network.UnicastCallbacks;
@@ -65,7 +65,7 @@ public class Backend extends Thread implements UnicastCallbacks, MulticastCallba
 		this.fileTransfer = new FileTransfer(callbacks, this, eventQueue);
 		this.multicastInterface = new MulticastInterface(localAddress, GROUP, MULTICAST_PORT, this);
 		this.unicastInterface = new UnicastInterface(localAddress, UNICAST_PORT, this);
-		this.tcpInterface = new TcpInterface(unicastInterface, localAddress, this);
+		this.tcpInterface = new TcpInterface(unicastInterface, this);
 		this.announceSender = new AnnounceSender(multicastInterface, clientCache, ANNOUNCE_INTERVAL);
 		this.callbacks = callbacks;
 	}
@@ -234,25 +234,25 @@ public class Backend extends Thread implements UnicastCallbacks, MulticastCallba
 	private void handleSendChatEvent(SendChatEvent event) {
 		ChatPacket packet = new ChatPacket(localClient, event.getMessage());
 		
-		sendReliableToAll(packet);
+		sendReliableToAll(packet, Priority.Normal);
 	}
 	
 	private void handleSendGroupChatEvent(SendGroupChatEvent event) {
 		GroupChatPacket packet = new GroupChatPacket(localClient, event.getGroup(), event.getMessage());
 		
-		sendReliableToAll(packet);
+		sendReliableToAll(packet, Priority.Normal);
 	}
 	
 	private void handleSendPokeEvent(SendPokeEvent event) {
 		PokePacket packet = new PokePacket(localClient);
 		
-		sendReliableTo(event.getClient(), packet);
+		sendReliableTo(event.getClient(), packet, Priority.Normal);
 	}
 	
 	private void handleSendPrivateChatEvent(SendPrivateChatEvent event) {
 		PrivateChatPacket packet = new PrivateChatPacket(localClient, event.getMessage());
 		
-		sendReliableTo(event.getClient(), packet);
+		sendReliableTo(event.getClient(), packet, Priority.Normal);
 	}
 	
 	private void handleRequestFileTransferEvent(RequestFileTransferEvent event) {
@@ -272,7 +272,7 @@ public class Backend extends Thread implements UnicastCallbacks, MulticastCallba
 	}
 	
 	private void handleSendReliablePacketEvent(SendReliablePacketEvent event) {
-		sendReliableTo(event.getDestination(), event.getPacket());
+		sendReliableTo(event.getDestination(), event.getPacket(), event.getPriority());
 	}
 	
 	private void handleFTTaskCancelledEvent(FTTaskCancelledEvent event) {
@@ -309,7 +309,6 @@ public class Backend extends Thread implements UnicastCallbacks, MulticastCallba
 	//-------------------------------------------
 	private void handleDisconnectPacket(DisconnectPacket packet) {
 		clientCache.clientDisconnected(packet.getClient());
-		TCP.closeConnection(packet.getSourceAddress());
 	}
 	
 	private void handleChatPacket(ChatPacket packet) {
@@ -337,14 +336,14 @@ public class Backend extends Thread implements UnicastCallbacks, MulticastCallba
 				// The client that sent this route request thinks it can reach the destination through us, but that is no longer
 				// the case. Inform him of this.
 				CannotRoutePacket cannotRoutePacket = new CannotRoutePacket(packet.getSrc(), localClient, packet.getDest());
-				tcpInterface.send(packet.getSourceAddress(), cannotRoutePacket);
+				tcpInterface.send(packet.getSourceAddress(), cannotRoutePacket, Priority.High);
 			}
 
 			if(cachedDest.isIndirect()) {
 				Client route = cachedDest.getRoute();
-				tcpInterface.send(route.getAddress(), packet);
+				tcpInterface.send(route.getAddress(), packet, Priority.High);
 			} else {
-				tcpInterface.send(cachedDest.getAddress(), packet);
+				tcpInterface.send(cachedDest.getAddress(), packet, Priority.High);
 			}
 		}
 	}
@@ -391,19 +390,19 @@ public class Backend extends Thread implements UnicastCallbacks, MulticastCallba
 		if(client.isIndirect()) {
 			Client route = client.getRoute();
 			RouteRequestPacket routePacket = new RouteRequestPacket(localClient, client, packet.serialize());
-			tcpInterface.send(route.getAddress(), routePacket);
+			tcpInterface.send(route.getAddress(), routePacket, Priority.High);
 		} else {
 			unicastInterface.send(client.getAddress(), packet);
 		}
 	}
 	
-	public void sendReliableTo(Client client, Packet packet) {
+	public void sendReliableTo(Client client, Packet packet, Priority priority) {
 		if(client.isIndirect()) {
 			Client route = client.getRoute();
 			RouteRequestPacket routePacket = new RouteRequestPacket(localClient, client, packet.serialize());
-			tcpInterface.send(route.getAddress(), routePacket);
+			tcpInterface.send(route.getAddress(), routePacket, Priority.High);
 		} else {
-			tcpInterface.send(client.getAddress(), packet);
+			tcpInterface.send(client.getAddress(), packet, priority);
 		}
 	}
 	
@@ -416,12 +415,12 @@ public class Backend extends Thread implements UnicastCallbacks, MulticastCallba
 		}
 	}
 	
-	public void sendReliableToAll(Packet packet) {
+	public void sendReliableToAll(Packet packet, Priority priority) {
 		// TODO: Ensure this is only ever called from the backend thread to avoid multithreading issues on the client cache.
 		Client[] clients = clientCache.getClients();
 		
 		for(Client client : clients) {
-			sendReliableTo(client, packet);
+			sendReliableTo(client, packet, priority);
 		}
 	}
 	
