@@ -1,5 +1,6 @@
 package network;
 
+import containers.Priority;
 import protocol.Packet;
 import client.Client;
 

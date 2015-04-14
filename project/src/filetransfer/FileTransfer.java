@@ -9,6 +9,8 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.Queue;
 
+import containers.Priority;
+import containers.SynchronizedQueue;
 import protocol.FTCancelPacket;
 import protocol.FTCompletedPacket;
 import protocol.FTDataPacket;
@@ -18,11 +20,9 @@ import protocol.FTReplyPacket;
 import protocol.FTRequestPacket;
 import protocol.Packet;
 import network.NetworkInterface;
-import network.Priority;
 import network.UnicastInterface;
 import client.Client;
 import events.Event;
-import events.EventQueue;
 import events.FTTaskCancelledEvent;
 import events.FTTaskCompletedEvent;
 import events.FTTaskDataEvent;
@@ -33,7 +33,7 @@ import events.SendReliablePacketEvent;
 public final class FileTransfer {
 	private final FileTransferCallbacks callbacks;
 	private final NetworkInterface networkInterface;
-	private final EventQueue eventQueue;
+	private final SynchronizedQueue<Event> eventQueue;
 	private final Map<Integer, FileTransferHandle> outgoingRequests;
 	private final Map<Integer, FileTransferHandle> incomingTransfers;
 	private final Map<Integer, FileTransferHandle> outgoingTransfers;
@@ -43,7 +43,7 @@ public final class FileTransfer {
 	private int nextRequestId;
 	private int nextTransferId;
 	
-	public FileTransfer(FileTransferCallbacks callbacks, NetworkInterface networkInterface, EventQueue eventQueue) {
+	public FileTransfer(FileTransferCallbacks callbacks, NetworkInterface networkInterface, SynchronizedQueue<Event> eventQueue) {
 		this.callbacks = callbacks;
 		this.networkInterface = networkInterface;
 		this.eventQueue = eventQueue;
@@ -482,14 +482,14 @@ public final class FileTransfer {
 	}
 	
 	class ReceiveTask extends Thread {
-		private final EventQueue localEventQueue;
+		private final SynchronizedQueue<Event> localEventQueue;
 		private final FileTransferHandle handle;
 		private final RandomAccessFile outputStream;
 		private volatile boolean taskCancelled;
 		private String exceptionMessage;
 		
 		public ReceiveTask(FileTransferHandle handle) {
-			this.localEventQueue = new EventQueue();
+			this.localEventQueue = new SynchronizedQueue<Event>();
 			this.handle = handle;
 			this.outputStream = handle.getOutputStream();
 			this.taskCancelled = false;

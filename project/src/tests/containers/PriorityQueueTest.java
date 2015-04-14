@@ -1,11 +1,11 @@
-package test.network;
+package tests.containers;
 
 import static org.junit.Assert.*;
 
-import network.Priority;
-import network.PriorityQueue;
-
 import org.junit.Test;
+
+import containers.Priority;
+import containers.PriorityQueue;
 
 public class PriorityQueueTest {
 	@Test

@@ -2,7 +2,6 @@ package backend;
 
 import events.CancelFileTransferEvent;
 import events.Event;
-import events.EventQueue;
 import events.FTTaskCancelledEvent;
 import events.FTTaskCompletedEvent;
 import events.FTTaskFailedEvent;
@@ -24,6 +23,8 @@ import gui.GUICallbacks;
 import java.net.InetAddress;
 import java.util.Queue;
 
+import containers.Priority;
+import containers.SynchronizedQueue;
 import client.CacheCallbacks;
 import client.Client;
 import client.ClientCache;
@@ -33,7 +34,6 @@ import network.AnnounceSender;
 import network.MulticastCallbacks;
 import network.MulticastInterface;
 import network.NetworkInterface;
-import network.Priority;
 import network.TcpCallbacks;
 import network.TcpInterface;
 import network.UnicastCallbacks;
@@ -45,7 +45,7 @@ public class Backend extends Thread implements UnicastCallbacks, MulticastCallba
 	public static final int UNICAST_PORT = 6970;
 	public static final int ANNOUNCE_INTERVAL = 1000;
 	
-	private final EventQueue eventQueue;
+	private final SynchronizedQueue<Event> eventQueue;
 	private final Client localClient;
 	private final ClientCache clientCache;
 	private final FileTransfer fileTransfer;
@@ -59,7 +59,7 @@ public class Backend extends Thread implements UnicastCallbacks, MulticastCallba
 	public Backend(String username, BackendCallbacks callbacks) {
 		InetAddress localAddress = NetworkUtils.getLocalAddress();
 
-		this.eventQueue = new EventQueue();
+		this.eventQueue = new SynchronizedQueue<Event>();
 		this.localClient = new Client(username, localAddress);
 		this.clientCache = new ClientCache(localClient, this);
 		this.fileTransfer = new FileTransfer(callbacks, this, eventQueue);

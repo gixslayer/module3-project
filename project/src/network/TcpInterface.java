@@ -4,6 +4,7 @@ import java.net.InetAddress;
 import java.util.HashMap;
 import java.util.Map;
 
+import containers.Priority;
 import protocol.Packet;
 
 public class TcpInterface {

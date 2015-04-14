@@ -1,6 +1,6 @@
 package events;
 
-import network.Priority;
+import containers.Priority;
 import protocol.Packet;
 import client.Client;
 
