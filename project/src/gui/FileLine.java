@@ -70,6 +70,6 @@ public class FileLine implements ChatLine {
 	}
 	
 	public void setNumericalProgress(float progress) {
-		this.line = "FILE TRANSFER " + fileName + ": " + sendClient.getName() + "*right*" + receiveClient.getName() + " | *" + (((int)this.progress/10)*10) + "p* " + ((int)progress) + "%";
+		this.line = "FILE TRANSFER " + fileName + ": " + sendClient.getName() + "*right*" + receiveClient.getName() + " | *" + (((int)progress/10)*10) + "p* " + ((int)progress) + "%";
 	}
 }
