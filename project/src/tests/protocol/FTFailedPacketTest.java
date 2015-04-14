@@ -1,11 +1,8 @@
 package tests.protocol;
 
 import static org.junit.Assert.*;
-
 import org.junit.Before;
 import org.junit.Test;
-
-import protocol.FTCancelPacket;
 import protocol.FTFailedPacket;
 import protocol.Packet;
 

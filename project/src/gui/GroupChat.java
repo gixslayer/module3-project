@@ -105,14 +105,14 @@ public class GroupChat extends JPanel implements ActionListener, KeyListener, Ch
 	
 	private void addToHistory(String str) {
 		String[] tmp = new String[0];
-		if(history.length+1 <= main.HISTORY_MAX_SIZE) {
+		if(history.length+1 <= MainGUI.HISTORY_MAX_SIZE) {
 			tmp = new String[history.length+1];
 		}
 		else {
 			tmp = new String[history.length];
 		}
 		tmp[0] = str;
-		if(history.length+1 <= main.HISTORY_MAX_SIZE) System.arraycopy(history, 0, tmp, 1, history.length);
+		if(history.length+1 <= MainGUI.HISTORY_MAX_SIZE) System.arraycopy(history, 0, tmp, 1, history.length);
 		else System.arraycopy(history, 0, tmp, 1, history.length-1);
 		history = tmp;
 	}

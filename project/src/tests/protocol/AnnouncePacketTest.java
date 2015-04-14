@@ -1,17 +1,11 @@
 package tests.protocol;
 
 import static org.junit.Assert.*;
-
 import java.net.InetAddress;
-
 import org.junit.Before;
-import org.junit.BeforeClass;
 import org.junit.Test;
-
 import protocol.AnnouncePacket;
 import protocol.Packet;
-import protocol.PacketHeader;
-
 import client.Client;
 
 public class AnnouncePacketTest {
