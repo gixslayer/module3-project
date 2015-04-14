@@ -104,6 +104,8 @@ public class Backend extends Thread implements UnicastCallbacks, MulticastCallba
 		// TODO: Reconsider how we want to handle this (call it here, reliable/unreliable etc).
 		sendToAll(new DisconnectPacket(localClient));
 		
+		fileTransfer.close();
+		
 		// Close the receive threads/sockets.
 		multicastInterface.close();
 		unicastInterface.close();

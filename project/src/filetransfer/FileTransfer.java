@@ -57,6 +57,16 @@ public final class FileTransfer {
 		this.nextTransferId = 0;
 	}
 	
+	public void close() {
+		for(TransferTask task : activeTasks.values()) {
+			task.cancel();
+		}
+		
+		for(ReceiveTask task : receiveTasks.values()) {
+			task.cancel();
+		}
+	}
+	
 	//-------------------------------------------
 	// File transfer related event handlers.
 	//-------------------------------------------
