@@ -738,6 +738,7 @@ public class MainGUI extends JFrame implements ActionListener, KeyListener, Mous
 		if(fileLines.containsKey(handle)) {
 			FileLine fLine = fileLines.get(handle);
 			fLine.setProgress(progress);
+			fLine.setLine(changeText(fLine.getLine()));
 		}
 	}
 	

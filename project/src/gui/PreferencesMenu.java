@@ -65,9 +65,9 @@ public class PreferencesMenu extends JFrame implements ActionListener, ChangeLis
         panel.add(areaColor);
         
         JPanel p = new JPanel();
-        chooseColor[0] = new JButton("Choose color #1");
+        chooseColor[0] = new JButton("Color #1");
         chooseColor[0].addActionListener(this);
-        chooseColor[1] = new JButton("Choose color #2");
+        chooseColor[1] = new JButton("Color #2");
         chooseColor[1].addActionListener(this);
         p.add(chooseColor[0]);
         p.add(chooseColor[1]);
