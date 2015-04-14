@@ -86,7 +86,7 @@ public class MulticastInterface {
 				
 				if(packet == null) {
 					break;
-				} else if(packet.getSourceAddress().equals(localAddress) || packet.getSourceAddress().getHostAddress().equals("192.168.5.2")) {
+				} else if(packet.getSourceAddress().equals(localAddress) /*|| packet.getSourceAddress().getHostAddress().equals("192.168.5.2")*/) {
 					// Don't invoke the callback if we received our own multicast packet. 
 					continue;
 				}
