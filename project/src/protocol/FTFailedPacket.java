@@ -34,7 +34,7 @@ public final class FTFailedPacket extends Packet {
 	protected void deserializeContent(byte[] buffer, int offset, int length) {
 		transferId = ByteUtils.getIntFromBytes(buffer, offset);
 		requestId = ByteUtils.getIntFromBytes(buffer, offset + 4);
-		receiverFailed = buffer[offset + 8] == 0xff;
+		receiverFailed = (buffer[offset + 8] & 0xFF) == 0xff;
 		
 	}
 

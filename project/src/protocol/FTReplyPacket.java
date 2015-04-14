@@ -14,8 +14,6 @@ public final class FTReplyPacket extends Packet {
 	public FTReplyPacket(int requestId, int transferId, boolean response) {
 		super(Packet.TYPE_FT_REPLY);
 		
-		System.out.println("SDSDSDSDS: " + response);
-		
 		this.requestId = requestId;
 		this.transferId = transferId;
 		this.response = response;
@@ -49,7 +47,6 @@ public final class FTReplyPacket extends Packet {
 	}
 	
 	public boolean getResponse() {
-		System.out.println("SDSDSDSDSDSDSDSDSDS:  " + response);
 		return response;
 	}
 }

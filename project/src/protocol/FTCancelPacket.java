@@ -34,7 +34,7 @@ public final class FTCancelPacket extends Packet {
 	protected void deserializeContent(byte[] buffer, int offset, int length) {
 		transferId = ByteUtils.getIntFromBytes(buffer, offset);
 		requestId = ByteUtils.getIntFromBytes(buffer, offset + 4);
-		receiverCancelled = buffer[offset + 8] == 0xff;
+		receiverCancelled = (buffer[offset + 8] & 0xFF) == 0xff;
 	}
 	
 	public int getTransferId() {

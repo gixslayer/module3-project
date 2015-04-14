@@ -5,10 +5,6 @@ public class EmptyPacket extends Packet {
 	public EmptyPacket() {
 		super(Packet.TYPE_EMPTY);
 	}
-	
-	public EmptyPacket(int type) {
-		super(type);
-	}
 
 	@Override
 	protected byte[] serializeContent() {
