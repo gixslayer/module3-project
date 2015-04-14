@@ -91,6 +91,7 @@ public class MainGUI extends JFrame implements ActionListener, KeyListener, Mous
 	private Backend app;
 	
 	private HashMap<FileTransferHandle, Float> fileHandles = new HashMap<FileTransferHandle, Float>();
+	private HashMap<FileTransferHandle, FileLine> fileLines = new HashMap<FileTransferHandle, FileLine>();
 	
 	private AnimationThread animation;
 	
@@ -378,6 +379,7 @@ public class MainGUI extends JFrame implements ActionListener, KeyListener, Mous
 		Date date = new Date();
 		SimpleDateFormat s = new SimpleDateFormat("HH:mm:ss");
 		f.setTime(s.format(date));
+		fileLines.put(handle, f);
 		list.addElement(f);
 		receiveArea.ensureIndexIsVisible(list.getSize() -1);
 		if(list.getSize() >= LIST_MAX_SIZE) {
@@ -732,6 +734,13 @@ public class MainGUI extends JFrame implements ActionListener, KeyListener, Mous
 		app.onSendPoke(client);
 	}
 	
+	public void updateFileLine(FileTransferHandle handle, float progress) {
+		if(fileLines.containsKey(handle)) {
+			FileLine fLine = fileLines.get(handle);
+			fLine.setProgress(progress);
+		}
+	}
+	
 //=============================================================================
 //============================= EVENT HANDLERS ================================
 //=============================================================================
@@ -1031,6 +1040,7 @@ public class MainGUI extends JFrame implements ActionListener, KeyListener, Mous
 	public void onFileTransferRejected(FileTransferHandle handle) {
 		System.out.println("Rejected!");
 		fileHandles.remove(handle);
+		fileLines.remove(handle);
 		if(handle.getReceiver().equals(localClient)) JOptionPane.showMessageDialog(this, "You've successfully rejected the transfer of " + handle.getFileName() + " from " + handle.getSender().getName() + ".");
 		if(handle.getSender().equals(localClient)) JOptionPane.showMessageDialog(this, "The transfer of " + handle.getFileName() + " to " + handle.getReceiver().getName() + " has been rejected.");
 	}
@@ -1039,6 +1049,7 @@ public class MainGUI extends JFrame implements ActionListener, KeyListener, Mous
 	public void onFileTransferCompleted(FileTransferHandle handle) {
 		System.out.println("Completed!");
 		fileHandles.remove(handle);
+		fileLines.remove(handle);
 		if(handle.getReceiver().equals(localClient)) {
 			if(JOptionPane.showConfirmDialog(this, "The transfer of " + handle.getFileName() + " from " + handle.getSender().getName() + " has succeeded." + System.lineSeparator() + "Do you want to open it?") == JOptionPane.YES_OPTION) {
 				File file = new File(handle.getSavePath());
@@ -1054,6 +1065,7 @@ public class MainGUI extends JFrame implements ActionListener, KeyListener, Mous
 	public void onFileTransferFailed(FileTransferHandle handle, String reason) {
 		System.out.println("Failed! " + reason);
 		fileHandles.remove(handle);
+		fileLines.remove(handle);
 		if(handle.getReceiver().equals(localClient)) JOptionPane.showMessageDialog(this, "The transfer of " + handle.getFileName() + " from " + handle.getSender().getName() + " has failed. Please try again.");
 		if(handle.getSender().equals(localClient)) JOptionPane.showMessageDialog(this, "The transfer of " + handle.getFileName() + " to " + handle.getReceiver().getName() + " has failed. Please try again.");
 	}
@@ -1061,8 +1073,7 @@ public class MainGUI extends JFrame implements ActionListener, KeyListener, Mous
 	@Override
 	public void onFileTransferProgress(FileTransferHandle handle, float progress) {
 		if(progress - fileHandles.get(handle) >= 10) {
-			addToScreen(handle.getSender(), handle.getReceiver(), handle, progress);
-			fileHandles.remove(handle);
+			updateFileLine(handle, progress);
 			fileHandles.put(handle, progress);
 		}
 	}
@@ -1071,6 +1082,7 @@ public class MainGUI extends JFrame implements ActionListener, KeyListener, Mous
 	public void onFileTransferCancelled(FileTransferHandle handle) {
 		System.out.println("Cancelled!");
 		fileHandles.remove(handle);
+		fileLines.remove(handle);
 		if(handle.getReceiver().equals(localClient)) JOptionPane.showMessageDialog(this, "The transfer of " + handle.getFileName() + " from " + handle.getSender().getName() + " has been cancelled.");
 		if(handle.getSender().equals(localClient)) JOptionPane.showMessageDialog(this, "The transfer of " + handle.getFileName() + " to " + handle.getReceiver().getName() + " has cancelled. Please try again.");
 	}

@@ -143,7 +143,7 @@ public final class TcpConnection {
 			int seq = packet.getHeader().getSeq();
 			int ack = packet.getHeader().getAck();
 			int flags = packet.getHeader().getFlags();
-			System.out.printf("TCP IN  [%s] seq=%-11d ack=%-11d flags=%-9s", remoteAddress.getHostAddress(), seq, ack, flagsToString(flags));
+			System.out.printf("TCP IN  [%s] seq=%-11d ack=%-11d flags=%-9s%n", remoteAddress.getHostAddress(), seq, ack, flagsToString(flags));
 		}
 		
 		if(state == State.Closed) {
@@ -265,6 +265,7 @@ public final class TcpConnection {
 	}
 	
 	private void processPacketQueue() {
+		if(state != State.Established) return;
 		while(retransmissionQueue.size() < MAX_RETRANSMISSION_QUEUE_SIZE) {
 			Packet packet = packetQueue.poll();
 			
@@ -330,7 +331,7 @@ public final class TcpConnection {
 			int seq = packet.getHeader().getSeq();
 			int ack = packet.getHeader().getAck();
 			int flags = packet.getHeader().getFlags();
-			System.out.printf("TCP OUT [%s] seq=%-11d ack=%-11d flags=%-9s", remoteAddress.getHostAddress(), seq, ack, flagsToString(flags));
+			System.out.printf("TCP OUT [%s] seq=%-11d ack=%-11d flags=%-9s%n", remoteAddress.getHostAddress(), seq, ack, flagsToString(flags));
 		}
 		
 		unicastInterface.send(remoteAddress, packet);

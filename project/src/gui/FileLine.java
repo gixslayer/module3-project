@@ -13,14 +13,14 @@ public class FileLine implements ChatLine {
 		this.sendClient = sendClient;
 		this.receiveClient = receiveClient;
 		this.fileName = fileName;
-		this.line = "FILE TRANSFER " + fileName + ": " + sendClient.getName() + "*right*" + receiveClient.getName() + " | *" + (((int)progress/10)*10) + "p*";
+		this.line = "FILE TRANSFER " + fileName + ": " + sendClient.getName() + "*right*" + receiveClient.getName() + " | *" + (((int)progress/10)*10) + "p* " + (((int)progress/10)*10) + "%";
 	}
 	
 	public FileLine(String time, Client sendClient, Client receiveClient, String fileName, float progress) {
 		this.sendClient = sendClient;
 		this.receiveClient = receiveClient;
 		this.fileName = fileName;
-		this.line = "FILE TRANSFER " + fileName + ": " + sendClient.getName() + "*right*" + receiveClient.getName() + " | *" + (((int)progress/10)*10) + "p*";
+		this.line = "FILE TRANSFER " + fileName + ": " + sendClient.getName() + "*right*" + receiveClient.getName() + " | *" + (((int)progress/10)*10) + "p* " + (((int)progress/10)*10) + "%";
 		this.time = time;
 	}
 	
@@ -59,5 +59,9 @@ public class FileLine implements ChatLine {
 
 	public String getFileName() {
 		return fileName;
+	}
+	
+	public void setProgress(float progress) {
+		this.line = "FILE TRANSFER " + fileName + ": " + sendClient.getName() + "*right*" + receiveClient.getName() + " | *" + (((int)progress/10)*10) + "p* " + (((int)progress/10)*10) + "%";
 	}
 }

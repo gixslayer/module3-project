@@ -75,7 +75,7 @@ public class Backend extends Thread implements UnicastCallbacks, MulticastCallba
 		startup();
 		
 		while(keepProcessing) {
-			System.out.printf("Backend process at %d%n", System.currentTimeMillis());
+			//System.out.printf("Backend process at %d%n", System.currentTimeMillis());
 			
 			process();
 			
@@ -128,7 +128,7 @@ public class Backend extends Thread implements UnicastCallbacks, MulticastCallba
 	private void processEventQueue() {
 		Queue<Event> queue = eventQueue.swapBuffers();
 		
-		System.out.printf("Processing event queue len=%d%n", queue.size());
+		//System.out.printf("Processing event queue len=%d%n", queue.size());
 		
 		while(true) {
 			// Grab the next event (if the queue is empty null is returned).
