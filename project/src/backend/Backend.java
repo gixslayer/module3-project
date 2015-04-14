@@ -44,6 +44,7 @@ public class Backend extends Thread implements UnicastCallbacks, MulticastCallba
 	public static final int MULTICAST_PORT = 6969;
 	public static final int UNICAST_PORT = 6970;
 	public static final int ANNOUNCE_INTERVAL = 1000;
+	public static final boolean DEBUG_PRINTS = true;
 	
 	private final SynchronizedQueue<Event> eventQueue;
 	private final Client localClient;
@@ -74,11 +75,8 @@ public class Backend extends Thread implements UnicastCallbacks, MulticastCallba
 	public void run() {
 		startup();
 		
-		while(keepProcessing) {
-			//System.out.printf("Backend process at %d%n", System.currentTimeMillis());
-			
+		while(keepProcessing) {			
 			process();
-			
 			
 			// TODO: Should we call a short Thread.sleep here to limit cpu usage?
 		}
@@ -114,23 +112,34 @@ public class Backend extends Thread implements UnicastCallbacks, MulticastCallba
 	// Processing.
 	//-------------------------------------------
 	private void process() {
+		long start = System.currentTimeMillis();
+		
+		long eventsStart = start;
 		// Process all events currently queued.
-		processEventQueue();
+		int eventsProcessed = processEventQueue();
+		long eventsDuration = System.currentTimeMillis() - eventsStart;
 
 		// Let the client cache check for timed-out clients etc...
 		clientCache.process();
 		
+		long tcpStart = System.currentTimeMillis();
 		// Let the TCP implementation do the work it needs (check for retransmission/send new packets/etc).
 		tcpInterface.process();
+		long tcpDuration = System.currentTimeMillis() - tcpStart;
 		
 		// Send multicast announcement if required.
 		announceSender.process();
+		
+		long totalDuration = System.currentTimeMillis() - start;
+		
+		if(DEBUG_PRINTS) {
+			System.out.printf("PROCESS total=%-5d events=%-5d tcp=%-5d events processed=%d%n", totalDuration, eventsDuration, tcpDuration, eventsProcessed);
+		}
 	}
 	
-	private void processEventQueue() {
+	private int processEventQueue() {
 		Queue<Event> queue = eventQueue.swapBuffers();
-		
-		//System.out.printf("Processing event queue len=%d%n", queue.size());
+		int size = queue.size();
 		
 		while(true) {
 			// Grab the next event (if the queue is empty null is returned).
@@ -143,6 +152,8 @@ public class Backend extends Thread implements UnicastCallbacks, MulticastCallba
 			
 			processEvent(event);
 		}
+		
+		return size;
 	}
 	
 	private void processEvent(Event event) {
