@@ -34,7 +34,6 @@ public class FTDataPacketTest {
 		assertEquals("Offsets are not equal", deserializedSerializedPacket.getOffset(), offset);
 		assertArrayEquals("Data Arrays are not equal", deserializedSerializedPacket.getData(), data);
 		assertNotNull("Deserialization of the packet returns null.", deserializedSerializedPacket);
-		assertArrayEquals("Deserialize does not return the packet which was serialized", deserializedSerializedPacket.getContent(), ftDataPacket.getContent());
 	}
 }
 
