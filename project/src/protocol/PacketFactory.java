@@ -29,6 +29,10 @@ public final class PacketFactory {
 			return new FTCancelPacket();
 		case Packet.TYPE_FT_FAILED:
 			return new FTFailedPacket();
+		case Packet.TYPE_FT_PROGRESS:
+			return new FTProgressPacket();
+		case Packet.TYPE_FT_COMPLETED:
+			return new FTCompletedPacket();
 		case Packet.TYPE_POKE:
 			return new PokePacket();
 		}

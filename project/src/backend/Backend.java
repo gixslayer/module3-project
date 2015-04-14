@@ -228,6 +228,10 @@ public class Backend extends Thread implements UnicastCallbacks, MulticastCallba
 			fileTransfer.onCancelPacketReceived((FTCancelPacket)packet);
 		} else if(type == Packet.TYPE_FT_FAILED) {
 			fileTransfer.onFailedPacketReceived((FTFailedPacket)packet);
+		} else if(type == Packet.TYPE_FT_PROGRESS) {
+			fileTransfer.onProgressPacketReceived((FTProgressPacket)packet);
+		}  else if(type == Packet.TYPE_FT_COMPLETED) {
+			fileTransfer.onCompletedPacketReceived((FTCompletedPacket)packet);
 		}
 	}
 	

@@ -10,8 +10,10 @@ import java.util.Map;
 import java.util.Queue;
 
 import protocol.FTCancelPacket;
+import protocol.FTCompletedPacket;
 import protocol.FTDataPacket;
 import protocol.FTFailedPacket;
+import protocol.FTProgressPacket;
 import protocol.FTReplyPacket;
 import protocol.FTRequestPacket;
 import protocol.Packet;
@@ -166,17 +168,16 @@ public final class FileTransfer {
 	public void taskCompleted(final FileTransferHandle handle) {
 		if(handle.isOutgoing(localClient)) {
 			activeTasks.remove(handle.getRequestId());
-			outgoingTransfers.remove(handle.getRequestId());
 		} else {
 			receiveTasks.remove(handle.getTransferId());
 			incomingTransfers.remove(handle.getTransferId());
+			
+			(new Thread() {
+				public void run() {
+					callbacks.onFileTransferCompleted(handle);				
+				}
+			}).start();
 		}
-		
-		(new Thread() {
-			public void run() {
-				callbacks.onFileTransferCompleted(handle);				
-			}
-		}).start();
 	}
 	
 	public void taskFailed(final FileTransferHandle handle, final String reason) {
@@ -343,6 +344,32 @@ public final class FileTransfer {
 		callbacks.onFileTransferFailed(handle, "Remote user indicated failure");
 	}
 	
+	public void onProgressPacketReceived(FTProgressPacket packet) {
+		final FileTransferHandle handle = outgoingTransfers.get(packet.getRequestId());
+		
+		if(handle == null) {
+			return;
+		}
+		
+		callbacks.onFileTransferProgress(handle, packet.getProgress());
+	}
+	
+	public void onCompletedPacketReceived(FTCompletedPacket packet) {
+		final FileTransferHandle handle = outgoingTransfers.get(packet.getRequestId());
+		
+		if(handle == null) {
+			return;
+		}
+		
+		outgoingTransfers.remove(handle.getRequestId());
+
+		(new Thread() {
+			public void run() {
+				callbacks.onFileTransferCompleted(handle);
+			}
+		}).start();
+	}
+	
 	//-------------------------------------------
 	// Private helper methods.
 	//-------------------------------------------
@@ -406,7 +433,6 @@ public final class FileTransfer {
 			byte[] buffer = new byte[UnicastInterface.RECV_BUFFER_SIZE - 1024]; // TODO: Determine a proper buffer size.
 			int transferId = handle.getTransferId();
 			Client destination = handle.getReceiver();
-			long size = handle.getFileSize();
 			boolean taskFailed = false;
 			String exceptionMessage = null;
 			int bytesRead = 0;
@@ -427,16 +453,10 @@ public final class FileTransfer {
 				
 				FTDataPacket dataPacket = new FTDataPacket(transferId, offset, buffer, bytesRead);
 				offset += bytesRead;
-				float progress = ((float)offset / (float)size) * 100.0f;
 				
 				sendPacketFromTask(destination, dataPacket, Priority.Low);
-				
-				eventQueue.enqueue(new FTTaskProgressEvent(handle, progress));
-				
-				/*try {
-					Thread.sleep(10);
-				} catch (InterruptedException e) { }*/
 			}
+			
 			// Close file handles.
 			handle.close();
 			
@@ -476,6 +496,9 @@ public final class FileTransfer {
 		public void run() {
 			setName(String.format("ReceiveTask-%d", handle.getTransferId()));
 			boolean taskFailed = false;
+			float lastProgressUpdate = 0f;
+			
+			sendProgressUpdate(0f);
 			
 			while(!taskCancelled && !taskFailed) {
 				Queue<Event> queue = localEventQueue.swapBuffers();
@@ -491,7 +514,14 @@ public final class FileTransfer {
 					
 					if(handleDataEvent((FTTaskDataEvent)event)) {
 						float progress = ((float)handle.getBytesReceived() / (float)handle.getFileSize()) * 100.0f;
+						
 						eventQueue.enqueue(new FTTaskProgressEvent(handle, progress));
+						
+						// Only send a progress update if there is a reasonable difference to prevent spamming packets. 
+						if(progress - lastProgressUpdate >= 1.0f) {
+							sendProgressUpdate(progress);
+							lastProgressUpdate = progress;
+						}
 					} else {
 						taskFailed = true;
 					}
@@ -515,6 +545,8 @@ public final class FileTransfer {
 				eventQueue.enqueue(new FTTaskCancelledEvent(handle));
 			} else {
 				eventQueue.enqueue(new FTTaskCompletedEvent(handle));
+				FTCompletedPacket packet = new FTCompletedPacket(handle.getRequestId());
+				sendPacketFromTask(handle.getSender(), packet, Priority.Normal);
 			}
 		}
 		
@@ -537,6 +569,11 @@ public final class FileTransfer {
 				exceptionMessage = e.getMessage();
 				return false;
 			}
+		}
+		
+		private void sendProgressUpdate(float progress) {
+			FTProgressPacket packet = new FTProgressPacket(handle.getRequestId(), progress);
+			sendPacketFromTask(handle.getSender(), packet, Priority.Normal);
 		}
 	}
 }
