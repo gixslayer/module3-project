@@ -89,6 +89,11 @@ public class PrivateChat extends JPanel implements ActionListener, KeyListener, 
 		addToScreen(localClient, txt);
 		addToHistory(txt);
 		typeField.setText("");
+
+		if(!main.isConnected(otherClient)) {
+			addToScreen(main.getBot(), otherClient.getName() + " is no longer in this chat. He/She will not receive any messages.");
+			return;
+		}
 		
 		app.onSendPrivateMessage(otherClient, txt);
 	}
