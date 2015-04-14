@@ -40,13 +40,9 @@ public final class UnicastInterface {
 		DatagramPacket datagram = new DatagramPacket(data,  0, data.length, dest, port);
 		
 		try {
-			long time = System.currentTimeMillis();
 			socket.send(datagram);
-			//System.out.println("direct socket send: " + (System.currentTimeMillis()-time));
 		} catch (IOException e) {
-			// TODO: Should this throw an exception or just print an error message to stderr?
-			//System.err.printf("IOException during DatagramSocket.send: %s%", e.getMessage());
-			throw new RuntimeException(e);
+			System.err.printf("IOException during DatagramSocket.send: %s%", e.getMessage());
 		}
 	}
 	
@@ -77,10 +73,7 @@ public final class UnicastInterface {
 				
 				if(packet == null) {
 					break;
-				} /*else if(packet.getType() == Packet.TYPE_EMPTY) {
-					// Don't send empty packets to the callback (they should only be used by the TcpInterface). 
-					continue;
-				}*/
+				}
 				
 				callbacks.onUnicastPacketReceived(packet);
 			}

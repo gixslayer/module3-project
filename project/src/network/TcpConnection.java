@@ -30,7 +30,7 @@ class RetransmissionTask {
 	}
 	
 	public boolean requiresResend() {
-		return System.currentTimeMillis() - lastSent >= 20;
+		return System.currentTimeMillis() - lastSent >= TcpConnection.RETRANSMISSION_TIMEOUT;
 	}
 	
 	public Packet getPacket() {
@@ -98,11 +98,12 @@ class SequenceNumber {
 }
 
 public final class TcpConnection {
+	public static final int MAX_RETRANSMISSION_QUEUE_SIZE = 10;
+	public static final int RETRANSMISSION_TIMEOUT = 100;
+	public static final boolean DEBUG_PRINTS = false;
 	private static final int FLAG_SYN = 1;
 	private static final int FLAG_ACK = 2;
 	private static final int FLAG_DATA = 4;
-	private static final int MAX_RETRANSMISSION_QUEUE_SIZE = 100; // Can only send new packets if the queue has less than this number of elements in it.
-	private static final boolean DEBUG_PRINTS = false;
 	
 	private final UnicastInterface unicastInterface;
 	private final InetAddress remoteAddress;
@@ -143,7 +144,7 @@ public final class TcpConnection {
 			int seq = packet.getHeader().getSeq();
 			int ack = packet.getHeader().getAck();
 			int flags = packet.getHeader().getFlags();
-			System.out.printf("TCP IN  [%s] seq=%-11d ack=%-11d flags=%-9s%n", remoteAddress.getHostAddress(), seq, ack, flagsToString(flags));
+			System.out.printf("TCP IN   [%s] seq=%-11d ack=%-11d flags=%s%n", remoteAddress.getHostAddress(), seq, ack, flagsToString(flags));
 		}
 		
 		if(state == State.Closed) {
@@ -256,25 +257,22 @@ public final class TcpConnection {
 	}
 	
 	private void processRetransmissionQueue() {
-		long lastTime = System.currentTimeMillis();
-		//System.out.println("queue retrans: " + retransmissionQueue.size());
 		for(RetransmissionTask task : retransmissionQueue) {
 			if(task.requiresResend()) {
 				task.updateLastSent();
 				send(task.getPacket());
 			}
 		}
-		//System.out.println("retrans " + (System.currentTimeMillis()-lastTime));
 	}
 	
 	private void processPacketQueue() {
-		if(state != State.Established) return;
-		long lastTime = System.currentTimeMillis();
-		//System.out.println("queue packet before loop: " + retransmissionQueue.size());
+		if(state != State.Established) {
+			// Only begin processing the packet queue once the connection is established.
+			return;
+		}
+		
 		while(retransmissionQueue.size() < MAX_RETRANSMISSION_QUEUE_SIZE) {
-			long pollTime = System.currentTimeMillis();
 			Packet packet = packetQueue.poll();
-			//System.out.println("pollTime" + (System.currentTimeMillis()-pollTime));
 			
 			if(packet == null) {
 				// Queue depleted, break out of loop.
@@ -282,12 +280,8 @@ public final class TcpConnection {
 			}
 			
 			// Send the next packet with a data flag, this will also add it to the retransmission queue.
-			long sendTime = System.currentTimeMillis();
 			sendPacket(FLAG_DATA, packet);
-			//System.out.println("sendTime" + (System.currentTimeMillis()-sendTime));
 		}
-		//System.out.println("queue packet after loop: " + retransmissionQueue.size());
-		//System.out.println("packetqueue "+(System.currentTimeMillis()-lastTime));
 	}
 	
 	private void cancelRetransmissionsUpTo(int ack) {
@@ -298,7 +292,10 @@ public final class TcpConnection {
 			int seq = task.getPacket().getHeader().getSeq();
 			
 			if(ackedSeq.isAfter(seq)) {
-				//System.out.printf("Removing seq=%d%n", seq);
+				if(DEBUG_PRINTS) {
+					System.out.printf("TCP INFO [%s] removed seq=%-11d from retransmission queue (recv ack=%d)%n", remoteAddress.getHostAddress(), seq, ack);
+				}
+				
 				it.remove();
 			}
 		}
@@ -341,12 +338,10 @@ public final class TcpConnection {
 			int seq = packet.getHeader().getSeq();
 			int ack = packet.getHeader().getAck();
 			int flags = packet.getHeader().getFlags();
-			System.out.printf("TCP OUT [%s] seq=%-11d ack=%-11d flags=%-9s%n", remoteAddress.getHostAddress(), seq, ack, flagsToString(flags));
+			System.out.printf("TCP OUT  [%s] seq=%-11d ack=%-11d flags=%s%n", remoteAddress.getHostAddress(), seq, ack, flagsToString(flags));
 		}
 		
-		long time = System.currentTimeMillis();
 		unicastInterface.send(remoteAddress, packet);
-		//System.out.println("kernel send: " + (System.currentTimeMillis()-time));
 	}
 	
 	private static String flagsToString(int flags) {
