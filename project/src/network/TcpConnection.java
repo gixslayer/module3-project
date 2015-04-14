@@ -30,7 +30,7 @@ class RetransmissionTask {
 	}
 	
 	public boolean requiresResend() {
-		return System.currentTimeMillis() - lastSent >= 100;
+		return System.currentTimeMillis() - lastSent >= 20;
 	}
 	
 	public Packet getPacket() {
@@ -101,7 +101,7 @@ public final class TcpConnection {
 	private static final int FLAG_SYN = 1;
 	private static final int FLAG_ACK = 2;
 	private static final int FLAG_DATA = 4;
-	private static final int MAX_RETRANSMISSION_QUEUE_SIZE = 10; // Can only send new packets if the queue has less than this number of elements in it.
+	private static final int MAX_RETRANSMISSION_QUEUE_SIZE = 100; // Can only send new packets if the queue has less than this number of elements in it.
 	private static final boolean DEBUG_PRINTS = true;
 	
 	private final UnicastInterface unicastInterface;
