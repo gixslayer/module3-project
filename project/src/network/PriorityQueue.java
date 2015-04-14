@@ -20,7 +20,7 @@ public final class PriorityQueue<T> {
 	}
 	
 	public T poll() {
-		for(int i = Priority.NUM_PRIORITIES - 1; i > 0; i--) {
+		for(int i = Priority.NUM_PRIORITIES - 1; i > -1; i--) {
 			T value = queues[i].poll();
 			
 			if(value != null) {
@@ -32,7 +32,7 @@ public final class PriorityQueue<T> {
 	}
 	
 	public T peek() {
-		for(int i = Priority.NUM_PRIORITIES - 1; i > 0; i--) {
+		for(int i = Priority.NUM_PRIORITIES - 1; i > -1; i--) {
 			T value = queues[i].peek();
 			
 			if(value != null) {
