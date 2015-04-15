@@ -61,14 +61,14 @@ public class Backend extends Thread implements UnicastCallbacks, MulticastCallba
 	private final BackendCallbacks callbacks;
 	private volatile boolean keepProcessing;
 	
-	private byte[] masterKey = new byte[2056];
+	private byte[] masterKey = new byte[32];
 
 	public Backend(String username, BackendCallbacks callbacks) {
 		InetAddress localAddress = NetworkUtils.getLocalAddress();
 		
 		try {
 			FileInputStream in = new FileInputStream(new File("res/key.bin"));
-			in.read(masterKey);
+			in.read(masterKey, 0, 32);
 			in.close();
 		} catch (FileNotFoundException e) { e.printStackTrace(); } catch (IOException e) { e.printStackTrace(); }
 
