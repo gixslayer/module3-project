@@ -217,14 +217,20 @@ public final class FileTransfer {
 	public void cancelActiveTasksFor(Client client) {
 		for(FileTransferHandle handle : incomingTransfers.values()) {
 			if(handle.getSender().equals(client)) {
-				receiveTasks.get(handle.getTransferId()).cancel();
+				ReceiveTask task = receiveTasks.get(handle.getTransferId());
+				if(task != null) {
+					task.cancel();
+				}
 				callbacks.onFileTransferFailed(handle, "Remote user disconnected");
 			}
 		}
 		
 		for(FileTransferHandle handle : outgoingTransfers.values()) {
 			if(handle.getReceiver().equals(client)) {
-				activeTasks.get(handle.getRequestId()).cancel();
+				TransferTask task = activeTasks.get(handle.getRequestId());
+				if(task != null) {
+					task.cancel();
+				}
 				callbacks.onFileTransferFailed(handle, "Remote user disconnected");
 			}
 		}
