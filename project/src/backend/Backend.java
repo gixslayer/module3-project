@@ -48,7 +48,7 @@ public class Backend extends Thread implements UnicastCallbacks, MulticastCallba
 	public static final int MULTICAST_PORT = 6969;
 	public static final int UNICAST_PORT = 6970;
 	public static final int ANNOUNCE_INTERVAL = 1000;
-	public static final boolean DEBUG_PRINTS = true;
+	public static final boolean DEBUG_PRINTS = false;
 	
 	private final SynchronizedQueue<Event> eventQueue;
 	private final Client localClient;

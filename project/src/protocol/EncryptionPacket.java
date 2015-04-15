@@ -1,5 +1,6 @@
 package protocol;
 
+import java.security.AlgorithmParameterGenerator;
 import java.security.InvalidKeyException;
 import java.security.NoSuchAlgorithmException;
 
@@ -39,8 +40,8 @@ public class EncryptionPacket extends Packet {
 	@Override
 	protected void deserializeContent(byte[] buffer, int offset, int length) {
 		encryptedData = new byte[length - 4];
-		System.arraycopy(buffer, 0, encryptedData, 0, length-4);
-		paddingSize = ByteUtils.getIntFromBytes(buffer, length-4);
+		System.arraycopy(buffer, offset, encryptedData, 0, length-4);
+		paddingSize = ByteUtils.getIntFromBytes(buffer, offset + (length-4));
 	}
 	
 	public void setKey(byte[] key) {
@@ -57,7 +58,7 @@ public class EncryptionPacket extends Packet {
 	
 	public void encrypt() {
 		try {
-			cipher = Cipher.getInstance("AES");
+			cipher = Cipher.getInstance("AES/ECB/NoPadding");
 			SecretKeySpec k = new SecretKeySpec(key, "AES");
 			cipher.init(Cipher.ENCRYPT_MODE, k);
 			int size = data.length % 16;
@@ -74,7 +75,7 @@ public class EncryptionPacket extends Packet {
 	
 	public void decrypt() {
 		try {
-			cipher = Cipher.getInstance("AES");
+			cipher = Cipher.getInstance("AES/ECB/NoPadding");
 			SecretKeySpec k = new SecretKeySpec(key, "AES");
 			cipher.init(Cipher.DECRYPT_MODE, k);
 			byte[] buffer = cipher.doFinal(encryptedData);
