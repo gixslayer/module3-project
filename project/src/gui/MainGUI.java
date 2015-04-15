@@ -350,7 +350,16 @@ public class MainGUI extends JFrame implements ActionListener, KeyListener, Mous
 			Client client = ((PrivateChat)chatMap.get(index)).getOtherClient();
 			tabMap.remove(client);
 		}
+		for(int i=index+1; i<tabPane.getTabCount(); i++) {
+			if(!chatMap.get(index).isPrivate())
+				groupMap.put(((GroupChat)chatMap.get(index)).getGroup(), index-1);
+			else
+				tabMap.put(((PrivateChat)chatMap.get(index)).getOtherClient(), index-1);
+		}
 		chatMap.remove(index);
+		for(int i=index+1; i<tabPane.getTabCount(); i++)
+			chatMap.put((index-1), chatMap.get(index));
+		chatMap.remove(tabPane.getTabCount()-1);
 	}
 	
 	/**
@@ -420,8 +429,6 @@ public class MainGUI extends JFrame implements ActionListener, KeyListener, Mous
 			PrivateChat pChat = (PrivateChat)chat;
 			pChat.receiveText(str, client);
 			if(tabPane.getSelectedIndex() != index) {
-				tabPane.remove(index);
-				tabPane.add(pChat, index);
 				tabPane.setBackgroundAt(index, Color.YELLOW);
 				addTabName(index, client.getName() + " [!]");
 			}
@@ -434,10 +441,8 @@ public class MainGUI extends JFrame implements ActionListener, KeyListener, Mous
 			GroupChat gChat = (GroupChat)chat;
 			gChat.receiveText(str, client);
 			if(tabPane.getSelectedIndex() != index) {
-				tabPane.remove(index);
-				tabPane.add(gChat, index);
-				tabPane.setBackgroundAt(index, Color.YELLOW);
-				addTabName(index, group.getName() + " [!]");
+				tabPane.setBackgroundAt(tabPane.indexOfTab("q"), Color.YELLOW);
+				addTabName(tabPane.indexOfTab("q"), group.getName() + " [!]");
 			}
 		}
 		else {
