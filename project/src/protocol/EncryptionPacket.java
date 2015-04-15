@@ -79,6 +79,7 @@ public class EncryptionPacket extends Packet {
 			SecretKeySpec k = new SecretKeySpec(key, "AES");
 			cipher.init(Cipher.DECRYPT_MODE, k);
 			byte[] buffer = cipher.doFinal(encryptedData);
+			data = new byte[buffer.length - paddingSize];
 			System.arraycopy(buffer, 0, data, 0, buffer.length - paddingSize);
 		} catch (NoSuchAlgorithmException | NoSuchPaddingException | InvalidKeyException | IllegalBlockSizeException | BadPaddingException e) { e.printStackTrace(); }
 	}
