@@ -371,6 +371,7 @@ public class Backend extends Thread implements UnicastCallbacks, MulticastCallba
 				// the case. Inform him of this.
 				CannotRoutePacket cannotRoutePacket = new CannotRoutePacket(packet.getSrc(), localClient, packet.getDest());
 				tcpInterface.send(packet.getSourceAddress(), cannotRoutePacket, Priority.High);
+				return;
 			}
 
 			if(cachedDest.isIndirect()) {
