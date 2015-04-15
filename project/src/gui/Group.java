@@ -30,4 +30,19 @@ public class Group {
 	public void leaveGroup(Client client) {
 		clientList.remove(client);
 	}
+	
+	@Override
+	public int hashCode() {
+		return name.hashCode();
+	}
+	
+	@Override
+	public boolean equals(Object obj) {
+		if(obj == null) return false;
+		if(!(obj instanceof Group)) return false;
+		
+		Group other = (Group)obj;
+		
+		return this.name.equals(other.name);
+	}
 }
