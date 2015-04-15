@@ -16,6 +16,7 @@ public class UserMenu extends JPopupMenu implements ActionListener {
     private JMenuItem pokeItem;
     private JMenuItem lastSeen;
     private JMenuItem fileItem;
+    private JMenuItem mute;
     private JMenu chooseColor;
     private JMenuItem[] color = new JMenuItem[7];
     private Client otherClient;
@@ -48,6 +49,10 @@ public class UserMenu extends JPopupMenu implements ActionListener {
 	        fileItem = new JMenuItem("Send File");
 	        fileItem.addActionListener(this);
 	        add(fileItem);
+	        
+	        mute = new JMenuItem("(Un)Mute");
+	        mute.addActionListener(this);
+	        add(mute);
         }
     }
     
@@ -68,6 +73,9 @@ public class UserMenu extends JPopupMenu implements ActionListener {
 		    if(returnVal == JFileChooser.APPROVE_OPTION) {
 		    	main.sendFile(chooser.getSelectedFile(), otherClient);
 		    }
+		}
+		else if(arg0.getSource().equals(mute)) {
+			main.mute(otherClient);
 		}
 		else {
 			for(int i=0; i<color.length; i++) {

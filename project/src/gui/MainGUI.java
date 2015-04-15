@@ -1,12 +1,10 @@
 package gui;
 
 import javax.swing.*;
-
 import backend.Backend;
 import backend.BackendCallbacks;
 import client.Client;
 import filetransfer.FileTransferHandle;
-
 import java.awt.*;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
@@ -38,19 +36,17 @@ public class MainGUI extends JFrame implements ActionListener, KeyListener, Mous
 	public static final int HISTORY_MAX_SIZE = 20;
 	
 	private static final String[] colors = {"Red", "Blue", "Green", "Yellow", "Purple", "Orange", "Black"};
-	
 	private HashMap<Client, String> colorMap = new HashMap<Client, String>();
 	private ColoringColors coloring = ColoringColors.NORMAL;
+	private ArrayList<Client> mutedList = new ArrayList<Client>();
 	
 	private Color[] gradient = new Color[MAX_GRADIENTS];
 	private Color[] totalGradient = new Color[MAX_GRADIENT_STEPS];
-	
 	private String[] history = new String[0];
 	private int currentHistory;
 	
 	private volatile boolean rainbowMode = false;
 	private boolean altRBMode = false;
-	
 	private ArrayList<String> checkTextStrings = new ArrayList<String>();
 	private Color chatFG;
 	
@@ -77,17 +73,14 @@ public class MainGUI extends JFrame implements ActionListener, KeyListener, Mous
 	private JScrollPane peopleScrollPane;
 	
 	private JFrame prefMenu;
-	
 	private DefaultListModel<ChatLine> list;
 	private JList<ChatLine> receiveArea;
 	private JScrollPane scrollPane;
 	private Client botClient;
 	
 	private JButton sendButton;
-	
 	private Client localClient;
 	private Icon closeIcon;
-	
 	private Backend app;
 	
 	private HashMap<FileTransferHandle, Float> fileHandles = new HashMap<FileTransferHandle, Float>();
@@ -738,6 +731,17 @@ public class MainGUI extends JFrame implements ActionListener, KeyListener, Mous
 		app.onSendPoke(client);
 	}
 	
+	public void mute(Client client) {
+		if(mutedList.contains(client)) 
+			mutedList.remove(client);
+		else 
+			mutedList.add(client);
+	}
+	
+	public boolean isMuted(Client client) {
+		return mutedList.contains(client);
+	}
+	
 	public void updateFileLine(FileTransferHandle handle, float progress) {
 		if(fileLines.containsKey(handle)) {
 			FileLine fLine = fileLines.get(handle);
@@ -995,16 +999,19 @@ public class MainGUI extends JFrame implements ActionListener, KeyListener, Mous
 
 	@Override
 	public void onChatMessageReceived(Client client, String message) {
+		if(mutedList.contains(client)) return;
 		receiveText(message, client, false, false, null);
 	}
 
 	@Override
 	public void onPrivateChatMessageReceived(Client client, String message) {
+		if(mutedList.contains(client)) return;
 		receiveText(message, client, true, false, null);
 	}
 	
 	@Override
 	public void onGroupChatMessageReceived(Client client, String groupName, String message) {
+		if(mutedList.contains(client)) return;
 		Group group = getGroup(groupName);
 		if(group != null) {
 			receiveText(message, client, false, true, group);
@@ -1095,6 +1102,7 @@ public class MainGUI extends JFrame implements ActionListener, KeyListener, Mous
 
 	@Override
 	public void onPokePacketReceived(Client client) {
+		if(mutedList.contains(client)) return;
 		addPrivateChat(client, false);
 		receiveText("*poke*", client, true, false, null);
 		if(JOptionPane.showConfirmDialog(this, "You've received a poke from " + client.getName() + ". Do you want to view it?") == JOptionPane.YES_OPTION)
