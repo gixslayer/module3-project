@@ -35,6 +35,8 @@ public final class PacketFactory {
 			return new FTCompletedPacket();
 		case Packet.TYPE_POKE:
 			return new PokePacket();
+		case Packet.TYPE_ENCRYPTION:
+			return new EncryptionPacket();
 		}
 		
 		throw new IllegalArgumentException("Invalid type");
