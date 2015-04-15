@@ -113,14 +113,30 @@ public class Backend extends Thread implements UnicastCallbacks, MulticastCallba
 	}
 	
 	private void shutdown() {
-		// TODO: Reconsider how we want to handle this (call it here, reliable/unreliable etc).
-		sendToAll(new DisconnectPacket(localClient));
+		sendDisconnect();
 		
 		fileTransfer.close();
 		
 		// Close the receive threads/sockets.
 		multicastInterface.close();
 		unicastInterface.close();
+	}
+	
+	private void sendDisconnect() {
+		Client[] clients = clientCache.getClients();
+		Packet disconnectPacket = new DisconnectPacket(localClient);
+		
+		for(Client client : clients) {
+			if(client.isIndirect()) {
+				sendTo(client, disconnectPacket);
+			}
+		}
+		
+		for(Client client : clients) {
+			if(!client.isIndirect()) {
+				sendTo(client, disconnectPacket);
+			}
+		}
 	}
 	//-------------------------------------------
 	// Processing.
