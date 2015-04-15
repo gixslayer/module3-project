@@ -10,7 +10,7 @@ import utils.DateUtils;
 
 public final class ClientCache {
 	public static final long TIMEOUT_DURATION = 10000; // Clients time out after not being seen for this many milliseconds.
-	public static final long RECONNECT_DURATION = 2500; // A client from the same IP/name cannot be indirectly added after it manually disconnects before this many milliseconds expire.
+	public static final long RECONNECT_DURATION = 5000; // A client from the same IP/name cannot be indirectly added after it manually disconnects before this many milliseconds expire.
 	
 	private final Client localClient;
 	private final List<Client> cache;
@@ -34,10 +34,12 @@ public final class ClientCache {
 	
 	public void updateDirect(Client client) {
 		if(!cache.contains(client)) {
-			// Client currently isn't in the cache, but we received an announcement message from him directly.
-			client.setDirect();
-			cache.add(client);
-			callbacks.onClientConnected(client);
+			if(!hasRecentlyDisconnected(client)) {
+				// Client currently isn't in the cache, but we received an announcement message from him directly.
+				client.setDirect();
+				cache.add(client);
+				callbacks.onClientConnected(client);
+			}
 		} else {
 			// Client is already in the cache, so grab the cached entry.
 			Client cachedClient = getCachedClient(client);
