@@ -260,7 +260,6 @@ public final class FileTransfer {
 		int requestId = packet.getRequestId();
 		int transferId = packet.getTransferId();
 		boolean response = packet.getResponse();
-		System.out.println("SDSDS: " + response);
 		FileTransferHandle handle = outgoingRequests.remove(requestId);
 		
 		// Ignore if the request id wasn't valid.
