@@ -41,8 +41,6 @@ public final class UnicastInterface {
 	
 	public void close() {
 		keepSending = false;
-		
-		socket.close();
 	}
 
 	public void send(InetAddress dest, Packet packet) {
@@ -132,6 +130,29 @@ public final class UnicastInterface {
 					Thread.sleep(5);
 				} catch (InterruptedException e) { }
 			}
+			
+			// Flush out all data in the other buffer as well before closing the socket to ensure disconnect packets
+			// are send out.
+			// Swap the buffers so we get a queue we can poll on.
+			Queue<DatagramPacket> queue = packetQueue.swapBuffers();
+			
+			// Deplete the entire queue and send out the queued datagram packets.
+			while(true) {
+				DatagramPacket entry = queue.poll();
+				
+				if(entry == null) {
+					// Queue depleted.
+					break;
+				}
+				
+				try {
+					socket.send(entry);
+				} catch (IOException e) {
+					System.err.printf("IOException during DatagramSocket.send: %s", e.getMessage());
+				}
+			}
+			
+			socket.close();
 		}
 	}
 }
