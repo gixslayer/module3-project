@@ -10,7 +10,7 @@ import utils.DateUtils;
 
 public final class ClientCache {
 	public static final long TIMEOUT_DURATION = 10000; // Clients time out after not being seen for this many milliseconds.
-	public static final long RECONNECT_DURATION = 5000; // A client from the same IP/name cannot be indirectly added after it manually disconnects before this many milliseconds expire.
+	public static final long RECONNECT_DURATION = 11000; // A client from the same IP/name cannot be indirectly added after it manually disconnects before this many milliseconds expire.
 	
 	private final Client localClient;
 	private final List<Client> cache;
