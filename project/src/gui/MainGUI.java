@@ -125,6 +125,7 @@ public class MainGUI extends JFrame implements ActionListener, KeyListener, Mous
 		typeField.addKeyListener(this);
 		
 		peopleArea = new JList<Client>(peopleList);
+		peopleArea.setCellRenderer(new MyCellRenderer());
 		peopleArea.setForeground(Color.BLACK);
 		peopleScrollPane = new JScrollPane(peopleArea);
 		
@@ -739,10 +740,12 @@ public class MainGUI extends JFrame implements ActionListener, KeyListener, Mous
 	}
 	
 	public void mute(Client client) {
-		if(mutedList.contains(client)) 
+		if(mutedList.contains(client)) {
 			mutedList.remove(client);
-		else 
+		}
+		else { 
 			mutedList.add(client);
+		}
 	}
 	
 	public boolean isMuted(Client client) {
@@ -1115,4 +1118,16 @@ public class MainGUI extends JFrame implements ActionListener, KeyListener, Mous
 		if(JOptionPane.showConfirmDialog(this, "You've received a poke from " + client.getName() + ". Do you want to view it?") == JOptionPane.YES_OPTION)
 			tabPane.setSelectedIndex(tabMap.get(client));
 	}
+	
+	class MyCellRenderer extends JLabel implements ListCellRenderer<Object> {
+	     public Component getListCellRendererComponent(JList<?> list, Object value, int index, boolean isSelected, boolean cellHasFocus) {
+	         Client client = (Client)value;
+	         if(isMuted(client)) 
+	        	 setText(changeText("<html>*mute* <font color=" + getUserColor(client) + ">" + client));
+	         else
+	        	 setText("<html><font color=" + getUserColor(client) + ">" + client);
+	         
+	         return this;
+	     }
+	 }
 }
