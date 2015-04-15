@@ -495,7 +495,7 @@ public class MainGUI extends JFrame implements ActionListener, KeyListener, Mous
 		}
 		if(str.equals("*never*")){
 			if(client.equals(localClient)) {
-				String[] tmp = {"Never gonna give you up", "Never gonna let you down", "Never gonna run around and desert you", "Never gonna make you cry", "never gonna say goodbye", "Never gonna tell a lie and hurt you"};
+				String[] tmp = {"Never gonna give you up", "Never gonna let you down", "Never gonna run around and desert you", "Never gonna make you cry", "Never gonna say goodbye", "Never gonna tell a lie and hurt you"};
 				sendMultiple(tmp);
 			}
 			return true;
