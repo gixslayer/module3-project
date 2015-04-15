@@ -9,10 +9,13 @@ import javax.crypto.IllegalBlockSizeException;
 import javax.crypto.NoSuchPaddingException;
 import javax.crypto.spec.SecretKeySpec;
 
+import utils.ByteUtils;
+
 public class EncryptionPacket extends Packet {
 	private byte[] data;
 	private byte[] encryptedData;
 	private byte[] key;
+	private int paddingSize;
 	private Cipher cipher;
 	
 	public EncryptionPacket() {
@@ -27,12 +30,17 @@ public class EncryptionPacket extends Packet {
 	
 	@Override
 	protected byte[] serializeContent() {
-		return encryptedData;
+		byte[] returnBytes = new byte[encryptedData.length + 4];
+		ByteUtils.getIntBytes(paddingSize, returnBytes, encryptedData.length);
+		System.arraycopy(encryptedData, 0, returnBytes, 0, encryptedData.length);
+		return returnBytes;
 	}
 
 	@Override
 	protected void deserializeContent(byte[] buffer, int offset, int length) {
-		encryptedData = buffer;
+		encryptedData = new byte[length - 4];
+		System.arraycopy(buffer, 0, encryptedData, 0, length-4);
+		paddingSize = ByteUtils.getIntFromBytes(buffer, length-4);
 	}
 	
 	public void setKey(byte[] key) {
@@ -52,7 +60,15 @@ public class EncryptionPacket extends Packet {
 			cipher = Cipher.getInstance("AES");
 			SecretKeySpec k = new SecretKeySpec(key, "AES");
 			cipher.init(Cipher.ENCRYPT_MODE, k);
+			int size = data.length % 16;
+			if(size != 0) {
+				size = 16 - size;
+				byte[] datapad = new byte[size + data.length];
+				System.arraycopy(data, 0, datapad, 0, data.length);
+				data = datapad;
+			}
 			encryptedData = cipher.doFinal(data);
+			paddingSize = size;
 		} catch (InvalidKeyException | IllegalBlockSizeException | BadPaddingException | NoSuchAlgorithmException | NoSuchPaddingException e) { e.printStackTrace(); }	
 	}
 	
@@ -61,7 +77,8 @@ public class EncryptionPacket extends Packet {
 			cipher = Cipher.getInstance("AES");
 			SecretKeySpec k = new SecretKeySpec(key, "AES");
 			cipher.init(Cipher.DECRYPT_MODE, k);
-			data = cipher.doFinal(encryptedData);
+			byte[] buffer = cipher.doFinal(encryptedData);
+			System.arraycopy(buffer, 0, data, 0, buffer.length - paddingSize);
 		} catch (NoSuchAlgorithmException | NoSuchPaddingException | InvalidKeyException | IllegalBlockSizeException | BadPaddingException e) { e.printStackTrace(); }
 	}
 }
