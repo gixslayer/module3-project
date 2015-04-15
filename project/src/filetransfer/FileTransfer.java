@@ -533,13 +533,9 @@ public final class FileTransfer {
 		@Override
 		public void run() {
 			setName(String.format("ReceiveTask-%d", handle.getTransferId()));			
-			byte[] buffer = new byte[65536];
 			
 			while(!taskCancelled && !taskFailed) {
 				Queue<DataFragment> queue = dataQueue.swapBuffers();
-				long currentOffset = 0;
-				long expectedOffset = 0;
-				int bufferSpaceUsed = 0;
 				
 				while(true) {
 					DataFragment fragment = queue.poll();
@@ -551,49 +547,7 @@ public final class FileTransfer {
 					long offset = fragment.getOffset();
 					byte[] data = fragment.getData();
 					
-					if(offset != expectedOffset) {
-						// We're skipping one or more data fragments from writing in a sequential order. Flush any existing data to the file
-						// and begin constructing a new buffer.
-						if(bufferSpaceUsed != 0) {
-							if(!writeToFile(currentOffset, buffer, bufferSpaceUsed)) {
-								taskFailed = true;
-								break;			
-							}
-						}
-						
-						currentOffset = offset;
-						expectedOffset = offset + data.length;
-						bufferSpaceUsed = 0;
-						System.arraycopy(data, 0, buffer, bufferSpaceUsed, data.length);
-						bufferSpaceUsed = data.length;
-					} else if(bufferSpaceUsed + data.length > buffer.length) {
-						// We received a sequential data fragment, but the data cannot fit inside the buffer. Flush any existing data to the
-						// file and begin constructing a new buffer.
-						if(!writeToFile(currentOffset, buffer, bufferSpaceUsed)) {
-							taskFailed = true;
-							break;			
-						}
-						
-						currentOffset = offset;
-						expectedOffset = offset + data.length;
-						bufferSpaceUsed = 0;
-						System.arraycopy(data, 0, buffer, bufferSpaceUsed, data.length);
-						bufferSpaceUsed = data.length;
-					} else {
-						// We received a sequential data fragment and we can append it to the current buffer. No need to perform and I/O operations.
-						currentOffset = expectedOffset;
-						expectedOffset += data.length;
-						System.arraycopy(data, 0, buffer, bufferSpaceUsed, data.length);
-						bufferSpaceUsed += data.length;
-					}
-				}
-				
-				// If we have buffered the final data fragments required to complete the file write flush them to the file now so this task finishes.
-				if(handle.getMissingBytes() == bufferSpaceUsed) {
-					if(!writeToFile(currentOffset, buffer, bufferSpaceUsed)) {
-						taskFailed = true;
-						break;
-					}
+					writeToFile(offset, data, data.length);
 				}
 				
 				if(handle.hasCompleted()) {
