@@ -213,6 +213,7 @@ public final class ClientCache {
 	
 	private List<Client> removeClient(Client client) {
 		List<Client> lostRouteClients = new ArrayList<Client>();
+		List<Client> result = new ArrayList<Client>();
 		
 		cache.remove(client);
 		recentlyDisconnected.put(client, DateUtils.getEpochTime());
@@ -223,10 +224,12 @@ public final class ClientCache {
 			}
 		}
 		
+		result.addAll(lostRouteClients);
+		
 		for(Client c : lostRouteClients) {
-			lostRouteClients.addAll(removeClient(c));
+			result.addAll(removeClient(c));
 		}
 		
-		return lostRouteClients;
+		return result;
 	}
 }
