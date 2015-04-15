@@ -441,15 +441,14 @@ public class MainGUI extends JFrame implements ActionListener, KeyListener, Mous
 			GroupChat gChat = (GroupChat)chat;
 			gChat.receiveText(str, client);
 			if(tabPane.getSelectedIndex() != index) {
-				tabPane.setBackgroundAt(tabPane.indexOfTab("q"), Color.YELLOW);
-				addTabName(tabPane.indexOfTab("q"), group.getName() + " [!]");
+				tabPane.setBackgroundAt(index, Color.YELLOW);
+				addTabName(index, group.getName() + " [!]");
 			}
 		}
 		else {
 			addToScreen(client, str);
 			if(tabPane.getSelectedIndex() != 0) {
 				JPanel mainChat = (JPanel)tabPane.getComponentAt(0);
-				tabPane.remove(0);
 				tabPane.add(mainChat, "Main Room [!]", 0);
 				tabPane.setBackgroundAt(0, Color.YELLOW);
 			}
