@@ -125,8 +125,8 @@ public class MainGUI extends JFrame implements ActionListener, KeyListener, Mous
 		typeField.addKeyListener(this);
 		
 		peopleArea = new JList<Client>(peopleList);
-		peopleArea.setCellRenderer(new MyCellRenderer());
 		peopleArea.setForeground(Color.BLACK);
+		peopleArea.setCellRenderer(new MyCellRenderer());
 		peopleScrollPane = new JScrollPane(peopleArea);
 		
 		receiveArea = new JList<ChatLine>(list);
@@ -1123,10 +1123,17 @@ public class MainGUI extends JFrame implements ActionListener, KeyListener, Mous
 	     public Component getListCellRendererComponent(JList<?> list, Object value, int index, boolean isSelected, boolean cellHasFocus) {
 	         Client client = (Client)value;
 	         if(isMuted(client)) 
-	        	 setText(changeText("<html>*mute* <font color=" + getUserColor(client) + ">" + client));
+	        	 setText(changeText("<html><font size=5>*mute*</font> <font color=" + getUserColor(client) + ">" + client));
 	         else
 	        	 setText("<html><font color=" + getUserColor(client) + ">" + client);
-	         
+	         if (isSelected) {
+	             setBackground(list.getSelectionBackground());
+	             setForeground(list.getSelectionForeground());
+	         } else {
+	             setBackground(list.getBackground());
+	             setForeground(list.getForeground());
+	         }
+	         setEnabled(true);
 	         return this;
 	     }
 	 }
