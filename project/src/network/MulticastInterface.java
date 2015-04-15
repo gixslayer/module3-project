@@ -4,6 +4,8 @@ import java.io.IOException;
 import java.net.DatagramPacket;
 import java.net.InetAddress;
 import java.net.MulticastSocket;
+import java.util.ArrayList;
+import java.util.List;
 
 import protocol.Packet;
 
@@ -11,23 +13,29 @@ public class MulticastInterface {
 	public static final int RECV_BUFFER_SIZE = 4096;
 	
 	private final MulticastSocket socket;
-	private final InetAddress localAddress;
 	private final InetAddress group;
 	private final int port;
 	private final byte[] recvBuffer;
 	private final MulticastCallbacks callbacks;
+	private final List<String> addressFilter;
 	
 	public MulticastInterface(InetAddress localAddress, String group, int port, MulticastCallbacks callbacks) {
 		try {
 			this.socket = new MulticastSocket(port);
-			this.localAddress = localAddress;
 			this.group = InetAddress.getByName(group);
 			this.port = port;
 			this.recvBuffer = new byte[RECV_BUFFER_SIZE];
 			this.callbacks = callbacks;
+			this.addressFilter = new ArrayList<String>();
 		} catch (IOException e) {
 			throw new RuntimeException(String.format("Failed to create multicast interface: %s", e.getMessage()));
 		}
+		
+		addressFilter.add(localAddress.getHostAddress());
+		//addressFilter.add("192.168.5.1"); // Ciske
+		//addressFilter.add("192.168.5.2"); // Edwin
+		//addressFilter.add("192.168.5.3"); // Roy
+		//addressFilter.add("192.168.5.4"); // Kevin
 	}
 	
 	public void start() {
@@ -86,7 +94,7 @@ public class MulticastInterface {
 				
 				if(packet == null) {
 					break;
-				} else if(packet.getSourceAddress().equals(localAddress) /*|| packet.getSourceAddress().getHostAddress().equals("192.168.5.2")*/) {
+				} else if(addressFilter.contains(packet.getSourceAddress().getHostAddress())) {
 					// Don't invoke the callback if we received our own multicast packet. 
 					continue;
 				}
