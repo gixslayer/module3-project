@@ -117,3 +117,4 @@ x.x,(✖╭╮✖)
 *scissors*,<font size=15>✌</font>
 *paper*,<font size=15>✋</font>
 *rock*,<font size=15>✊</font>
+*mute*,<font size=15>𝄥</font>
