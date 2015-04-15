@@ -466,6 +466,7 @@ public class MainGUI extends JFrame implements ActionListener, KeyListener, Mous
 	}
 	
 	private String getFromHistory(int index) {
+		if(history.length == 0) return "";
 		if(index >= history.length) {
 			currentHistory = history.length-1;
 			return history[history.length-1];
@@ -1134,6 +1135,7 @@ public class MainGUI extends JFrame implements ActionListener, KeyListener, Mous
 	             setForeground(list.getForeground());
 	         }
 	         setEnabled(true);
+	         setOpaque(true);
 	         return this;
 	     }
 	 }
