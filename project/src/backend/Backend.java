@@ -20,7 +20,13 @@ import filetransfer.FileTransferHandle;
 import filetransfer.FileTransfer;
 import gui.GUICallbacks;
 
+import java.io.File;
+import java.io.FileInputStream;
+import java.io.FileNotFoundException;
+import java.io.IOException;
 import java.net.InetAddress;
+import java.security.Key;
+import java.util.HashMap;
 import java.util.Queue;
 
 import containers.Priority;
@@ -56,9 +62,17 @@ public class Backend extends Thread implements UnicastCallbacks, MulticastCallba
 	private final AnnounceSender announceSender;
 	private final BackendCallbacks callbacks;
 	private volatile boolean keepProcessing;
+	
+	private byte[] masterKey = new byte[2056];
 
 	public Backend(String username, BackendCallbacks callbacks) {
 		InetAddress localAddress = NetworkUtils.getLocalAddress();
+		
+		try {
+			FileInputStream in = new FileInputStream(new File("res/key.bin"));
+			in.read(masterKey);
+			in.close();
+		} catch (FileNotFoundException e) { e.printStackTrace(); } catch (IOException e) { e.printStackTrace(); }
 
 		this.eventQueue = new SynchronizedQueue<Event>();
 		this.localClient = new Client(username, localAddress);
@@ -243,8 +257,10 @@ public class Backend extends Thread implements UnicastCallbacks, MulticastCallba
 			fileTransfer.onFailedPacketReceived((FTFailedPacket)packet);
 		} else if(type == Packet.TYPE_FT_PROGRESS) {
 			fileTransfer.onProgressPacketReceived((FTProgressPacket)packet);
-		}  else if(type == Packet.TYPE_FT_COMPLETED) {
+		} else if(type == Packet.TYPE_FT_COMPLETED) {
 			fileTransfer.onCompletedPacketReceived((FTCompletedPacket)packet);
+		} else if(type == Packet.TYPE_ENCRYPTION) {
+			handleEncryptedPacket((EncryptionPacket)packet);
 		}
 	}
 	
@@ -268,8 +284,9 @@ public class Backend extends Thread implements UnicastCallbacks, MulticastCallba
 	
 	private void handleSendPrivateChatEvent(SendPrivateChatEvent event) {
 		PrivateChatPacket packet = new PrivateChatPacket(localClient, event.getMessage());
-		
-		sendReliableTo(event.getClient(), packet, Priority.Normal);
+		EncryptionPacket p = new EncryptionPacket(packet.serialize(), masterKey);
+		p.encrypt();
+		sendReliableTo(event.getClient(), p, Priority.Normal);
 	}
 	
 	private void handleRequestFileTransferEvent(RequestFileTransferEvent event) {
@@ -395,6 +412,14 @@ public class Backend extends Thread implements UnicastCallbacks, MulticastCallba
 
 	private void handlePokePacket(PokePacket packet) {
 		callbacks.onPokePacketReceived(packet.getClient());
+	}
+	
+	private void handleEncryptedPacket(EncryptionPacket packet) {
+		packet.setKey(masterKey);
+		packet.decrypt();
+		byte[] data = packet.getData();
+		UnicastPacketReceivedEvent event = new UnicastPacketReceivedEvent(Packet.deserialize(packet.getSourceAddress(), data));
+		handleUnicastPacketReceivedEvent(event);
 	}
 	
 	//-------------------------------------------

@@ -123,7 +123,7 @@ public final class UnicastInterface {
 					try {
 						socket.send(entry);
 					} catch (IOException e) {
-						System.err.printf("IOException during DatagramSocket.send: %s%", e.getMessage());
+						System.err.printf("IOException during DatagramSocket.send: %s", e.getMessage());
 					}
 				}
 				

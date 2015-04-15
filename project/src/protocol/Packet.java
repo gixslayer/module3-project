@@ -21,6 +21,7 @@ public abstract class Packet {
 	public static final int TYPE_FT_PROGRESS = 13;
 	public static final int TYPE_FT_COMPLETED = 14;
 	public static final int TYPE_POKE = 15;
+	public static final int TYPE_ENCRYPTION = 16;
 	
 	private final int type;
 	private InetAddress sourceAddress;
