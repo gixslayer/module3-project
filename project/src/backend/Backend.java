@@ -93,6 +93,9 @@ public class Backend extends Thread implements UnicastCallbacks, MulticastCallba
 			process();
 			
 			// TODO: Should we call a short Thread.sleep here to limit cpu usage?
+			try {
+				Thread.sleep(10);
+			} catch(InterruptedException e) { }
 		}
 		
 		shutdown();

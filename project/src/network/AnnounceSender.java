@@ -22,7 +22,6 @@ public final class AnnounceSender {
 	
 	public void process() {
 		if(System.currentTimeMillis() - lastSent >= interval) {
-			System.out.println("ANN " + (System.currentTimeMillis()-lastSent));
 			// Update the last seen time-stamp of the local client to the current epoch time.
 			localClient.setLastSeen(DateUtils.getEpochTime());
 
