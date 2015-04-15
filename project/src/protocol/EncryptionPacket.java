@@ -32,7 +32,7 @@ public class EncryptionPacket extends Packet {
 
 	@Override
 	protected void deserializeContent(byte[] buffer, int offset, int length) {
-		System.arraycopy(buffer, offset, encryptedData, 0, length);
+		encryptedData = buffer;
 	}
 	
 	public void setKey(byte[] key) {
