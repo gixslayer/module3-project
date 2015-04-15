@@ -214,6 +214,22 @@ public final class FileTransfer {
 		callbacks.onFileTransferProgress(handle, progress);
 	}
 	
+	public void cancelActiveTasksFor(Client client) {
+		for(FileTransferHandle handle : incomingTransfers.values()) {
+			if(handle.getSender().equals(client)) {
+				receiveTasks.get(handle.getTransferId()).cancel();
+				callbacks.onFileTransferFailed(handle, "Remote user disconnected");
+			}
+		}
+		
+		for(FileTransferHandle handle : outgoingTransfers.values()) {
+			if(handle.getReceiver().equals(client)) {
+				activeTasks.get(handle.getRequestId()).cancel();
+				callbacks.onFileTransferFailed(handle, "Remote user disconnected");
+			}
+		}
+	}
+	
 	//-------------------------------------------
 	// Called when packets arrive.
 	//-------------------------------------------

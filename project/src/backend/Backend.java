@@ -25,8 +25,6 @@ import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.net.InetAddress;
-import java.security.Key;
-import java.util.HashMap;
 import java.util.Queue;
 
 import containers.Priority;
@@ -92,7 +90,6 @@ public class Backend extends Thread implements UnicastCallbacks, MulticastCallba
 		while(keepProcessing) {			
 			process();
 			
-			// TODO: Should we call a short Thread.sleep here to limit cpu usage?
 			try {
 				Thread.sleep(10);
 			} catch(InterruptedException e) { }
@@ -515,13 +512,13 @@ public class Backend extends Thread implements UnicastCallbacks, MulticastCallba
 	public void onClientTimedOut(Client client) {
 		// Communication is no longer possible, force close any existing TCP connections.
 		tcpInterface.forceClose(client.getAddress());
+		fileTransfer.cancelActiveTasksFor(client);
 		
 		callbacks.onClientTimedOut(client);
 	}
 
 	@Override
 	public void onClientConnected(Client client) {
-		// TODO: Perhaps the reliableLayer should be informed of this?
 		callbacks.onClientConnected(client);
 	}
 
@@ -529,7 +526,8 @@ public class Backend extends Thread implements UnicastCallbacks, MulticastCallba
 	public void onClientDisconnected(Client client) {
 		// Communication is no longer possible, force close any existing TCP connections.
 		tcpInterface.forceClose(client.getAddress());
-
+		fileTransfer.cancelActiveTasksFor(client);
+		
 		callbacks.onClientDisconnected(client);
 	}
 	
@@ -537,6 +535,7 @@ public class Backend extends Thread implements UnicastCallbacks, MulticastCallba
 	public void onClientLostRoute(Client client) {
 		// Communication is no longer possible, force close any existing TCP connections.
 		tcpInterface.forceClose(client.getAddress());
+		fileTransfer.cancelActiveTasksFor(client);
 		
 		callbacks.onClientLostRoute(client);
 	}
