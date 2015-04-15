@@ -33,8 +33,8 @@ public class MulticastInterface {
 		
 		addressFilter.add(localAddress.getHostAddress());
 		//addressFilter.add("192.168.5.1"); // Ciske
-		//addressFilter.add("192.168.5.2"); // Edwin
-		//addressFilter.add("192.168.5.3"); // Roy
+		addressFilter.add("192.168.5.2"); // Edwin
+		addressFilter.add("192.168.5.3"); // Roy
 		//addressFilter.add("192.168.5.4"); // Kevin
 	}
 	

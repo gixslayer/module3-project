@@ -448,8 +448,7 @@ public class MainGUI extends JFrame implements ActionListener, KeyListener, Mous
 		else {
 			addToScreen(client, str);
 			if(tabPane.getSelectedIndex() != 0) {
-				JPanel mainChat = (JPanel)tabPane.getComponentAt(0);
-				tabPane.add(mainChat, "Main Room [!]", 0);
+				tabPane.setTitleAt(0, "Main Room [!]");
 				tabPane.setBackgroundAt(0, Color.YELLOW);
 			}
 		}
