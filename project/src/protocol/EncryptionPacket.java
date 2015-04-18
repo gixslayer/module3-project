@@ -1,6 +1,5 @@
 package protocol;
 
-import java.security.AlgorithmParameterGenerator;
 import java.security.InvalidKeyException;
 import java.security.NoSuchAlgorithmException;
 

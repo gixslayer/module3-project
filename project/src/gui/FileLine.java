@@ -8,13 +8,11 @@ public class FileLine implements ChatLine {
 	private Client receiveClient;
 	private String fileName;
 	private String line;
-	private float progress;
 	
 	public FileLine(Client sendClient, Client receiveClient, String fileName, float progress) {
 		this.sendClient = sendClient;
 		this.receiveClient = receiveClient;
 		this.fileName = fileName;
-		this.progress = progress;
 		this.line = "FILE TRANSFER " + fileName + ": " + sendClient.getName() + "*right*" + receiveClient.getName() + " | *" + (((int)progress/10)*10) + "p* " + (((int)progress/10)*10) + "%";
 	}
 	
@@ -22,7 +20,6 @@ public class FileLine implements ChatLine {
 		this.sendClient = sendClient;
 		this.receiveClient = receiveClient;
 		this.fileName = fileName;
-		this.progress = progress;
 		this.line = "FILE TRANSFER " + fileName + ": " + sendClient.getName() + "*right*" + receiveClient.getName() + " | *" + (((int)progress/10)*10) + "p* " + (((int)progress/10)*10) + "%";
 		this.time = time;
 	}
@@ -65,7 +62,6 @@ public class FileLine implements ChatLine {
 	}
 	
 	public void setProgress(float progress) {
-		this.progress = progress;
 		this.line = "FILE TRANSFER " + fileName + ": " + sendClient.getName() + "*right*" + receiveClient.getName() + " | *" + (((int)progress/10)*10) + "p* " + (((int)progress/10)*10) + "%";
 	}
 	

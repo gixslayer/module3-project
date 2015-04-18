@@ -41,7 +41,7 @@ public interface FileTransferCallbacks {
 	 * @param handle The handle of the file transfer.
 	 * @param progress The new progress of the file transfer as a floating point value between 0 and 100 (inclusive).
 	 */
-	void onFileTransferProgress(FileTransferHandle handle, float progress); // TODO: Only call this every X steps of progress
+	void onFileTransferProgress(FileTransferHandle handle, float progress);
 	/**
 	 * Called when an existing file transfer has been cancelled by either the sender or receiver. This is called for both the receiver and sender. 
 	 * @param handle The handle of the file transfer which has been cancelled. It still contains data, but is no longer considered valid by the manager.

@@ -10,7 +10,7 @@ import utils.DateUtils;
 
 public final class ClientCache {
 	public static final long TIMEOUT_DURATION = 10000; // Clients time out after not being seen for this many milliseconds.
-	public static final long RECONNECT_DURATION = 11000; // A client from the same IP/name cannot be indirectly added after it manually disconnects before this many milliseconds expire.
+	public static final long RECONNECT_DURATION = 11000; // A client from the same IP/name cannot be added after it disconnects before this many milliseconds expire.
 	
 	private final Client localClient;
 	private final List<Client> cache;
@@ -87,8 +87,6 @@ public final class ClientCache {
 				if(client.getLastSeen() > cachedClient.getLastSeen()) {
 					cachedClient.setLastSeen(client.getLastSeen());
 					
-					// TODO: Do we even need to keep track of this? The idea was to route through the client that saw the
-					// client most recently, but if we can delegate the routing to the IP layer we can ignore this.
 					cachedClient.setRoute(source);
 				}
 			}
@@ -102,7 +100,6 @@ public final class ClientCache {
 		}
 
 		// Grab a list of all clients can no longer be reached when this client is removed.
-		// TODO: Do we need this? Perhaps just let the clients be disconnected through the timeout system instead?
 		List<Client> lostRouteClients = removeClient(client);
 		
 		callbacks.onClientDisconnected(client);
@@ -128,7 +125,6 @@ public final class ClientCache {
 			return;
 		}
 
-		// Process callbacks outside critical section to avoid holding the lock longer than needed.
 		callbacks.onClientLostRoute(destination);
 		
 		for(Client client : removedClients) {
@@ -197,7 +193,6 @@ public final class ClientCache {
 			lostRouteClients.addAll(removeClient(client));
 		}
 		
-		// Process callbacks outside critical section to avoid holding the lock longer than needed.
 		for(Client client : timedOutClients) {
 			callbacks.onClientTimedOut(client);
 		}

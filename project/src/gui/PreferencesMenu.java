@@ -115,7 +115,7 @@ public class PreferencesMenu extends JFrame implements ActionListener, ChangeLis
 	@Override
 	public void actionPerformed(ActionEvent arg0) {
 		if(arg0.getSource().equals(areaColor)) {
-			@SuppressWarnings("unchecked") // TODO: Verify this cast cannot blow up on us.
+			@SuppressWarnings("unchecked")
 			JComboBox<String> jb = (JComboBox<String>)arg0.getSource();
 			for(int i=0; i<main.getNumberofColoringArrays(); i++) {
 				if(jb.getSelectedItem().equals(ColoringColors.getColor(i).toString())) main.setColoring(ColoringColors.getColor(i));

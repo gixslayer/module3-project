@@ -441,10 +441,7 @@ public class Backend extends Thread implements UnicastCallbacks, MulticastCallba
 	
 	//-------------------------------------------
 	// NetworkInterface.
-	//-------------------------------------------
-	// TODO: Do we even need the concept of 'indirect' clients? Currently we (attempt) to route manually,
-	// but if we just try to send UDP traffic (going through our TCP layer or not) won't it do the routing for us?
-	
+	//-------------------------------------------	
 	public void sendTo(Client client, Packet packet) {
 		if(client.isIndirect()) {
 			Client route = client.getRoute();
@@ -466,7 +463,7 @@ public class Backend extends Thread implements UnicastCallbacks, MulticastCallba
 	}
 	
 	public void sendToAll(Packet packet) {
-		// TODO: Ensure this is only ever called from the backend thread to avoid multithreading issues on the client cache.
+		// NOTE: This should only ever be called from the backend thread to avoid multithreading issues on the client cache.
 		Client[] clients = clientCache.getClients();
 		
 		for(Client client : clients) {
@@ -475,7 +472,7 @@ public class Backend extends Thread implements UnicastCallbacks, MulticastCallba
 	}
 	
 	public void sendReliableToAll(Packet packet, Priority priority) {
-		// TODO: Ensure this is only ever called from the backend thread to avoid multithreading issues on the client cache.
+		// NOTE: This should only ever be called from the backend thread to avoid multithreading issues on the client cache.
 		Client[] clients = clientCache.getClients();
 		
 		for(Client client : clients) {
